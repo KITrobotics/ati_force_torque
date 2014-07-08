@@ -104,6 +104,9 @@ private:
 
 bool ForceTorqueNode::init()
 {
+
+  // Read data from parameter server	
+	
   m_isInitialized = false;
   topicPub_ForceData_ = nh_.advertise<std_msgs::Float32MultiArray>("force_values", 100);
   topicPub_ForceDataBase_ = nh_.advertise<std_msgs::Float32MultiArray>("force_values_base", 100);
@@ -120,30 +123,38 @@ bool ForceTorqueNode::srvCallback_Init(cob_srvs::Trigger::Request &req,
 {
   if(!m_isInitialized)
     {
-	ftc.SetFXGain(-1674.08485641479, 25.3936432491561, 3936.02718786968, -26695.2539299392, -3463.73728677908, 32320.8777656041);
-	ftc.SetFYGain(-4941.11252317989, 32269.5827812235, 1073.82949467087, -15541.8400780814, 3061.89541712948, -18995.9891819409);
-	ftc.SetFZGain(39553.9250733854, -501.940034213822, 40905.2545309848, 85.1095865539103, 38879.4015426067, 541.344775537753);
-	ftc.SetTXGain(-57.4775857386444, 225.941430274037, -638.238694389357, -116.780649376712, 645.133934885308, -116.310081348745 );
-	ftc.SetTYGain(786.70602313107, -4.36504382717595, -422.360387149734, 180.7428885668, -352.389412256677, -232.293941041101);
-	ftc.SetTZGain(60.1009854270179, -400.19573754971, 29.142908672741, -392.119024237625, 70.9306507180567, -478.104759057292);
+		ftc.SetFXGain(-1674.08485641479, 25.3936432491561, 3936.02718786968, -26695.2539299392, -3463.73728677908, 32320.8777656041);
+		ftc.SetFYGain(-4941.11252317989, 32269.5827812235, 1073.82949467087, -15541.8400780814, 3061.89541712948, -18995.9891819409);
+		ftc.SetFZGain(39553.9250733854, -501.940034213822, 40905.2545309848, 85.1095865539103, 38879.4015426067, 541.344775537753);
+		ftc.SetTXGain(-57.4775857386444, 225.941430274037, -638.238694389357, -116.780649376712, 645.133934885308, -116.310081348745 );
+		ftc.SetTYGain(786.70602313107, -4.36504382717595, -422.360387149734, 180.7428885668, -352.389412256677, -232.293941041101);
+		ftc.SetTZGain(60.1009854270179, -400.19573754971, 29.142908672741, -392.119024237625, 70.9306507180567, -478.104759057292);
 
-	ftc.SetCalibMatrix();
-	ftc.Init();
-	ROS_INFO("FTC initialized");
+		ftc.SetCalibMatrix();
+		// read return init status and check it!
+		if (ftc.Init()) {
+			ROS_INFO("FTC initialized");
 
-	//set Calibdata to zero
-	F_avg.resize(6);
-	F_avg[0] = 0.0;
-	F_avg[1] = 0.0;
-	F_avg[2] = 0.0;
-	F_avg[3] = 0.0;
-	F_avg[4] = 0.0;
-	F_avg[5] = 0.0;
+			//set Calibdata to zero
+			F_avg.resize(6);
+			F_avg[0] = 0.0;
+			F_avg[1] = 0.0;
+			F_avg[2] = 0.0;
+			F_avg[3] = 0.0;
+			F_avg[4] = 0.0;
+			F_avg[5] = 0.0;
 
 
-	m_isInitialized = false;//true;
+			m_isInitialized = true;
+			res.success.data = true;
+		}
+		else {
+			m_isInitialized = false;
+			res.success.data = false;
+			res.error_message.data = "Don't know! But it's bad! :/";
+		}
     }
-  return true;
+  return m_isInitialized;
 }
 
 bool ForceTorqueNode::srvCallback_Calibrate(cob_srvs::Trigger::Request &req,

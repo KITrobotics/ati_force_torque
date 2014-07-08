@@ -2,3 +2,4 @@ device:
     type: CAN_PEAK_USN
     path: /dev/pcan32
     baudrate: 250K
+    base_identifier: 0x20

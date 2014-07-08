@@ -1,5 +1,5 @@
-#ifndef FORCETORQUE
-#define FORCETORQUE
+#ifndef FORCETORQUECTRL_INCLUDEDEF_H
+#define FORCETORQUECTRL_INCLUDEDEF_H
 
 #include <iostream>
 
@@ -14,13 +14,17 @@
 
 //opCodes for the ForceTorque Can Interface
 //set as Can Message ID
-#define READ_SG 	0x200
-#define READ_MATRIX 	0x202
-#define READ_CALIB	0x205
-#define SET_CALIB	0x206
-#define SET_BASEID	0x213
-#define SET_BAUD	0x214
-#define READ_FIRMWARE	0x215
+#define READ_SG 		0x0
+#define READ_MATRIX 	0x2
+#define READ_SERIALNR	0x5
+#define SET_CALIB		0x6
+#define READ_COUNTSPERU	0x7
+#define READ_UNITCODE	0x8
+#define READ_DIAGNOV	0X9
+#define RESET			0xC
+#define SET_BASEID		0xD
+#define SET_BAUD		0xE
+#define READ_FIRMWARE	0xF
 
 class ForceTorqueCtrl
 {
@@ -29,10 +33,11 @@ class ForceTorqueCtrl
 		~ForceTorqueCtrl();
 
 		bool Init();
-		void ReadFTSerialNumber();
-		void SetActiveCalibrationMatrix(int num);
+		bool ReadFTSerialNumber();
+		bool ReadUnitCodes();
+		bool SetActiveCalibrationMatrix(int num);
 		void ReadSGData(double &Fx, double &Fy, double &Fz, double &Tx, double &Ty, double &Tz);
-		void ReadFirmwareVersion();
+		bool ReadFirmwareVersion();
 		void ReadCalibrationMatrix();
 
 		void SetGaugeOffset(float sg0Off, float sg1Off, float sg2Off, float sg3Off, float sg4Off, float sg5Off);
@@ -49,7 +54,7 @@ class ForceTorqueCtrl
 		void StrainGaugeToForce(int& sg0, int& sg1, int& sg2, int& sg3, int& sg4, int& sg5);
 
 	protected:
-		void initCan();
+		bool initCan();
 
 		//--------------------------------- Variables
 		CanMsg m_CanMsgRec;
@@ -58,11 +63,12 @@ class ForceTorqueCtrl
 
 	private:
 		CanMsg CMsg;
-		CanItf* m_pCanCtrl; // old m_Can
+		CanItf* m_pCanCtrl;
 
 		int m_CanType;
 		std::string m_CanDevice;
 		int m_CanBaudrate;
+		int m_CanBaseIdentifier;
 
 		unsigned int d_len;
 		Eigen::VectorXf m_v3StrainGaigeOffset;
