@@ -4,7 +4,11 @@
 #include <iostream>
 
 
-#include <cob_forcetorque/CanESD.h>
+// Headers provided by other cob-packages
+#include <cob_generic_can/CanItf.h>
+
+#include <cob_forcetorque/Mutex.h>
+
 #include <Eigen/Core>
 #include <fstream>
 
@@ -20,7 +24,7 @@
 
 class ForceTorqueCtrl
 {
-	public:	
+	public:
 		ForceTorqueCtrl();
 		~ForceTorqueCtrl();
 
@@ -43,13 +47,23 @@ class ForceTorqueCtrl
 		void SetCalibMatrix();
 		void CalcCalibMatrix();
 		void StrainGaugeToForce(int& sg0, int& sg1, int& sg2, int& sg3, int& sg4, int& sg5);
-	
+
 	protected:
 		void initCan();
-		
+
+		//--------------------------------- Variables
+		CanMsg m_CanMsgRec;
+		Mutex m_Mutex;
+		bool m_bWatchdogErr;
+
 	private:
 		CanMsg CMsg;
-		CanItf* m_Can;
+		CanItf* m_pCanCtrl; // old m_Can
+
+		int m_CanType;
+		std::string m_CanDevice;
+		int m_CanBaudrate;
+
 		unsigned int d_len;
 		Eigen::VectorXf m_v3StrainGaigeOffset;
 		Eigen::VectorXf m_v3GaugeGain;
@@ -61,13 +75,13 @@ class ForceTorqueCtrl
 		Eigen::VectorXf m_v3TZGain;
 		Eigen::MatrixXf m_mXCalibMatrix;
 		Eigen::MatrixXf m_vForceData;
-		
-		
+
+
 
 		// the Parameter indicates the Axis row to Read
 		// Fx = 0 | Fy = 1 | Fz = 2 | Tx = 3 | Ty = 4 | Tz = 5
 		void ReadMatrix(int axis, Eigen::VectorXf& vec);
-		
+
 
 		union
 		{
@@ -81,7 +95,7 @@ class ForceTorqueCtrl
 			float value;
 		} fbBuf;
 
-		std::ofstream out; 
+		std::ofstream out;
 };
 
 #endif

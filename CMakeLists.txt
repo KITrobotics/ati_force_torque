@@ -7,7 +7,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   cob_srvs
   visualization_msgs
-  libntcan
+  cob_generic_can
 )
 
 find_package(Eigen REQUIRED)
@@ -17,7 +17,7 @@ find_package(Eigen REQUIRED)
 ###################################
 catkin_package(
  INCLUDE_DIRS common/include
- CATKIN_DEPENDS roscpp libntcan
+ CATKIN_DEPENDS roscpp cob_generic_can
  DEPENDS Eigen
 )
 
@@ -34,7 +34,7 @@ include_directories(
   ${Eigen_INCLUDE_DIRS}
 )
 
-add_executable(${PROJECT_NAME} ros/src/forcetorque.cpp common/src/ForceTorqueCtrl.cpp common/src/CanESD.cpp common/src/TimeStamp.cpp)
+add_executable(${PROJECT_NAME} ros/src/forcetorque.cpp common/src/ForceTorqueCtrl.cpp)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
 
 #############

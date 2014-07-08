@@ -141,7 +141,7 @@ bool ForceTorqueNode::srvCallback_Init(cob_srvs::Trigger::Request &req,
 	F_avg[5] = 0.0;
 
 
-	m_isInitialized = true;
+	m_isInitialized = false;//true;
     }
   return true;
 }
@@ -202,7 +202,8 @@ void ForceTorqueNode::updateFTData()
       fdata.setOrigin(tf::Vector3(Fx-F_avg[0], Fy-F_avg[1], Fz-F_avg[2]));
 
       try{
-        tflistener.lookupTransform("arm_7_link", "base_link", ros::Time(0), transform_ee_base);
+        //tflistener.lookupTransform("arm_7_link", "base_link", ros::Time(0), transform_ee_base);
+        tflistener.lookupTransform("kms_link", "base_link", ros::Time(0), transform_ee_base);
       }
       catch (tf::TransformException ex){
 	ROS_ERROR("%s",ex.what());
