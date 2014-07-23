@@ -1,14 +1,12 @@
 //general includes
 #include <unistd.h>
 
-// Headrs provided by other cob-packages
+// Headrs provided by cob-packages
 //#include <cob_generic_can/CanESD.h>
 //#include <cob_generic_can/CanPeakSys.h>
 #include <cob_generic_can/CanPeakSysUSB.h>
 #include <cob_forcetorque/ForceTorqueCtrl.h>
 
-
-//ForceTorqueCtrl::ForceTorqueCtrl(int can_type, string can_path, int can_baudrate, byte base_identifier)
 ForceTorqueCtrl::ForceTorqueCtrl()
 {
 
@@ -17,12 +15,26 @@ ForceTorqueCtrl::ForceTorqueCtrl()
 	// ------------- first of all set used CanItf
 	m_pCanCtrl = NULL;
 
-	// now for test, use default params -- normally get them as parameters
 	// for types and baudrates see: https://github.com/ipa320/cob_robots/blob/hydro_dev/cob_hardware_config/raw3-5/config/base/CanCtrl.ini
 	m_CanType = CANITFTYPE_CAN_PEAK_USN;
-	m_CanDevice = "/dev/pcan32";
+	m_CanDevice = "/dev/pcan33";
 	m_CanBaudrate = CANITFBAUD_250K;
 	m_CanBaseIdentifier = 0x20 << 4;
+}
+
+ForceTorqueCtrl::ForceTorqueCtrl(int can_type, std::string can_path, int can_baudrate, int base_identifier)
+{
+
+	out.open("force.txt");
+
+	// ------------- first of all set used CanItf
+	m_pCanCtrl = NULL;
+
+	// for types and baudrates see: https://github.com/ipa320/cob_robots/blob/hydro_dev/cob_hardware_config/raw3-5/config/base/CanCtrl.ini
+	m_CanType = can_type;
+	m_CanDevice = can_path;
+	m_CanBaudrate = can_baudrate;
+	m_CanBaseIdentifier = base_identifier << 4;
 }
 
 ForceTorqueCtrl::~ForceTorqueCtrl()
@@ -36,10 +48,10 @@ ForceTorqueCtrl::~ForceTorqueCtrl()
 bool ForceTorqueCtrl::Init()
 {
 	bool ret = true;
-	
+
 	if (initCan()) {
-		
-		// This is way of testig if communication is also successful 
+
+		// This is way of testig if communication is also successful
 		if (! ReadFTSerialNumber())
 		{
 			std::cout << "Can not read Serial Number from FTS!" << std::endl;
@@ -60,9 +72,9 @@ bool ForceTorqueCtrl::Init()
 		std::cout << "CAN initialisation unsuccessful!" << std::endl;
 		ret = false;
 	}
-	
-	return ret;	
-	
+
+	return ret;
+
 	//SetActiveCalibrationMatrix(0);
 	//ReadCalibrationMatrix();
 }
@@ -70,7 +82,7 @@ bool ForceTorqueCtrl::Init()
 bool ForceTorqueCtrl::initCan()
 {
 	bool ret = true;
-	
+
 	// current implementation only for CanPeakSysUSB
 	// Should be changed to static in CanItf.h
 	if (m_CanType == CANITFTYPE_CAN_PEAK_USN)
@@ -79,25 +91,25 @@ bool ForceTorqueCtrl::initCan()
 		std::cout << "Uses CAN-Peak-USB" << std::endl;
 		ret = m_pCanCtrl->init_ret();
 	}
-	
+
 	return ret;
 }
 
 bool ForceTorqueCtrl::ReadFTSerialNumber()
 {
 	std::cout << "\n\n*********FTSerialNumber**********" << std::endl;
-	bool ret = true;	
+	bool ret = true;
 	CanMsg CMsg;
 	CMsg.setID(m_CanBaseIdentifier | READ_SERIALNR);
 	CMsg.setLength(0);
 
 	ret = m_pCanCtrl->transmitMsg(CMsg, true);
-	
+
 	if (ret) {
 		CanMsg replyMsg;
 		replyMsg.set(0, 0, 0, 0, 0, 0, 0, 0);
 		ret = m_pCanCtrl->receiveMsg(&replyMsg);
-		
+
 		if (ret) {
 			std::cout << "reply ID: \t" << std::hex << replyMsg.getID()<<std::endl;
 			std::cout << "reply Length: \t" << replyMsg.getLength()<<std::endl;
@@ -109,28 +121,28 @@ bool ForceTorqueCtrl::ReadFTSerialNumber()
 		else {
 			std::cout << "ForceTorqueCtrl::ReadFTSerialNumber(): Can not read message!" << std::endl;
 		}
-	}	
+	}
 	else {
 		std::cout << "ForceTorqueCtrl::ReadFTSerialNumber(): Can not transmit message!" << std::endl;
 	}
-	
+
 	return ret;
 }
 
 bool ForceTorqueCtrl::ReadUnitCodes()
 {
 	std::cout << "\n\n*********Read Unit Codes**********" << std::endl;
-	bool ret = true;	
+	bool ret = true;
 	CanMsg CMsg;
 	CMsg.setID(m_CanBaseIdentifier | READ_UNITCODE);
 	CMsg.setLength(0);
 
 	ret = m_pCanCtrl->transmitMsg(CMsg, true);
-	
+
 	if (ret) {
 		CanMsg replyMsg;
 		ret = m_pCanCtrl->receiveMsg(&replyMsg);
-		
+
 		if (ret) {
 			std::cout << "reply ID: \t" << std::hex << replyMsg.getID()<<std::endl;
 			std::cout << "reply Length: \t" << replyMsg.getLength()<<std::endl;
@@ -139,11 +151,11 @@ bool ForceTorqueCtrl::ReadUnitCodes()
 		else {
 			std::cout << "ForceTorqueCtrl::ReadUnitCodes(): Can not read message!" << std::endl;
 		}
-	}	
+	}
 	else {
 		std::cout << "ForceTorqueCtrl::ReadUnitCodes(): Can not transmit message!" << std::endl;
 	}
-	
+
 	return ret;
 }
 
@@ -158,7 +170,7 @@ bool ForceTorqueCtrl::SetActiveCalibrationMatrix(int num)
 	CMsg.setAt(num,0);
 
 	ret = m_pCanCtrl->transmitMsg(CMsg, true);
-	
+
 	if (ret) {
 
 		CanMsg replyMsg;
@@ -181,7 +193,7 @@ bool ForceTorqueCtrl::SetActiveCalibrationMatrix(int num)
 	else {
 		std::cout << "ForceTorqueCtrl::SetActiveCalibrationMatrix(int num): Can not transmit message!" << std::endl;
 	}
-		
+
 	return ret;
 
 }
@@ -326,7 +338,7 @@ bool ForceTorqueCtrl::ReadFirmwareVersion()
 	CMsg.setLength(0);
 
 	ret = m_pCanCtrl->transmitMsg(CMsg, true);
-	
+
 	if (ret)
 	{
 		CanMsg replyMsg;
@@ -354,8 +366,8 @@ bool ForceTorqueCtrl::ReadFirmwareVersion()
 	else {
 		std::cout<<"Error: Receiving Message failed!"<<std::endl;
 		ret = false;
-	}	
-		
+	}
+
 	return ret;
 }
 

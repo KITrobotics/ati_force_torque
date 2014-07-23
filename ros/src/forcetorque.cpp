@@ -2,7 +2,7 @@
  *
  * Copyright (c) 2010
  *
- * Fraunhofer Institute for Manufacturing Engineering	
+ * Fraunhofer Institute for Manufacturing Engineering
  * and Automation (IPA)
  *
  * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -10,9 +10,9 @@
  * Project name: care-o-bot
  * ROS stack name: cob_driver
  * ROS package name: cob_forcetorque
- *								
+ *
  * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- *			
+ *
  * Author: Alexander Bubeck, email:alexander.bubeck@ipa.fhg.de
  * Supervised by: Alexander Bubeck, email:alexander.bubeck@ipa.fhg.de
  *
@@ -29,23 +29,23 @@
  *     * Redistributions in binary form must reproduce the above copyright
  *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the Fraunhofer Institute for Manufacturing 
+ *     * Neither the name of the Fraunhofer Institute for Manufacturing
  *       Engineering and Automation (IPA) nor the names of its
  *       contributors may be used to endorse or promote products derived from
  *       this software without specific prior written permission.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License LGPL as 
- * published by the Free Software Foundation, either version 3 of the 
+ * it under the terms of the GNU Lesser General Public License LGPL as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License LGPL for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public 
- * License LGPL along with this program. 
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License LGPL along with this program.
  * If not, see <http://www.gnu.org/licenses/>.
  *
  ****************************************************************/
@@ -84,6 +84,12 @@ public:
   void visualizeData(double x, double y, double z);
 
 private:
+	// CAN parameters
+	int deviceType;
+	std::string devicePath;
+	int deviceBaudrate;
+	int deviceBaseIdentifier;
+
   // declaration of topics to publish
   ros::Publisher topicPub_ForceData_;
   ros::Publisher topicPub_ForceDataBase_;
@@ -99,22 +105,27 @@ private:
   bool m_isInitialized;
   ForceTorqueCtrl ftc;
   std::vector<double> F_avg;
-  
+
 };
 
 bool ForceTorqueNode::init()
 {
 
-  // Read data from parameter server	
-	
   m_isInitialized = false;
+
+  // Read data from parameter server
+	nh_.param<int>("device/type", deviceType, -1);
+	nh_.param<std::string>("device/path", devicePath, "");
+	nh_.param<int>("device/baudrate", deviceBaudrate, -1);
+	nh_.param<int>("device/base_identifier", deviceBaseIdentifier, -1);
+
   topicPub_ForceData_ = nh_.advertise<std_msgs::Float32MultiArray>("force_values", 100);
   topicPub_ForceDataBase_ = nh_.advertise<std_msgs::Float32MultiArray>("force_values_base", 100);
   topicPub_Marker_ = nh_.advertise<visualization_msgs::Marker>("/visualization_marker", 1);
   srvServer_Init_ = nh_.advertiseService("Init", &ForceTorqueNode::srvCallback_Init, this);
   srvServer_Calibrate_ = nh_.advertiseService("Calibrate", &ForceTorqueNode::srvCallback_Calibrate, this);
 
-  
+
   return true;
 }
 
@@ -194,7 +205,7 @@ void ForceTorqueNode::updateFTData()
   if(m_isInitialized)
     {
       double Fx, Fy, Fz, Tx, Ty, Tz = 0;
-      
+
       ftc.ReadSGData(Fx, Fy, Fz, Tx, Ty, Tz);
       std_msgs::Float32MultiArray msg;
       msg.data.push_back(Fx-F_avg[0]);
@@ -206,7 +217,7 @@ void ForceTorqueNode::updateFTData()
 
 
       topicPub_ForceData_.publish(msg);
-      
+
 
       tf::Transform fdata_base;
       tf::Transform fdata;
@@ -245,7 +256,7 @@ void ForceTorqueNode::visualizeData(double x, double y, double z)
   marker.type = shape;
 // first delete old markers
   marker.action = visualization_msgs::Marker::DELETE;
-  topicPub_Marker_.publish(marker);	
+  topicPub_Marker_.publish(marker);
   marker.action = visualization_msgs::Marker::ADD;
   marker.pose.position.x = 0;
   marker.pose.position.y = 0;
@@ -272,9 +283,9 @@ int main(int argc, char ** argv)
   ros::init(argc, argv, "talker");
   ForceTorqueNode ftn;
   ftn.init();
-  
+
   ROS_INFO("ForceTorque Sensor Node running.");
-  
+
   ros::Rate loop_rate(10);
   while(ros::ok())
     {

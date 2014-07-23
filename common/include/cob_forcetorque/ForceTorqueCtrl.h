@@ -30,6 +30,7 @@ class ForceTorqueCtrl
 {
 	public:
 		ForceTorqueCtrl();
+		ForceTorqueCtrl(int can_type, std::string can_path, int can_baudrate, int base_identifier);
 		~ForceTorqueCtrl();
 
 		bool Init();
