@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <launch>
 
-  <rosparam command="load" ns="fts" file="$(find cob_forcetorque)/config/can_ati.yaml"/>
+  <rosparam command="load" ns="fts" file="$(find ati_mini_45)/config/can_ati.yaml"/>
 
   <!-- this is for test -->
-  <node pkg="tf" type="static_transform_publisher" name="kms_transfrom" args="0 0 0 0 0 0 /base_link /kms_link 10"/>
+  <node pkg="tf" type="static_transform_publisher" name="fts_transfrom" args="0 0 0 0 0 0 /base_link /kms_link 10"/>
 
 <!-- start powercube_chain -->
-  <node pkg="cob_forcetorque" type="cob_forcetorque_node" name="cob_forcetorque" ns="fts" cwd="node" respawn="false" output="screen" />
+  <node pkg="ati_mini_45" type="ati_mini_45_node" name="fts_node" ns="fts" cwd="node" respawn="false" output="screen" />
 
 </launch>
