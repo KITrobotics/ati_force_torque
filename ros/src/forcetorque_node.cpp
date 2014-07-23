@@ -72,16 +72,16 @@ typedef unsigned char uint8_t;
 class ForceTorqueNode
 {
 public:
-  // create a handle for this node, initialize node
-  ros::NodeHandle nh_;
 
-  bool init();
-  bool srvCallback_Init(cob_srvs::Trigger::Request &req,
-			cob_srvs::Trigger::Response &res );
-  bool srvCallback_Calibrate(cob_srvs::Trigger::Request &req,
-			cob_srvs::Trigger::Response &res );
+	ForceTorqueNode();
+
+	bool srvCallback_Init(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res);
+  bool srvCallback_Calibrate(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res);
   void updateFTData();
   void visualizeData(double x, double y, double z);
+
+  // create a handle for this node, initialize node
+  ros::NodeHandle nh_;
 
 private:
 	// CAN parameters
@@ -103,21 +103,15 @@ private:
   tf::StampedTransform transform_ee_base;
 
   bool m_isInitialized;
-  ForceTorqueCtrl ftc;
+  ForceTorqueCtrl* p_Ftc;
   std::vector<double> F_avg;
 
 };
 
-bool ForceTorqueNode::init()
+ForceTorqueNode::ForceTorqueNode()
 {
 
-  m_isInitialized = false;
-
-  // Read data from parameter server
-	nh_.param<int>("device/type", deviceType, -1);
-	nh_.param<std::string>("device/path", devicePath, "");
-	nh_.param<int>("device/baudrate", deviceBaudrate, -1);
-	nh_.param<int>("device/base_identifier", deviceBaseIdentifier, -1);
+	m_isInitialized = false;
 
   topicPub_ForceData_ = nh_.advertise<std_msgs::Float32MultiArray>("force_values", 100);
   topicPub_ForceDataBase_ = nh_.advertise<std_msgs::Float32MultiArray>("force_values_base", 100);
@@ -125,8 +119,14 @@ bool ForceTorqueNode::init()
   srvServer_Init_ = nh_.advertiseService("Init", &ForceTorqueNode::srvCallback_Init, this);
   srvServer_Calibrate_ = nh_.advertiseService("Calibrate", &ForceTorqueNode::srvCallback_Calibrate, this);
 
+	// Read data from parameter server
+	nh_.param<int>("device/type", deviceType, -1);
+	nh_.param<std::string>("device/path", devicePath, "");
+	nh_.param<int>("device/baudrate", deviceBaudrate, -1);
+	nh_.param<int>("device/base_identifier", deviceBaseIdentifier, -1);
 
-  return true;
+	p_Ftc = new ForceTorqueCtrl(deviceType, devicePath, deviceBaudrate, deviceBaseIdentifier);
+
 }
 
 bool ForceTorqueNode::srvCallback_Init(cob_srvs::Trigger::Request &req,
@@ -134,16 +134,16 @@ bool ForceTorqueNode::srvCallback_Init(cob_srvs::Trigger::Request &req,
 {
   if(!m_isInitialized)
     {
-		ftc.SetFXGain(-1674.08485641479, 25.3936432491561, 3936.02718786968, -26695.2539299392, -3463.73728677908, 32320.8777656041);
-		ftc.SetFYGain(-4941.11252317989, 32269.5827812235, 1073.82949467087, -15541.8400780814, 3061.89541712948, -18995.9891819409);
-		ftc.SetFZGain(39553.9250733854, -501.940034213822, 40905.2545309848, 85.1095865539103, 38879.4015426067, 541.344775537753);
-		ftc.SetTXGain(-57.4775857386444, 225.941430274037, -638.238694389357, -116.780649376712, 645.133934885308, -116.310081348745 );
-		ftc.SetTYGain(786.70602313107, -4.36504382717595, -422.360387149734, 180.7428885668, -352.389412256677, -232.293941041101);
-		ftc.SetTZGain(60.1009854270179, -400.19573754971, 29.142908672741, -392.119024237625, 70.9306507180567, -478.104759057292);
+		p_Ftc->SetFXGain(-1674.08485641479, 25.3936432491561, 3936.02718786968, -26695.2539299392, -3463.73728677908, 32320.8777656041);
+		p_Ftc->SetFYGain(-4941.11252317989, 32269.5827812235, 1073.82949467087, -15541.8400780814, 3061.89541712948, -18995.9891819409);
+		p_Ftc->SetFZGain(39553.9250733854, -501.940034213822, 40905.2545309848, 85.1095865539103, 38879.4015426067, 541.344775537753);
+		p_Ftc->SetTXGain(-57.4775857386444, 225.941430274037, -638.238694389357, -116.780649376712, 645.133934885308, -116.310081348745 );
+		p_Ftc->SetTYGain(786.70602313107, -4.36504382717595, -422.360387149734, 180.7428885668, -352.389412256677, -232.293941041101);
+		p_Ftc->SetTZGain(60.1009854270179, -400.19573754971, 29.142908672741, -392.119024237625, 70.9306507180567, -478.104759057292);
 
-		ftc.SetCalibMatrix();
+		p_Ftc->SetCalibMatrix();
 		// read return init status and check it!
-		if (ftc.Init()) {
+		if (p_Ftc->Init()) {
 			ROS_INFO("FTC initialized");
 
 			//set Calibdata to zero
@@ -183,7 +183,7 @@ bool ForceTorqueNode::srvCallback_Calibrate(cob_srvs::Trigger::Request &req,
       for(int i = 0; i < measurements; i++)
 	{
 	  double Fx, Fy, Fz, Tx, Ty, Tz = 0;
-	  ftc.ReadSGData(Fx, Fy, Fz, Tx, Ty, Tz);
+	  p_Ftc->ReadSGData(Fx, Fy, Fz, Tx, Ty, Tz);
 	  F_avg[0] += Fx;
 	  F_avg[1] += Fy;
 	  F_avg[2] += Fz;
@@ -206,7 +206,7 @@ void ForceTorqueNode::updateFTData()
     {
       double Fx, Fy, Fz, Tx, Ty, Tz = 0;
 
-      ftc.ReadSGData(Fx, Fy, Fz, Tx, Ty, Tz);
+      p_Ftc->ReadSGData(Fx, Fy, Fz, Tx, Ty, Tz);
       std_msgs::Float32MultiArray msg;
       msg.data.push_back(Fx-F_avg[0]);
       msg.data.push_back(Fy-F_avg[1]);
@@ -282,7 +282,6 @@ int main(int argc, char ** argv)
 
   ros::init(argc, argv, "talker");
   ForceTorqueNode ftn;
-  ftn.init();
 
   ROS_INFO("ForceTorque Sensor Node running.");
 

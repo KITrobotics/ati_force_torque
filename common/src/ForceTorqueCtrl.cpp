@@ -9,24 +9,18 @@
 
 ForceTorqueCtrl::ForceTorqueCtrl()
 {
-
-	out.open("force.txt");
-
 	// ------------- first of all set used CanItf
 	m_pCanCtrl = NULL;
 
 	// for types and baudrates see: https://github.com/ipa320/cob_robots/blob/hydro_dev/cob_hardware_config/raw3-5/config/base/CanCtrl.ini
 	m_CanType = CANITFTYPE_CAN_PEAK_USN;
-	m_CanDevice = "/dev/pcan33";
+	m_CanDevice = "/dev/pcan32";
 	m_CanBaudrate = CANITFBAUD_250K;
 	m_CanBaseIdentifier = 0x20 << 4;
 }
 
 ForceTorqueCtrl::ForceTorqueCtrl(int can_type, std::string can_path, int can_baudrate, int base_identifier)
 {
-
-	out.open("force.txt");
-
 	// ------------- first of all set used CanItf
 	m_pCanCtrl = NULL;
 

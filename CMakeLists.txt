@@ -7,6 +7,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   cob_srvs
   visualization_msgs
+  geometry_msgs
   cob_generic_can
 )
 
@@ -17,7 +18,7 @@ find_package(Eigen REQUIRED)
 ###################################
 catkin_package(
  INCLUDE_DIRS common/include
- CATKIN_DEPENDS roscpp cob_generic_can
+ CATKIN_DEPENDS roscpp cob_generic_can geometry_msgs
  DEPENDS Eigen
 )
 
@@ -34,14 +35,16 @@ include_directories(
   ${Eigen_INCLUDE_DIRS}
 )
 
-add_executable(${PROJECT_NAME} ros/src/forcetorque.cpp common/src/ForceTorqueCtrl.cpp)
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
+add_library(${PROJECT_NAME} common/src/ForceTorqueCtrl.cpp)
+
+add_executable(${PROJECT_NAME}_node ros/src/forcetorque_node.cpp)
+target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
 
 #############
 ## Install ##
 #############
 
-install(TARGETS ${PROJECT_NAME}
+install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
