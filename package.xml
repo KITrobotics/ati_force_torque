@@ -1,12 +1,12 @@
 <package>
-  <name>cob_forcetorque</name>
+  <name>ati_mini_45</name>
   <version>0.5.0</version>
-  <description>Driver for the Schunk LWA 3 Force Torque Controller based on ATI Mini 45.</description>
+  <description>Driver for ATI Mini 45 FTS. Based on cob_forcetorque package.</description>
   <maintainer email="denis.stogl@kit.edu">Denis Štogl</maintainer>
 
   <license>LGPL</license>
 
-  <url type="website">http://ros.org/wiki/cob_forcetorque</url>
+  <url type="website">http://ros.org/wiki/ati_mini_45</url>
   <!-- <url type="bugtracker"></url> -->
 
   <author>Alexander Bubeck</author>
