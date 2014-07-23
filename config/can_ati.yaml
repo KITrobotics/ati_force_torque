@@ -3,3 +3,5 @@ device:
     path: /dev/pcan33
     baudrate: 0x4     # CANITFBAUD_250K
     base_identifier: 0x20
+
+frame: "kms_link"

@@ -56,8 +56,8 @@ typedef unsigned char uint8_t;
 #include <inttypes.h>
 #include <iostream>
 #include <ros/ros.h>
-#include <std_msgs/Float32MultiArray.h>
 #include <cob_forcetorque/ForceTorqueCtrl.h>
+#include <geometry_msgs/WrenchStamped.h>
 
 #include <cob_srvs/Trigger.h>
 
@@ -90,6 +90,8 @@ private:
 	int deviceBaudrate;
 	int deviceBaseIdentifier;
 
+	std::string frame_id;
+
   // declaration of topics to publish
   ros::Publisher topicPub_ForceData_;
   ros::Publisher topicPub_ForceDataBase_;
@@ -113,8 +115,8 @@ ForceTorqueNode::ForceTorqueNode()
 
 	m_isInitialized = false;
 
-  topicPub_ForceData_ = nh_.advertise<std_msgs::Float32MultiArray>("force_values", 100);
-  topicPub_ForceDataBase_ = nh_.advertise<std_msgs::Float32MultiArray>("force_values_base", 100);
+  topicPub_ForceData_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values", 100);
+  topicPub_ForceDataBase_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values_base", 100);
   topicPub_Marker_ = nh_.advertise<visualization_msgs::Marker>("/visualization_marker", 1);
   srvServer_Init_ = nh_.advertiseService("Init", &ForceTorqueNode::srvCallback_Init, this);
   srvServer_Calibrate_ = nh_.advertiseService("Calibrate", &ForceTorqueNode::srvCallback_Calibrate, this);
@@ -124,6 +126,8 @@ ForceTorqueNode::ForceTorqueNode()
 	nh_.param<std::string>("device/path", devicePath, "");
 	nh_.param<int>("device/baudrate", deviceBaudrate, -1);
 	nh_.param<int>("device/base_identifier", deviceBaseIdentifier, -1);
+
+	nh_.param<std::string>("frame", frame_id, "fts_link");
 
 	p_Ftc = new ForceTorqueCtrl(deviceType, devicePath, deviceBaudrate, deviceBaseIdentifier);
 
@@ -207,17 +211,16 @@ void ForceTorqueNode::updateFTData()
       double Fx, Fy, Fz, Tx, Ty, Tz = 0;
 
       p_Ftc->ReadSGData(Fx, Fy, Fz, Tx, Ty, Tz);
-      std_msgs::Float32MultiArray msg;
-      msg.data.push_back(Fx-F_avg[0]);
-      msg.data.push_back(Fy-F_avg[1]);
-      msg.data.push_back(Fz-F_avg[2]);
-      msg.data.push_back(Tx-F_avg[3]);
-      msg.data.push_back(Ty-F_avg[4]);
-      msg.data.push_back(Tz-F_avg[5]);
 
-
+      geometry_msgs::WrenchStamped msg;
+			msg.header.frame_id = frame_id;
+			msg.wrench.force.x = Fx-F_avg[0];
+			msg.wrench.force.y = Fy-F_avg[1];
+			msg.wrench.force.z = Fz-F_avg[2];
+			msg.wrench.torque.x = Tx-F_avg[3];
+			msg.wrench.torque.y = Ty-F_avg[4];
+			msg.wrench.torque.z = Tz-F_avg[5];
       topicPub_ForceData_.publish(msg);
-
 
       tf::Transform fdata_base;
       tf::Transform fdata;
@@ -225,21 +228,21 @@ void ForceTorqueNode::updateFTData()
 
       try{
         //tflistener.lookupTransform("arm_7_link", "base_link", ros::Time(0), transform_ee_base);
-        tflistener.lookupTransform("kms_link", "base_link", ros::Time(0), transform_ee_base);
+        tflistener.lookupTransform(frame_id, "base_link", ros::Time(0), transform_ee_base);
       }
       catch (tf::TransformException ex){
-	ROS_ERROR("%s",ex.what());
+				ROS_ERROR("%s",ex.what());
       }
 
       fdata_base = transform_ee_base * fdata;
-
-      std_msgs::Float32MultiArray base_msg;
-      base_msg.data.push_back(fdata_base.getOrigin().x());
-      base_msg.data.push_back(fdata_base.getOrigin().y());
-      base_msg.data.push_back(fdata_base.getOrigin().z());
-      base_msg.data.push_back(0.0);
-      base_msg.data.push_back(0.0);
-      base_msg.data.push_back(0.0);
+			geometry_msgs::WrenchStamped base_msg;
+			base_msg.header.frame_id = frame_id;
+			base_msg.wrench.force.x = fdata_base.getOrigin().x();
+			base_msg.wrench.force.y = fdata_base.getOrigin().y();
+			base_msg.wrench.force.z = fdata_base.getOrigin().z();
+			base_msg.wrench.torque.x = 0.0;
+			base_msg.wrench.torque.y = 0.0;
+			base_msg.wrench.torque.z = 0.0;
       topicPub_ForceDataBase_.publish(base_msg);
       visualizeData(fdata_base.getOrigin().x(), fdata_base.getOrigin().y(), fdata_base.getOrigin().z());
     }
