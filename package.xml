@@ -17,7 +17,9 @@
   <!-- Dependencies needed to compile this package. -->
   <build_depend>roscpp</build_depend>
   <build_depend>eigen</build_depend>
-  <build_depend>tf</build_depend>
+  <build_depend>tf2</build_depend>
+	<build_depend>tf2_ros</build_depend>
+	<build_depend>tf2_geometry_msgs</build_depend>
   <build_depend>cob_srvs</build_depend>
   <build_depend>std_msgs</build_depend>
   <build_depend>visualization_msgs</build_depend>
@@ -27,7 +29,9 @@
   <!-- Dependencies needed after this package is compiled. -->
   <run_depend>roscpp</run_depend>
   <run_depend>eigen</run_depend>
-  <run_depend>tf</run_depend>
+  <run_depend>tf2</run_depend>
+	<run_depend>tf2_ros</run_depend>
+	<run_depend>tf2_geometry_msgs</run_depend>
   <run_depend>cob_srvs</run_depend>
   <run_depend>std_msgs</run_depend>
   <run_depend>visualization_msgs</run_depend>
