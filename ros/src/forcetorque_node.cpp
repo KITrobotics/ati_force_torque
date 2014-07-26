@@ -97,6 +97,7 @@ private:
 	std::string frame_id;
 
   // declaration of topics to publish
+	ros::Publisher topicPub_transData_;
   ros::Publisher topicPub_ForceData_;
   ros::Publisher topicPub_ForceDataBase_;
   ros::Publisher topicPub_Marker_;
@@ -105,10 +106,13 @@ private:
   ros::ServiceServer srvServer_Init_;
   ros::ServiceServer srvServer_Calibrate_;
 
-  tf2_ros::Buffer *p_tfBuffer;
-  tf2_ros::TransformListener* p_tfListener;
-  tf2::Transform transform_ee_base;
-  geometry_msgs::TransformStamped transform_ee_base_stamped;
+	tf2_ros::Buffer *p_tfBuffer;
+ 	tf2_ros::TransformListener* p_tfListener;
+	tf2::Transform transform_ee_base;
+	geometry_msgs::TransformStamped transform_ee_base_stamped;
+
+//   tf::TransformListener tflistener;
+//   tf::StampedTransform transform_ee_base;
 
   bool m_isInitialized;
   ForceTorqueCtrl* p_Ftc;
@@ -119,7 +123,9 @@ private:
 ForceTorqueNode::ForceTorqueNode()
 {
 
-  m_isInitialized = false;
+	m_isInitialized = false;
+
+	topicPub_transData_ = nh_.advertise<geometry_msgs::TransformStamped>("trans_values", 100);
 
   topicPub_ForceData_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values", 100);
   topicPub_ForceDataBase_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values_base", 100);
@@ -242,6 +248,10 @@ void ForceTorqueNode::updateFTData()
       catch (tf2::TransformException ex ){
 				ROS_ERROR("%s",ex.what());
       }
+
+      topicPub_transData_.publish(transform_ee_base_stamped);
+
+
 
       // TODO
 
