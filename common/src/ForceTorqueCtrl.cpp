@@ -102,7 +102,7 @@ bool ForceTorqueCtrl::ReadFTSerialNumber()
 	if (ret) {
 		CanMsg replyMsg;
 		replyMsg.set(0, 0, 0, 0, 0, 0, 0, 0);
-		ret = m_pCanCtrl->receiveMsg(&replyMsg);
+		ret = m_pCanCtrl->receiveMsgRetry(&replyMsg, 10);
 
 		if (ret) {
 			std::cout << "reply ID: \t" << std::hex << replyMsg.getID()<<std::endl;
@@ -135,7 +135,7 @@ bool ForceTorqueCtrl::ReadUnitCodes()
 
 	if (ret) {
 		CanMsg replyMsg;
-		ret = m_pCanCtrl->receiveMsg(&replyMsg);
+		ret = m_pCanCtrl->receiveMsgRetry(&replyMsg, 10);
 
 		if (ret) {
 			std::cout << "reply ID: \t" << std::hex << replyMsg.getID()<<std::endl;
@@ -168,7 +168,7 @@ bool ForceTorqueCtrl::SetActiveCalibrationMatrix(int num)
 	if (ret) {
 
 		CanMsg replyMsg;
-		ret = m_pCanCtrl->receiveMsg(&replyMsg);
+		ret = m_pCanCtrl->receiveMsgRetry(&replyMsg, 10);
 		if(ret)
 		{
 			std::cout<<"reply ID: \t"<< std::hex << replyMsg.getID()<<std::endl;
@@ -241,7 +241,7 @@ void ForceTorqueCtrl::ReadMatrix(int axis, Eigen::VectorXf& vec)
 	}
 
 	CanMsg replyMsg;
-	bool ret2 = m_pCanCtrl->receiveMsg(&replyMsg);
+	bool ret2 = m_pCanCtrl->receiveMsgRetry(&replyMsg, 10);
 	if(ret2)
 	{
 		std::cout << "reply ID: \t" << replyMsg.getID()<<std::endl;
@@ -268,7 +268,7 @@ void ForceTorqueCtrl::ReadMatrix(int axis, Eigen::VectorXf& vec)
 	else
 		return;
 
-	ret2 = m_pCanCtrl->receiveMsg(&replyMsg);
+	ret2 = m_pCanCtrl->receiveMsgRetry(&replyMsg, 10);
 	if(ret2)
 	{
 		std::cout << "reply ID: \t" << std::hex << replyMsg.getID()<<std::endl;
@@ -293,7 +293,7 @@ void ForceTorqueCtrl::ReadMatrix(int axis, Eigen::VectorXf& vec)
 	else
 		return;
 
-	ret2 = m_pCanCtrl->receiveMsg(&replyMsg);
+	ret2 = m_pCanCtrl->receiveMsgRetry(&replyMsg, 10);
 	if(ret2)
 	{
 		std::cout << "reply ID: \t" << std::hex << replyMsg.getID()<<std::endl;
@@ -336,7 +336,7 @@ bool ForceTorqueCtrl::ReadFirmwareVersion()
 	if (ret)
 	{
 		CanMsg replyMsg;
-		ret = m_pCanCtrl->receiveMsg(&replyMsg);
+		ret = m_pCanCtrl->receiveMsgRetry(&replyMsg, 10);
 		if(ret)
 		{
 			std::cout<<"reply ID: \t"<< std::hex << replyMsg.getID()<<std::endl;
@@ -376,7 +376,7 @@ void ForceTorqueCtrl::ReadSGData(double &Fx, double &Fy, double &Fz, double &Tx,
 	bool ret = m_pCanCtrl->transmitMsg(CMsg, true);
 
 	CanMsg replyMsg;
-	bool ret2 = m_pCanCtrl->receiveMsg(&replyMsg);
+	bool ret2 = m_pCanCtrl->receiveMsgRetry(&replyMsg, 10);
 	unsigned char c[2];
 	if(ret2)
 	{
@@ -403,7 +403,7 @@ void ForceTorqueCtrl::ReadSGData(double &Fx, double &Fy, double &Fz, double &Tx,
 	else
 		return;
 
-	ret2 = m_pCanCtrl->receiveMsg(&replyMsg);
+	ret2 = m_pCanCtrl->receiveMsgRetry(&replyMsg, 10);
 	if(ret2)
 	{
 		int length = replyMsg.getLength();
