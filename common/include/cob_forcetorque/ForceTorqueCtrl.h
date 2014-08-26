@@ -14,16 +14,16 @@
 
 //opCodes for the ForceTorque Can Interface
 //set as Can Message ID
-#define READ_SG 		0x0
+#define READ_SG 	0x0
 #define READ_MATRIX 	0x2
 #define READ_SERIALNR	0x5
-#define SET_CALIB		0x6
+#define SET_CALIB	0x6
 #define READ_COUNTSPERU	0x7
 #define READ_UNITCODE	0x8
 #define READ_DIAGNOV	0X9
-#define RESET			0xC
-#define SET_BASEID		0xD
-#define SET_BAUD		0xE
+#define RESET		0xC
+#define SET_BASEID	0xD
+#define SET_BAUD	0xE
 #define READ_FIRMWARE	0xF
 
 class ForceTorqueCtrl
@@ -35,6 +35,7 @@ class ForceTorqueCtrl
 
 		bool Init();
 		bool ReadFTSerialNumber();
+		bool ReadCountsPerUnit();
 		bool ReadUnitCodes();
 		bool SetActiveCalibrationMatrix(int num);
 		void ReadSGData(double &Fx, double &Fy, double &Fz, double &Tx, double &Ty, double &Tz);
@@ -95,6 +96,12 @@ class ForceTorqueCtrl
 		    char bytes[2];
 		    short int value;
 		} ibBuf;
+		
+		union
+		{
+		    char bytes[4];
+		    int value;
+		} intbBuf;
 
 		union
 		{

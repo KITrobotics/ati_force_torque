@@ -56,11 +56,19 @@ bool ForceTorqueCtrl::Init()
 			std::cout << "Can not read Firmware version from FTS!" << std::endl;
 			ret = false;
 		}
+		if (! ReadCountsPerUnit())
+		{
+			std::cout << "Can not read Counts Per Unit from FTS!" << std::endl;
+			ret = false;
+		}		
 		if (! ReadUnitCodes())
 		{
 			std::cout << "Can not read Unit Codes from FTS!" << std::endl;
 			ret = false;
 		}
+		// Add return values and checking
+		SetActiveCalibrationMatrix(0);
+		ReadCalibrationMatrix();
 	}
 	else {
 		std::cout << "CAN initialisation unsuccessful!" << std::endl;
@@ -68,9 +76,6 @@ bool ForceTorqueCtrl::Init()
 	}
 
 	return ret;
-
-	//SetActiveCalibrationMatrix(0);
-	//ReadCalibrationMatrix();
 }
 
 bool ForceTorqueCtrl::initCan()
@@ -120,6 +125,53 @@ bool ForceTorqueCtrl::ReadFTSerialNumber()
 		std::cout << "ForceTorqueCtrl::ReadFTSerialNumber(): Can not transmit message!" << std::endl;
 	}
 
+	return ret;
+}
+
+bool ForceTorqueCtrl::ReadCountsPerUnit()
+{
+	std::cout << "\n\n*********Read Counts Per Unit**********" << std::endl;
+	bool ret = true;
+	float countsPerForce = 0, countsPerTorque = 0;
+	CanMsg CMsg;
+	CMsg.setID(m_CanBaseIdentifier | READ_COUNTSPERU);
+	CMsg.setLength(0);
+
+	ret = m_pCanCtrl->transmitMsg(CMsg, true);
+
+	if (ret) {
+		CanMsg replyMsg;
+		ret = m_pCanCtrl->receiveMsgRetry(&replyMsg, 10);
+
+		if (ret) {
+			std::cout << "reply ID: \t" << std::hex << replyMsg.getID()<<std::endl;
+			std::cout << "reply Length: \t" << replyMsg.getLength()<<std::endl;
+			std::cout << "reply Data: \t" << replyMsg.getAt(0) << " " << replyMsg.getAt(1) << " "
+				      << replyMsg.getAt(2) << " " << replyMsg.getAt(3) << " "
+				      << replyMsg.getAt(4) << " " << replyMsg.getAt(5) << " "
+				      << replyMsg.getAt(6) << " " << replyMsg.getAt(7) << std::endl;
+
+			intbBuf.bytes[0] = replyMsg.getAt(3);
+			intbBuf.bytes[1] = replyMsg.getAt(2);
+			intbBuf.bytes[2] = replyMsg.getAt(1);
+			intbBuf.bytes[3] = replyMsg.getAt(0);
+			countsPerForce = intbBuf.value;
+
+			intbBuf.bytes[0] = replyMsg.getAt(7);
+			intbBuf.bytes[1] = replyMsg.getAt(6);
+			intbBuf.bytes[2] = replyMsg.getAt(5);
+			intbBuf.bytes[3] = replyMsg.getAt(4);
+			countsPerTorque = intbBuf.value;
+		}
+		else {
+			std::cout << "ForceTorqueCtrl::ReadCountsPerUnit(): Can not read message!" << std::endl;
+		}
+	}
+	else {
+		std::cout << "ForceTorqueCtrl::ReadCountsPerUnit(): Can not transmit message!" << std::endl;
+	}
+
+	std::cout << "CountsPerforce: " << countsPerForce << "  CountsPerTorque: " << countsPerTorque << std::endl;
 	return ret;
 }
 
@@ -257,7 +309,6 @@ void ForceTorqueCtrl::ReadMatrix(int axis, Eigen::VectorXf& vec)
 		fbBuf.bytes[3] = replyMsg.getAt(0);
 		sg0 = fbBuf.value;
 
-
 		fbBuf.bytes[0] = replyMsg.getAt(7);
 		fbBuf.bytes[1] = replyMsg.getAt(6);
 		fbBuf.bytes[2] = replyMsg.getAt(5);
@@ -324,7 +375,7 @@ void ForceTorqueCtrl::ReadMatrix(int axis, Eigen::VectorXf& vec)
 
 bool ForceTorqueCtrl::ReadFirmwareVersion()
 {
-	std::cout << "\n\n*******Reading Firmware Version: "<< std::endl;
+	std::cout << "\n\n*******Reading Firmware Version*******"<< std::endl;
 	bool ret = true;
 	BYTE b = 0;
 	CanMsg CMsg;
@@ -384,21 +435,19 @@ void ForceTorqueCtrl::ReadSGData(double &Fx, double &Fy, double &Fz, double &Tx,
 
 		c[0] = replyMsg.getAt(0); //status code
 		c[1] = replyMsg.getAt(1);
-		//statusCode = (((char)c[0] << 8) | c[1]);
+		statusCode = (((char)c[0] << 8) | c[1]);
 
 		c[0] = replyMsg.getAt(2); //sg0
 		c[1] = replyMsg.getAt(3);
-
-		//sg0 = (((char)c[0] << 8) | c[1]);
 		sg0 = (short)((c[0] << 8) | c[1]);
 
-		c[0] = replyMsg.getAt(4); //sg1
+		c[0] = replyMsg.getAt(4); //sg2
 		c[1] = replyMsg.getAt(5);
-		sg1 = (short)((c[0] << 8) | c[1]);
-
-		c[0] = replyMsg.getAt(6); //sg2
-		c[1] = replyMsg.getAt(7);
 		sg2 = (short)((c[0] << 8) | c[1]);
+
+		c[0] = replyMsg.getAt(6); //sg4
+		c[1] = replyMsg.getAt(7);
+		sg4 = (short)((c[0] << 8) | c[1]);
 	}
 	else
 		return;
@@ -408,13 +457,13 @@ void ForceTorqueCtrl::ReadSGData(double &Fx, double &Fy, double &Fz, double &Tx,
 	{
 		int length = replyMsg.getLength();
 
-		c[0] = replyMsg.getAt(0); //sg3
+		c[0] = replyMsg.getAt(0); //sg1
 		c[1] = replyMsg.getAt(1);
-		sg3 = (short)((c[0] << 8) | c[1]);
+		sg1 = (short)((c[0] << 8) | c[1]);
 
-		c[0] = replyMsg.getAt(2); //sg4
+		c[0] = replyMsg.getAt(2); //sg3
 		c[1] = replyMsg.getAt(3);
-		sg4 = (short)((c[0] << 8) | c[1]);
+		sg3 = (short)((c[0] << 8) | c[1]);
 
 		c[0] = replyMsg.getAt(4); //sg5
 		c[1] = replyMsg.getAt(5);
@@ -424,8 +473,7 @@ void ForceTorqueCtrl::ReadSGData(double &Fx, double &Fy, double &Fz, double &Tx,
 		return;
 
 
-	//~ std::cout<<"\nsg0: "<<sg0<<" sg1: "<<sg1<<" sg2: "<<sg2<<" sg3: "<<sg3<<" sg4: "<<sg4<<" sg5: "<<sg5<<std::endl;
-	//~ out<<"sg0: "<<sg0<<" sg1: "<<sg1<<" sg2: "<<sg2<<" sg3: "<<sg3<<" sg4: "<<sg4<<" sg5: "<<sg5<<std::endl;
+	std::cout<<"\nsg0: "<<sg0<<" sg1: "<<sg1<<" sg2: "<<sg2<<" sg3: "<<sg3<<" sg4: "<<sg4<<" sg5: "<<sg5<<std::endl;
 
 	StrainGaugeToForce(sg0, sg1, sg2, sg3, sg4, sg5);
 

@@ -77,12 +77,12 @@ class ForceTorqueNode
 {
 public:
 
-	ForceTorqueNode();
+    ForceTorqueNode();
 
-	bool srvCallback_Init(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res);
-  bool srvCallback_Calibrate(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res);
-  void updateFTData();
-  void visualizeData(double x, double y, double z);
+    bool srvCallback_Init(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res);
+    bool srvCallback_Calibrate(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res);
+    void updateFTData();
+    void visualizeData(double x, double y, double z);
 
   // create a handle for this node, initialize node
   ros::NodeHandle nh_;
@@ -111,9 +111,6 @@ private:
 	tf2::Transform transform_ee_base;
 	geometry_msgs::TransformStamped transform_ee_base_stamped;
 
-//   tf::TransformListener tflistener;
-//   tf::StampedTransform transform_ee_base;
-
   bool m_isInitialized;
   ForceTorqueCtrl* p_Ftc;
   std::vector<double> F_avg;
@@ -127,11 +124,11 @@ ForceTorqueNode::ForceTorqueNode()
 
 	topicPub_transData_ = nh_.advertise<geometry_msgs::TransformStamped>("trans_values", 100);
 
-  topicPub_ForceData_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values", 100);
-  topicPub_ForceDataBase_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values_base", 100);
-  topicPub_Marker_ = nh_.advertise<visualization_msgs::Marker>("/visualization_marker", 1);
-  srvServer_Init_ = nh_.advertiseService("Init", &ForceTorqueNode::srvCallback_Init, this);
-  srvServer_Calibrate_ = nh_.advertiseService("Calibrate", &ForceTorqueNode::srvCallback_Calibrate, this);
+	topicPub_ForceData_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values", 100);
+	topicPub_ForceDataBase_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values_base", 100);
+	topicPub_Marker_ = nh_.advertise<visualization_msgs::Marker>("/visualization_marker", 1);
+	srvServer_Init_ = nh_.advertiseService("Init", &ForceTorqueNode::srvCallback_Init, this);
+	srvServer_Calibrate_ = nh_.advertiseService("Calibrate", &ForceTorqueNode::srvCallback_Calibrate, this);
 
 	// Read data from parameter server
 	nh_.param<int>("device/type", deviceType, -1);
@@ -153,14 +150,6 @@ bool ForceTorqueNode::srvCallback_Init(cob_srvs::Trigger::Request &req,
 {
   if(!m_isInitialized)
     {
-		p_Ftc->SetFXGain(-1674.08485641479, 25.3936432491561, 3936.02718786968, -26695.2539299392, -3463.73728677908, 32320.8777656041);
-		p_Ftc->SetFYGain(-4941.11252317989, 32269.5827812235, 1073.82949467087, -15541.8400780814, 3061.89541712948, -18995.9891819409);
-		p_Ftc->SetFZGain(39553.9250733854, -501.940034213822, 40905.2545309848, 85.1095865539103, 38879.4015426067, 541.344775537753);
-		p_Ftc->SetTXGain(-57.4775857386444, 225.941430274037, -638.238694389357, -116.780649376712, 645.133934885308, -116.310081348745 );
-		p_Ftc->SetTYGain(786.70602313107, -4.36504382717595, -422.360387149734, 180.7428885668, -352.389412256677, -232.293941041101);
-		p_Ftc->SetTZGain(60.1009854270179, -400.19573754971, 29.142908672741, -392.119024237625, 70.9306507180567, -478.104759057292);
-
-		p_Ftc->SetCalibMatrix();
 		// read return init status and check it!
 		if (p_Ftc->Init()) {
 			ROS_INFO("FTC initialized");
@@ -177,6 +166,7 @@ bool ForceTorqueNode::srvCallback_Init(cob_srvs::Trigger::Request &req,
 
 			m_isInitialized = true;
 			res.success.data = true;
+			res.error_message.data = "All good, you are nice person! :)";
 		}
 		else {
 			m_isInitialized = false;

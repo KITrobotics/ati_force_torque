@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
   geometry_msgs
   cob_generic_can
+  cmake_modules
 )
 
 find_package(Eigen REQUIRED)
