@@ -4,9 +4,12 @@
   <rosparam command="load" ns="fts" file="$(find ati_mini_45)/config/can_ati.yaml"/>
 
   <!-- this is for test -->
-  <node pkg="tf" type="static_transform_publisher" name="fts_transfrom" args="1 50 21 0 90 0 /base_link /kms_link 10"/>
+  <node pkg="tf" type="static_transform_publisher" name="fts_transfrom" args="0 0 0 0 0 90 /base_link /kms_link 10"/>
 
 <!-- start powercube_chain -->
-  <node pkg="ati_mini_45" type="ati_mini_45_node" name="fts_node" ns="fts" cwd="node" respawn="false" output="screen" />
+  <node pkg="ati_mini_45" type="ati_mini_45_node" name="fts_node" ns="fts" cwd="node" respawn="false" output="screen">
+      <param name="frame" value="kms_link" />
+      <param name="transform_frame" value="base_link" />
+  </node>
 
 </launch>

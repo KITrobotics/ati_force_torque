@@ -59,6 +59,7 @@ typedef unsigned char uint8_t;
 #include <cob_forcetorque/ForceTorqueCtrl.h>
 #include <geometry_msgs/WrenchStamped.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/Vector3Stamped.h>
 
 #include <cob_srvs/Trigger.h>
 
@@ -95,11 +96,12 @@ private:
 	int deviceBaseIdentifier;
 
 	std::string frame_id;
+	std::string transform_frame_id;
 
   // declaration of topics to publish
-	ros::Publisher topicPub_transData_;
+  ros::Publisher topicPub_transData_;
   ros::Publisher topicPub_ForceData_;
-  ros::Publisher topicPub_ForceDataBase_;
+  ros::Publisher topicPub_ForceDataTrans_;
   ros::Publisher topicPub_Marker_;
 
   // service servers
@@ -125,8 +127,8 @@ ForceTorqueNode::ForceTorqueNode()
 	topicPub_transData_ = nh_.advertise<geometry_msgs::TransformStamped>("trans_values", 100);
 
 	topicPub_ForceData_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values", 100);
-	topicPub_ForceDataBase_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values_base", 100);
-	topicPub_Marker_ = nh_.advertise<visualization_msgs::Marker>("/visualization_marker", 1);
+	topicPub_ForceDataTrans_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values_transformed", 100);
+	topicPub_Marker_ = nh_.advertise<visualization_msgs::Marker>("visualization_marker", 1);
 	srvServer_Init_ = nh_.advertiseService("Init", &ForceTorqueNode::srvCallback_Init, this);
 	srvServer_Calibrate_ = nh_.advertiseService("Calibrate", &ForceTorqueNode::srvCallback_Calibrate, this);
 
@@ -136,7 +138,9 @@ ForceTorqueNode::ForceTorqueNode()
 	nh_.param<int>("device/baudrate", deviceBaudrate, -1);
 	nh_.param<int>("device/base_identifier", deviceBaseIdentifier, -1);
 
-	nh_.param<std::string>("frame", frame_id, "fts_link");
+	ros::NodeHandle nh("~");
+	nh.getParam("frame", frame_id);
+	nh.getParam("transform_frame", transform_frame_id);
 
 	p_tfBuffer = new tf2_ros::Buffer();
 	p_tfListener = new tf2_ros::TransformListener(*p_tfBuffer);
@@ -217,15 +221,16 @@ void ForceTorqueNode::updateFTData()
 
       p_Ftc->ReadSGData(Fx, Fy, Fz, Tx, Ty, Tz);
 
-      geometry_msgs::WrenchStamped msg;
-			msg.header.frame_id = frame_id;
-			msg.header.stamp = ros::Time::now();
-			msg.wrench.force.x = Fx-F_avg[0];
-			msg.wrench.force.y = Fy-F_avg[1];
-			msg.wrench.force.z = Fz-F_avg[2];
-			msg.wrench.torque.x = Tx-F_avg[3];
-			msg.wrench.torque.y = Ty-F_avg[4];
-			msg.wrench.torque.z = Tz-F_avg[5];
+      geometry_msgs::WrenchStamped msg, msg_transformed;
+      
+      msg.header.frame_id = frame_id;
+      msg.header.stamp = ros::Time::now();
+      msg.wrench.force.x = Fx-F_avg[0];
+      msg.wrench.force.y = Fy-F_avg[1];
+      msg.wrench.force.z = Fz-F_avg[2];
+      msg.wrench.torque.x = Tx-F_avg[3];
+      msg.wrench.torque.y = Ty-F_avg[4];
+      msg.wrench.torque.z = Tz-F_avg[5];
       topicPub_ForceData_.publish(msg);
 
       tf2::Transform fdata_base;
@@ -233,44 +238,27 @@ void ForceTorqueNode::updateFTData()
       fdata.setOrigin(tf2::Vector3(Fx-F_avg[0], Fy-F_avg[1], Fz-F_avg[2]));
 
       try{
-        transform_ee_base_stamped = p_tfBuffer->lookupTransform("base_link", frame_id, ros::Time(0));
+        transform_ee_base_stamped = p_tfBuffer->lookupTransform(transform_frame_id, frame_id, ros::Time(0));
       }
       catch (tf2::TransformException ex ){
-				ROS_ERROR("%s",ex.what());
+	ROS_ERROR("%s",ex.what());
       }
 
       topicPub_transData_.publish(transform_ee_base_stamped);
-
-
-
-      // TODO
-
-//       geometry_msgs::PoseStamped pose;
-//
-// 			pose.header = transform_ee_base_stamped.header;
-// 			pose.pose.position.x = transform_ee_base_stamped.transform.translation.x;
-// 			pose.pose.position.y = transform_ee_base_stamped.transform.translation.y;
-// 			pose.pose.position.z = transform_ee_base_stamped.transform.translation.z;
-//
-// 			pose.pose.orientation.x = transform_ee_base_stamped.transform.rotation.x;
-// 			pose.pose.orientation.y = transform_ee_base_stamped.transform.rotation.y;
-// 			pose.pose.orientation.z = transform_ee_base_stamped.transform.rotation.z;
-// 			pose.pose.orientation.w = transform_ee_base_stamped.transform.rotation.w;
-//
-//       tf2::convert(pose, transform_ee_base);
-//
-//       fdata_base = transform_ee_base * fdata;
-// 			geometry_msgs::WrenchStamped base_msg;
-// 			base_msg.header.frame_id = frame_id;
-// 			base_msg.header.stamp = ros::Time::now();
-// 			base_msg.wrench.force.x = fdata_base.getOrigin().x();
-// 			base_msg.wrench.force.y = fdata_base.getOrigin().y();
-// 			base_msg.wrench.force.z = fdata_base.getOrigin().z();
-// 			base_msg.wrench.torque.x = 0.0;
-// 			base_msg.wrench.torque.y = 0.0;
-// 			base_msg.wrench.torque.z = 0.0;
-//       topicPub_ForceDataBase_.publish(base_msg);
-//       visualizeData(fdata_base.getOrigin().x(), fdata_base.getOrigin().y(), fdata_base.getOrigin().z());
+      
+      geometry_msgs::Vector3Stamped temp_vector_in, temp_vector_out;      
+      
+      temp_vector_in.header = msg.header;
+      temp_vector_in.vector = msg.wrench.force;      
+      tf2::doTransform(temp_vector_in, temp_vector_out, transform_ee_base_stamped);      
+      msg_transformed.header = temp_vector_out.header;
+      msg_transformed.wrench.force = temp_vector_out.vector;
+      
+      temp_vector_in.vector = msg.wrench.torque;      
+      tf2::doTransform(temp_vector_in, temp_vector_out, transform_ee_base_stamped);
+      msg_transformed.wrench.torque = temp_vector_out.vector;
+      
+      topicPub_ForceDataTrans_.publish(msg_transformed);
     }
 }
 
