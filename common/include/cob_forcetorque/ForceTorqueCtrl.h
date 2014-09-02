@@ -1,11 +1,13 @@
 #ifndef FORCETORQUECTRL_INCLUDEDEF_H
 #define FORCETORQUECTRL_INCLUDEDEF_H
 
+//general includes
+#include <unistd.h>
 #include <iostream>
-
 
 // Headers provided by other cob-packages
 #include <cob_generic_can/CanItf.h>
+#include <cob_generic_can/CanPeakSysUSB.h>
 
 #include <cob_forcetorque/Mutex.h>
 
@@ -26,6 +28,13 @@
 #define SET_BAUD	0xE
 #define READ_FIRMWARE	0xF
 
+#define ATI_BAUD_2M	0
+#define ATI_BAUD_1M	1
+#define ATI_BAUD_500K	2
+#define ATI_BAUD_250K	3
+#define ATI_BAUD_125K	4
+
+
 class ForceTorqueCtrl
 {
 	public:
@@ -41,6 +50,7 @@ class ForceTorqueCtrl
 		void ReadSGData(double &Fx, double &Fy, double &Fz, double &Tx, double &Ty, double &Tz);
 		bool ReadFirmwareVersion();
 		void ReadCalibrationMatrix();
+		bool SetBaudRate(BYTE num);
 
 		void SetGaugeOffset(float sg0Off, float sg1Off, float sg2Off, float sg3Off, float sg4Off, float sg5Off);
 		void SetGaugeGain(float gg0, float gg1, float gg2, float gg3, float gg4, float gg5);

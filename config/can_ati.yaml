@@ -1,5 +1,5 @@
 device:
     type: 1           # CAN_PEAK_USN
     path: /dev/pcan33
-    baudrate: 0x4     # CANITFBAUD_250K
+    baudrate: 0x4     # CANITFBAUD_1M
     base_identifier: 0x20
