@@ -209,7 +209,6 @@ bool ForceTorqueCtrl::SetActiveCalibrationMatrix(int num)
 {
 	std::cout << "\n\n*******Setting Active Calibration Matrix Num to: "<< num <<"********"<< std::endl;
 	bool ret = true;
-	BYTE b = 0;
 	CanMsg CMsg;
 	CMsg.setID(m_CanBaseIdentifier | SET_CALIB);
 	CMsg.setLength(1);
@@ -242,6 +241,81 @@ bool ForceTorqueCtrl::SetActiveCalibrationMatrix(int num)
 
 	return ret;
 
+}
+
+bool ForceTorqueCtrl::SetBaudRate(int value)
+{
+    std::cout << "\n\n*******Setting Baud Rate value to: "<< value <<"********"<< std::endl;
+    bool ret = true;
+    BYTE b = 0;
+    CanMsg CMsg;
+    CMsg.setID(m_CanBaseIdentifier | SET_BAUD);
+    CMsg.setLength(1);
+    CMsg.setAt(value,0);
+
+    ret = m_pCanCtrl->transmitMsg(CMsg, true);
+
+    if (ret) {
+
+	CanMsg replyMsg;
+	ret = m_pCanCtrl->receiveMsgRetry(&replyMsg, 10);
+	if(ret)
+	{
+		std::cout<<"reply ID: \t"<< std::hex << replyMsg.getID()<<std::endl;
+		std::cout<<"reply Length: \t"<<replyMsg.getLength()<<std::endl;
+		if(replyMsg.getID() == (m_CanBaseIdentifier | SET_BAUD))
+		{
+			std::cout<<"Setting Baud Rate succeed!"<<std::endl;
+			std::cout<<"Send Baud Rate value: "<<CMsg.getAt(0)<<"!"<<std::endl;
+		}
+		else
+			std::cout<<"Error: Received wrong opcode!"<<std::endl;
+	}
+	else
+		std::cout<<"Error: Receiving Message failed!"<<std::endl;
+    }
+    else {
+	std::cout << "ForceTorqueCtrl::SetBaudRate(int value): Can not transmit message!" << std::endl;
+    }
+
+    return ret;
+}
+
+bool ForceTorqueCtrl::SetBaseIdentifier(int identifier)
+{
+    std::cout << "\n\n*******Setting Base Identifier value to HEX : " << std::hex << identifier <<" ********"<< std::endl;
+    bool ret = true;
+    BYTE b = 0;
+    CanMsg CMsg;
+    CMsg.setID(m_CanBaseIdentifier | SET_BASEID);
+    CMsg.setLength(1);
+    CMsg.setAt(identifier,0);
+
+    ret = m_pCanCtrl->transmitMsg(CMsg, true);
+
+    if (ret) {
+	CanMsg replyMsg;
+	ret = m_pCanCtrl->receiveMsgRetry(&replyMsg, 10);
+	if(ret)
+	{
+	    std::cout<<"reply ID: \t"<< std::hex << replyMsg.getID() << std::endl;
+	    std::cout<<"reply Length: \t"<<replyMsg.getLength() << std::endl;
+	    if(replyMsg.getID() == (m_CanBaseIdentifier | SET_BASEID))
+	    {
+		std::cout<<"Setting Base Identifier succeed!"<<std::endl;
+		std::cout<<"Send Base Identifier value: "<< std::hex << CMsg.getAt(0) <<"!"<<std::endl;
+	    }
+	    else
+		std::cout<<"Error: Received wrong opcode!"<<std::endl;
+	}
+	else
+	    std::cout<<"Error: Receiving Message failed!"<<std::endl;
+    }
+    else {
+	std::cout << "ForceTorqueCtrl::SetBaseIdentifier(int identifier): Can not transmit message!" << std::endl;
+    }
+
+    return ret;
 }
 
 

@@ -85,37 +85,37 @@ public:
     void updateFTData();
     void visualizeData(double x, double y, double z);
 
-  // create a handle for this node, initialize node
-  ros::NodeHandle nh_;
+    // create a handle for this node, initialize node
+    ros::NodeHandle nh_;
 
 private:
-	// CAN parameters
-	int deviceType;
-	std::string devicePath;
-	int deviceBaudrate;
-	int deviceBaseIdentifier;
+    // CAN parameters
+    int deviceType;
+    std::string devicePath;
+    int deviceBaudrate;
+    int deviceBaseIdentifier;
 
-	std::string frame_id;
-	std::string transform_frame_id;
+    std::string frame_id;
+    std::string transform_frame_id;
 
-  // declaration of topics to publish
-  ros::Publisher topicPub_transData_;
-  ros::Publisher topicPub_ForceData_;
-  ros::Publisher topicPub_ForceDataTrans_;
-  ros::Publisher topicPub_Marker_;
+    // declaration of topics to publish
+    ros::Publisher topicPub_transData_;
+    ros::Publisher topicPub_ForceData_;
+    ros::Publisher topicPub_ForceDataTrans_;
+    ros::Publisher topicPub_Marker_;
 
-  // service servers
-  ros::ServiceServer srvServer_Init_;
-  ros::ServiceServer srvServer_Calibrate_;
+    // service servers
+    ros::ServiceServer srvServer_Init_;
+    ros::ServiceServer srvServer_Calibrate_;
 
-	tf2_ros::Buffer *p_tfBuffer;
- 	tf2_ros::TransformListener* p_tfListener;
-	tf2::Transform transform_ee_base;
-	geometry_msgs::TransformStamped transform_ee_base_stamped;
+    tf2_ros::Buffer *p_tfBuffer;
+    tf2_ros::TransformListener* p_tfListener;
+    tf2::Transform transform_ee_base;
+    geometry_msgs::TransformStamped transform_ee_base_stamped;
 
-  bool m_isInitialized;
-  ForceTorqueCtrl* p_Ftc;
-  std::vector<double> F_avg;
+    bool m_isInitialized;
+    ForceTorqueCtrl* p_Ftc;
+    std::vector<double> F_avg;
 
 };
 
@@ -181,36 +181,44 @@ bool ForceTorqueNode::srvCallback_Init(cob_srvs::Trigger::Request &req,
   return m_isInitialized;
 }
 
-bool ForceTorqueNode::srvCallback_Calibrate(cob_srvs::Trigger::Request &req,
-		      cob_srvs::Trigger::Response &res )
+bool ForceTorqueNode::srvCallback_Calibrate(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res )
 {
-  int measurements = 20;
-  if(m_isInitialized)
+    int measurements = 20;
+    if(m_isInitialized)
     {
-      F_avg[0] = 0.0;
-      F_avg[1] = 0.0;
-      F_avg[2] = 0.0;
-      F_avg[3] = 0.0;
-      F_avg[4] = 0.0;
-      F_avg[5] = 0.0;
-      for(int i = 0; i < measurements; i++)
-	{
-	  double Fx, Fy, Fz, Tx, Ty, Tz = 0;
-	  p_Ftc->ReadSGData(Fx, Fy, Fz, Tx, Ty, Tz);
-	  F_avg[0] += Fx;
-	  F_avg[1] += Fy;
-	  F_avg[2] += Fz;
-	  F_avg[3] += Tx;
-	  F_avg[4] += Ty;
-	  F_avg[5] += Tz;
-	  usleep(10000);
+	F_avg[0] = 0.0;
+	F_avg[1] = 0.0;
+	F_avg[2] = 0.0;
+	F_avg[3] = 0.0;
+	F_avg[4] = 0.0;
+	F_avg[5] = 0.0;
+	
+	for(int i = 0; i < measurements; i++) {
+	    
+	    double Fx, Fy, Fz, Tx, Ty, Tz = 0;
+	    p_Ftc->ReadSGData(Fx, Fy, Fz, Tx, Ty, Tz);
+	    F_avg[0] += Fx;
+	    F_avg[1] += Fy;
+	    F_avg[2] += Fz;
+	    F_avg[3] += Tx;
+	    F_avg[4] += Ty;
+	    F_avg[5] += Tz;
+	    usleep(10000);
 	}
-      for(int i = 0; i < 6; i++)
-	F_avg[i] /= measurements;
-      return true;
+	
+	for(int i = 0; i < 6; i++) {
+	    F_avg[i] /= measurements;
+	}
+	
+	res.success.data = true;
+	res.error_message.data = "Calibration successfull! :)";
     }
-  else
-    return false;
+    else {
+	res.success.data = false;
+	res.error_message.data = "FTS not initialised! :/";
+    }
+    
+    return true;
 }
 
 void ForceTorqueNode::updateFTData()
@@ -297,7 +305,7 @@ void ForceTorqueNode::visualizeData(double x, double y, double z)
 int main(int argc, char ** argv)
 {
 
-  ros::init(argc, argv, "talker");
+  ros::init(argc, argv, "forcetorque_node");
   ForceTorqueNode ftn;
 
   ROS_INFO("ForceTorque Sensor Node running.");

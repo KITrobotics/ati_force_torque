@@ -3,3 +3,5 @@ device:
     path: /dev/pcan33
     baudrate: 0x0     # CANITFBAUD_1M
     base_identifier: 0x20
+    future_baudrate: 1 # ATI_CAN_BAUD_1M
+    future_identifier: 0x20

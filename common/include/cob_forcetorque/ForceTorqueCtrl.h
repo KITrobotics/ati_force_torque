@@ -26,6 +26,11 @@
 #define SET_BAUD	0xE
 #define READ_FIRMWARE	0xF
 
+#define ATI_CAN_BAUD_2M		0
+#define ATI_CAN_BAUD_1M		1
+#define ATI_CAN_BAUD_500K	3
+#define ATI_CAN_BAUD_250K	7
+
 class ForceTorqueCtrl
 {
 	public:
@@ -38,6 +43,8 @@ class ForceTorqueCtrl
 		bool ReadCountsPerUnit();
 		bool ReadUnitCodes();
 		bool SetActiveCalibrationMatrix(int num);
+		bool SetBaudRate(int value);
+		bool SetBaseIdentifier(int identifier);
 		void ReadSGData(double &Fx, double &Fy, double &Fz, double &Tx, double &Ty, double &Tz);
 		bool ReadFirmwareVersion();
 		void ReadCalibrationMatrix();
