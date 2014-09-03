@@ -12,15 +12,16 @@ typedef unsigned char uint8_t;
 #define PI 3.14159265
 
 
-class ForceTorqueNode
+class ForceTorqueConfig
 {
 public:
 
-    ForceTorqueNode();
+    ForceTorqueConfig();
     
     bool initFts();
     bool srvCallback_SetBaudRate(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res);
     bool srvCallback_SetBaseIdentifier(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res);
+    bool srvCallback_Reset(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res);
     // create a handle for this node, initialize node
     ros::NodeHandle nh_;
 
@@ -36,18 +37,20 @@ private:
     // service servers
     ros::ServiceServer srvServer_SetBaudRate_;
     ros::ServiceServer srvServer_SetBaseIdentifier_;
+    ros::ServiceServer srvSever_Reset_;
     
     bool m_isInitialized;
     ForceTorqueCtrl* p_Ftc;
 };
 
-ForceTorqueNode::ForceTorqueNode()
+ForceTorqueConfig::ForceTorqueConfig()
 {
 
 	m_isInitialized = false;
 
-	srvServer_SetBaudRate_ = nh_.advertiseService("SetBaudRate", &ForceTorqueNode::srvCallback_SetBaudRate, this);
-	srvServer_SetBaseIdentifier_ = nh_.advertiseService("SetBaseIdentifier", &ForceTorqueNode::srvCallback_SetBaseIdentifier, this);
+	srvServer_SetBaudRate_ = nh_.advertiseService("SetBaudRate", &ForceTorqueConfig::srvCallback_SetBaudRate, this);
+	srvServer_SetBaseIdentifier_ = nh_.advertiseService("SetBaseIdentifier", &ForceTorqueConfig::srvCallback_SetBaseIdentifier, this);
+	srvSever_Reset_ = nh_.advertiseService("Reset", &ForceTorqueConfig::srvCallback_Reset, this);
 
 	// Read data from parameter server
 	nh_.param<int>("CAN/type", canType, -1);
@@ -63,7 +66,7 @@ ForceTorqueNode::ForceTorqueNode()
 
 }
 
-bool ForceTorqueNode::initFts()
+bool ForceTorqueConfig::initFts()
 {
     if(!m_isInitialized)
     {
@@ -80,7 +83,7 @@ bool ForceTorqueNode::initFts()
     return m_isInitialized;
 }
 
-bool ForceTorqueNode::srvCallback_SetBaudRate(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res) {
+bool ForceTorqueConfig::srvCallback_SetBaudRate(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res) {
  
     if (m_isInitialized) {
 	
@@ -104,7 +107,7 @@ bool ForceTorqueNode::srvCallback_SetBaudRate(cob_srvs::Trigger::Request &req, c
     return true;    
 }
 
-bool ForceTorqueNode::srvCallback_SetBaseIdentifier(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res) {
+bool ForceTorqueConfig::srvCallback_SetBaseIdentifier(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res) {
  
     if (m_isInitialized) {
 	
@@ -128,11 +131,28 @@ bool ForceTorqueNode::srvCallback_SetBaseIdentifier(cob_srvs::Trigger::Request &
     return true;    
 }
 
+bool ForceTorqueConfig::srvCallback_Reset(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res) {
+    
+    ROS_WARN("Going to reset NETCANOEM!");
+    
+    if (p_Ftc->Reset()) {
+	res.success.data = true;
+	res.error_message.data = "Reset succeded!";
+    }
+    else {
+	res.success.data = false;
+	res.error_message.data = "Reset NOT succeded!";
+    }
+    
+    return true;   
+}
+    
+
 int main(int argc, char ** argv)
 {
 
   ros::init(argc, argv, "forcetorque_config");
-  ForceTorqueNode ftn;
+  ForceTorqueConfig ftn;
 
   ROS_INFO("ForceTorque Config Node running.");
   

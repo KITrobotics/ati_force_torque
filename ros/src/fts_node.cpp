@@ -100,7 +100,6 @@ private:
     std::string transform_frame_id;
 
     // declaration of topics to publish
-    ros::Publisher topicPub_transData_;
     ros::Publisher topicPub_ForceData_;
     ros::Publisher topicPub_ForceDataTrans_;
     ros::Publisher topicPub_Marker_;
@@ -126,8 +125,6 @@ ForceTorqueNode::ForceTorqueNode()
 
 	m_isInitialized = false;
 
-	topicPub_transData_ = nh_.advertise<geometry_msgs::TransformStamped>("trans_values", 100);
-
 	topicPub_ForceData_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values", 100);
 	topicPub_ForceDataTrans_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values_transformed", 100);
 	topicPub_Marker_ = nh_.advertise<visualization_msgs::Marker>("visualization_marker", 1);
@@ -147,7 +144,7 @@ ForceTorqueNode::ForceTorqueNode()
 	nh.getParam("transform_frame", transform_frame_id);
 
 	p_tfBuffer = new tf2_ros::Buffer();
-	p_tfListener = new tf2_ros::TransformListener(*p_tfBuffer);
+	p_tfListener = new tf2_ros::TransformListener(*p_tfBuffer, true);
 	
 	ftUpdateTimer = nh_.createTimer(ros::Rate(nodePubFreq), &ForceTorqueNode::updateFTData, this, false, false);
 
@@ -202,7 +199,7 @@ bool ForceTorqueNode::srvCallback_Calibrate(cob_srvs::Trigger::Request &req, cob
 	
 	for(int i = 0; i < measurements; i++) {
 	    
-	    int status;
+	    int status = 0;
 	    double Fx, Fy, Fz, Tx, Ty, Tz = 0;
 	    p_Ftc->ReadSGData(status, Fx, Fy, Fz, Tx, Ty, Tz);
 	    F_avg[0] += Fx;
@@ -231,15 +228,12 @@ bool ForceTorqueNode::srvCallback_Calibrate(cob_srvs::Trigger::Request &req, cob
 
 void ForceTorqueNode::updateFTData(const ros::TimerEvent& event)
 {
-    ros::Time start = ros::Time::now();
+//     ros::Time start = ros::Time::now();
     
-    int status;
-    
+    int status = 0;    
     double Fx, Fy, Fz, Tx, Ty, Tz = 0;
 
-    p_Ftc->ReadSGData(status, Fx, Fy, Fz, Tx, Ty, Tz);
-    
-    
+    p_Ftc->ReadSGData(status, Fx, Fy, Fz, Tx, Ty, Tz);    
 
     geometry_msgs::WrenchStamped msg, msg_transformed;
     
@@ -258,13 +252,11 @@ void ForceTorqueNode::updateFTData(const ros::TimerEvent& event)
     fdata.setOrigin(tf2::Vector3(Fx-F_avg[0], Fy-F_avg[1], Fz-F_avg[2]));
 
     try{
-    transform_ee_base_stamped = p_tfBuffer->lookupTransform(transform_frame_id, frame_id, ros::Time(0));
+	transform_ee_base_stamped = p_tfBuffer->lookupTransform(transform_frame_id, frame_id, ros::Time(0));
     }
-    catch (tf2::TransformException ex ){
-    ROS_ERROR("%s",ex.what());
+	catch (tf2::TransformException ex ){
+	ROS_ERROR("%s",ex.what());
     }
-
-    topicPub_transData_.publish(transform_ee_base_stamped);
     
     geometry_msgs::Vector3Stamped temp_vector_in, temp_vector_out;      
     
