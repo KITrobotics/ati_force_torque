@@ -202,8 +202,9 @@ bool ForceTorqueNode::srvCallback_Calibrate(cob_srvs::Trigger::Request &req, cob
 	
 	for(int i = 0; i < measurements; i++) {
 	    
+	    int status;
 	    double Fx, Fy, Fz, Tx, Ty, Tz = 0;
-	    p_Ftc->ReadSGData(Fx, Fy, Fz, Tx, Ty, Tz);
+	    p_Ftc->ReadSGData(status, Fx, Fy, Fz, Tx, Ty, Tz);
 	    F_avg[0] += Fx;
 	    F_avg[1] += Fy;
 	    F_avg[2] += Fz;
@@ -232,9 +233,13 @@ void ForceTorqueNode::updateFTData(const ros::TimerEvent& event)
 {
     ros::Time start = ros::Time::now();
     
+    int status;
+    
     double Fx, Fy, Fz, Tx, Ty, Tz = 0;
 
-    p_Ftc->ReadSGData(Fx, Fy, Fz, Tx, Ty, Tz);
+    p_Ftc->ReadSGData(status, Fx, Fy, Fz, Tx, Ty, Tz);
+    
+    
 
     geometry_msgs::WrenchStamped msg, msg_transformed;
     

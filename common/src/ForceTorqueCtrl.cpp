@@ -490,9 +490,9 @@ bool ForceTorqueCtrl::ReadFirmwareVersion()
 	return ret;
 }
 
-void ForceTorqueCtrl::ReadSGData(double &Fx, double &Fy, double &Fz, double &Tx, double &Ty, double &Tz)
+void ForceTorqueCtrl::ReadSGData(int statusCode, double &Fx, double &Fy, double &Fz, double &Tx, double &Ty, double &Tz)
 {
-    int statusCode = 0, sg0 = 0, sg1 = 0, sg2 = 0, sg3 = 0, sg4 = 0, sg5 = 0;
+    int sg0 = 0, sg1 = 0, sg2 = 0, sg3 = 0, sg4 = 0, sg5 = 0;
 
     CanMsg CMsg;
     CMsg.setID(m_CanBaseIdentifier | READ_SG);
@@ -505,11 +505,26 @@ void ForceTorqueCtrl::ReadSGData(double &Fx, double &Fy, double &Fz, double &Tx,
     unsigned char c[2];
     if(ret2)
     {
-	int length = replyMsg.getLength();
+	if(replyMsg.getID() != (m_CanBaseIdentifier | 0x0)) {
+	    
+	    std::cout << "Error: Received wrong opcode!" << std::endl;
+	    std::cout << "reply ID: \t" << std::hex << replyMsg.getID()<<std::endl;
+	    std::cout << "reply Length: \t" << replyMsg.getLength()<<std::endl;
+	    std::cout << "reply Data: \t" << replyMsg.getAt(0) << " " << replyMsg.getAt(1) << " "
+				    << replyMsg.getAt(2) << " " << replyMsg.getAt(3) << " "
+				    << replyMsg.getAt(4) << " " << replyMsg.getAt(5) << " "
+				    << replyMsg.getAt(6) << " " << replyMsg.getAt(7) << std::endl;
+	    return;	    
+	}
 
 	c[0] = replyMsg.getAt(0); //status code
 	c[1] = replyMsg.getAt(1);
-	statusCode = (((char)c[0] << 8) | c[1]);
+	statusCode = (short)((c[0] << 8) | c[1]);
+	
+	if (statusCode != 0) {
+	    std::cout << "Error: Something is wrong with sensor!" << std::endl;
+	    std::cout << std::hex << statusCode << std::endl;
+	}
 
 	c[0] = replyMsg.getAt(2); //sg0
 	c[1] = replyMsg.getAt(3);
@@ -529,7 +544,17 @@ void ForceTorqueCtrl::ReadSGData(double &Fx, double &Fy, double &Fz, double &Tx,
     ret2 = m_pCanCtrl->receiveMsgRetry(&replyMsg, -1);
     if(ret2)
     {
-	int length = replyMsg.getLength();
+	if(replyMsg.getID() != (m_CanBaseIdentifier | 0x1)) {
+	    
+	    std::cout<<"Error: Received wrong opcode!"<<std::endl;
+	    std::cout << "reply ID: \t" << std::hex << replyMsg.getID()<<std::endl;
+	    std::cout << "reply Length: \t" << replyMsg.getLength()<<std::endl;
+	    std::cout << "reply Data: \t" << replyMsg.getAt(0) << " " << replyMsg.getAt(1) << " "
+				    << replyMsg.getAt(2) << " " << replyMsg.getAt(3) << " "
+				    << replyMsg.getAt(4) << " " << replyMsg.getAt(5) << " "
+				    << replyMsg.getAt(6) << " " << replyMsg.getAt(7) << std::endl;
+	    return;    
+	}
 
 	c[0] = replyMsg.getAt(0); //sg1
 	c[1] = replyMsg.getAt(1);

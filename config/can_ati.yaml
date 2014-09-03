@@ -7,4 +7,4 @@ FTS:
     base_identifier: 0x20
     
 node:
-    ft_pub_freq: 1000
+    ft_pub_freq: 500

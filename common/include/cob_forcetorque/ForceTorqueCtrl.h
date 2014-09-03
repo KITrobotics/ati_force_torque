@@ -45,7 +45,7 @@ class ForceTorqueCtrl
 	bool SetActiveCalibrationMatrix(int num);
 	bool SetBaudRate(int value);
 	bool SetBaseIdentifier(int identifier);
-	void ReadSGData(double &Fx, double &Fy, double &Fz, double &Tx, double &Ty, double &Tz);
+	void ReadSGData(int statusCode, double &Fx, double &Fy, double &Fz, double &Tx, double &Ty, double &Tz);
 	bool ReadFirmwareVersion();
 	void ReadCalibrationMatrix();
 
