@@ -1,0 +1,9 @@
+CAN:
+    type: 1           # CAN_PEAK_USN
+    path: /dev/pcan33
+    baudrate: 0x0     # CANITFBAUD_1M
+    
+FTS:
+    base_identifier: 0x20
+    future_baudrate: 1 # ATI_CAN_BAUD_1M
+    future_base_id: 0x20
