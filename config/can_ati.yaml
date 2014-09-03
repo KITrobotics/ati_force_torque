@@ -1,15 +1,10 @@
 CAN:
     type: 1           # CAN_PEAK_USN
     path: /dev/pcan33
-<<<<<<< HEAD
-    baudrate: 0x4     # CANITFBAUD_1M
-    base_identifier: 0x20
-=======
     baudrate: 0x0     # CANITFBAUD_1M
 
 FTS:
     base_identifier: 0x20
     
 node:
-    ft_pub_freq: 1000
->>>>>>> e9e52ecef48166196b1741b855c41122eaa1c4dd
+    ft_pub_freq: 650

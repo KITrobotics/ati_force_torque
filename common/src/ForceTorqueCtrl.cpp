@@ -278,8 +278,6 @@ bool ForceTorqueCtrl::SetBaudRate(BYTE value)
 	return ret;
 }
 
-<<<<<<< HEAD
-=======
 bool ForceTorqueCtrl::SetBaudRate(int value)
 {
     std::cout << "\n\n*******Setting Baud Rate value to: "<< value <<"********"<< std::endl;
@@ -314,6 +312,26 @@ bool ForceTorqueCtrl::SetBaudRate(int value)
     else {
 	std::cout << "ForceTorqueCtrl::SetBaudRate(int value): Can not transmit message!" << std::endl;
     }
+
+    return ret;
+}
+
+bool ForceTorqueCtrl::Reset()
+{
+    std::cout << "\n\n******* Reseting the NETCANOEM ********"<< std::endl;
+    bool ret = true;
+    CanMsg CMsg;
+    CMsg.setID(m_CanBaseIdentifier | RESET);
+    CMsg.setLength(0);
+
+    ret = m_pCanCtrl->transmitMsg(CMsg, true);
+
+    if (!ret) {
+	std::cout << "ForceTorqueCtrl::Reset(): Can not transmit message!" << std::endl;
+	ret = false;
+    }
+    
+    usleep(10000);
 
     return ret;
 }
@@ -355,8 +373,6 @@ bool ForceTorqueCtrl::SetBaseIdentifier(int identifier)
     return ret;
 }
 
-
->>>>>>> e9e52ecef48166196b1741b855c41122eaa1c4dd
 void ForceTorqueCtrl::ReadCalibrationMatrix()
 {
 	Eigen::VectorXf vCoef(6);
@@ -521,42 +537,60 @@ bool ForceTorqueCtrl::ReadFirmwareVersion()
 		}
 	}
 	else {
-		std::cout<<"Error: Receiving Message failed!"<<std::endl;
+		std::cout<<"Error: Transmiting Message failed!"<<std::endl;
 		ret = false;
 	}
 
 	return ret;
 }
 
-void ForceTorqueCtrl::ReadSGData(double &Fx, double &Fy, double &Fz, double &Tx, double &Ty, double &Tz)
+void ForceTorqueCtrl::ReadSGData(int statusCode, double &Fx, double &Fy, double &Fz, double &Tx, double &Ty, double &Tz)
 {
-    int statusCode = 0, sg0 = 0, sg1 = 0, sg2 = 0, sg3 = 0, sg4 = 0, sg5 = 0;
+    int sg0 = 0, sg1 = 0, sg2 = 0, sg3 = 0, sg4 = 0, sg5 = 0;
 
     CanMsg CMsg;
     CMsg.setID(m_CanBaseIdentifier | READ_SG);
     CMsg.setLength(0);
 
-<<<<<<< HEAD
-	CanMsg replyMsg;
-	bool ret2 = m_pCanCtrl->receiveMsgTimeout(&replyMsg, 2000);
-	unsigned char c[2];
-	if(ret2)
-	{
-		int length = replyMsg.getLength();
-=======
     bool ret = m_pCanCtrl->transmitMsg(CMsg, true);
->>>>>>> e9e52ecef48166196b1741b855c41122eaa1c4dd
+    
+    if (!ret) {
+	std::cout << "ForceTorqueCtrl::ReadSGData: Error: Transmiting message failed!" << std::endl;
+	return;
+    }
 
     CanMsg replyMsg;
-    bool ret2 = m_pCanCtrl->receiveMsgRetry(&replyMsg, -1);
+    bool ret2 = m_pCanCtrl->receiveMsgTimeout(&replyMsg, -1);
     unsigned char c[2];
     if(ret2)
     {
-	int length = replyMsg.getLength();
+	if(replyMsg.getID() != (m_CanBaseIdentifier | 0x0)) {
+	    
+	    std::cout << "ForceTorqueCtrl::ReadSGData: Error: Received wrong opcode (Should be 0x200)!" << std::endl;
+	    std::cout << "reply ID: \t" << std::hex << replyMsg.getID()<<std::endl;
+	    std::cout << "reply Length: \t" << replyMsg.getLength()<<std::endl;
+	    std::cout << "reply Data: \t" << replyMsg.getAt(0) << " " << replyMsg.getAt(1) << " "
+				    << replyMsg.getAt(2) << " " << replyMsg.getAt(3) << " "
+				    << replyMsg.getAt(4) << " " << replyMsg.getAt(5) << " "
+				    << replyMsg.getAt(6) << " " << replyMsg.getAt(7) << std::endl;
+	    return;	    
+	}
 
 	c[0] = replyMsg.getAt(0); //status code
 	c[1] = replyMsg.getAt(1);
-	statusCode = (((char)c[0] << 8) | c[1]);
+	statusCode = (short)((c[0] << 8) | c[1]);
+	
+	if (statusCode != 0) {	    
+	    if (statusCode & 0x4000) {
+		std::cout << "ForceTorqueCtrl::ReadSGData: CAN bus error detected!" << std::endl;
+		Reset();
+		std::cout << "ForceTorqueCtrl::ReadSGData: FTS reseted!" << std::endl;
+	    }
+	    else {
+		std::cout << "ForceTorqueCtrl::ReadSGData: Error: Something is wrong with sensor!" << std::endl;
+	    std::cout << std::hex << statusCode << std::endl;
+	    }
+	}
 
 	c[0] = replyMsg.getAt(2); //sg0
 	c[1] = replyMsg.getAt(3);
@@ -566,24 +600,27 @@ void ForceTorqueCtrl::ReadSGData(double &Fx, double &Fy, double &Fz, double &Tx,
 	c[1] = replyMsg.getAt(5);
 	sg2 = (short)((c[0] << 8) | c[1]);
 
-<<<<<<< HEAD
-	ret2 = m_pCanCtrl->receiveMsgTimeout(&replyMsg, 2000);
-	if(ret2)
-	{
-		int length = replyMsg.getLength();
-=======
 	c[0] = replyMsg.getAt(6); //sg4
 	c[1] = replyMsg.getAt(7);
 	sg4 = (short)((c[0] << 8) | c[1]);
     }
     else
 	return;
->>>>>>> e9e52ecef48166196b1741b855c41122eaa1c4dd
 
-    ret2 = m_pCanCtrl->receiveMsgRetry(&replyMsg, -1);
+    ret2 = m_pCanCtrl->receiveMsgTimeout(&replyMsg, -1);
     if(ret2)
     {
-	int length = replyMsg.getLength();
+	if(replyMsg.getID() != (m_CanBaseIdentifier | 0x1)) {
+	    
+	    std::cout<<"ForceTorqueCtrl::ReadSGData: Error: Received wrong opcode (Should be 0x201)!"<<std::endl;
+	    std::cout << "reply ID: \t" << std::hex << replyMsg.getID()<<std::endl;
+	    std::cout << "reply Length: \t" << replyMsg.getLength()<<std::endl;
+	    std::cout << "reply Data: \t" << replyMsg.getAt(0) << " " << replyMsg.getAt(1) << " "
+				    << replyMsg.getAt(2) << " " << replyMsg.getAt(3) << " "
+				    << replyMsg.getAt(4) << " " << replyMsg.getAt(5) << " "
+				    << replyMsg.getAt(6) << " " << replyMsg.getAt(7) << std::endl;
+	    return;    
+	}
 
 	c[0] = replyMsg.getAt(0); //sg1
 	c[1] = replyMsg.getAt(1);

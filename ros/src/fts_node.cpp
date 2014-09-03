@@ -82,12 +82,7 @@ public:
 
     bool srvCallback_Init(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res);
     bool srvCallback_Calibrate(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res);
-<<<<<<< HEAD:ros/src/forcetorque_node.cpp
-    bool srvCallback_SetBaudRate(cob_srvs::Trigger::Request &req,  cob_srvs::Trigger::Response &res);
-    void updateFTData();
-=======
     void updateFTData(const ros::TimerEvent& event);
->>>>>>> e9e52ecef48166196b1741b855c41122eaa1c4dd:ros/src/fts_node.cpp
     void visualizeData(double x, double y, double z);
 
     // create a handle for this node, initialize node
@@ -95,24 +90,16 @@ public:
 
 private:
     // CAN parameters
-<<<<<<< HEAD:ros/src/forcetorque_node.cpp
-    int deviceType;
-    std::string devicePath;
-    int deviceBaudrate;
-    int deviceBaseIdentifier;
-=======
     int canType;
     std::string canPath;
     int canBaudrate;
     int ftsBaseID;
     double nodePubFreq;
->>>>>>> e9e52ecef48166196b1741b855c41122eaa1c4dd:ros/src/fts_node.cpp
 
     std::string frame_id;
     std::string transform_frame_id;
 
     // declaration of topics to publish
-    ros::Publisher topicPub_transData_;
     ros::Publisher topicPub_ForceData_;
     ros::Publisher topicPub_ForceDataTrans_;
     ros::Publisher topicPub_Marker_;
@@ -120,36 +107,23 @@ private:
     // service servers
     ros::ServiceServer srvServer_Init_;
     ros::ServiceServer srvServer_Calibrate_;
-<<<<<<< HEAD:ros/src/forcetorque_node.cpp
-    ros::ServiceServer srvServer_SetBaudRate_;
-=======
->>>>>>> e9e52ecef48166196b1741b855c41122eaa1c4dd:ros/src/fts_node.cpp
 
     tf2_ros::Buffer *p_tfBuffer;
     tf2_ros::TransformListener* p_tfListener;
     tf2::Transform transform_ee_base;
     geometry_msgs::TransformStamped transform_ee_base_stamped;
 
-<<<<<<< HEAD:ros/src/forcetorque_node.cpp
-    bool m_isInitialized;
-    ForceTorqueCtrl* p_Ftc;
-    std::vector<double> F_avg;
-
-=======
     ros::Timer ftUpdateTimer;
     
     bool m_isInitialized;
     ForceTorqueCtrl* p_Ftc;
     std::vector<double> F_avg;
->>>>>>> e9e52ecef48166196b1741b855c41122eaa1c4dd:ros/src/fts_node.cpp
 };
 
 ForceTorqueNode::ForceTorqueNode()
 {
 
 	m_isInitialized = false;
-
-	topicPub_transData_ = nh_.advertise<geometry_msgs::TransformStamped>("trans_values", 100);
 
 	topicPub_ForceData_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values", 100);
 	topicPub_ForceDataTrans_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values_transformed", 100);
@@ -159,18 +133,11 @@ ForceTorqueNode::ForceTorqueNode()
 	srvServer_SetBaudRate_ = nh_.advertiseService("SetBaudRate", &ForceTorqueNode::srvCallback_SetBaudRate, this);
 
 	// Read data from parameter server
-<<<<<<< HEAD:ros/src/forcetorque_node.cpp
-	nh_.param<int>("device/type", deviceType, -1);
-	nh_.param<std::string>("device/path", devicePath, "");
-	nh_.param<int>("device/baudrate", deviceBaudrate, -1);
-	nh_.param<int>("device/base_identifier", deviceBaseIdentifier, -1);
-=======
 	nh_.param<int>("CAN/type", canType, -1);
 	nh_.param<std::string>("CAN/path", canPath, "");
 	nh_.param<int>("CAN/baudrate", canBaudrate, -1);
 	nh_.param<int>("FTS/base_identifier", ftsBaseID, -1);
 	nh_.param<double>("node/ft_pub_freq", nodePubFreq, 100);
->>>>>>> e9e52ecef48166196b1741b855c41122eaa1c4dd:ros/src/fts_node.cpp
 	
 
 	ros::NodeHandle nh("~");
@@ -178,7 +145,7 @@ ForceTorqueNode::ForceTorqueNode()
 	nh.getParam("transform_frame", transform_frame_id);
 
 	p_tfBuffer = new tf2_ros::Buffer();
-	p_tfListener = new tf2_ros::TransformListener(*p_tfBuffer);
+	p_tfListener = new tf2_ros::TransformListener(*p_tfBuffer, true);
 	
 	ftUpdateTimer = nh_.createTimer(ros::Rate(nodePubFreq), &ForceTorqueNode::updateFTData, this, false, false);
 
@@ -206,12 +173,9 @@ bool ForceTorqueNode::srvCallback_Init(cob_srvs::Trigger::Request &req, cob_srvs
 	    m_isInitialized = true;
 	    res.success.data = true;
 	    res.error_message.data = "All good, you are nice person! :)";
-<<<<<<< HEAD:ros/src/forcetorque_node.cpp
-=======
 	    
 	    // start timer for reading FT-data
 	    ftUpdateTimer.start();
->>>>>>> e9e52ecef48166196b1741b855c41122eaa1c4dd:ros/src/fts_node.cpp
 	}
 	else {
 	    m_isInitialized = false;
@@ -219,72 +183,11 @@ bool ForceTorqueNode::srvCallback_Init(cob_srvs::Trigger::Request &req, cob_srvs
 	    res.error_message.data = "Don't know! But it's bad! :/";
 	}
     }
-<<<<<<< HEAD:ros/src/forcetorque_node.cpp
-    return m_isInitialized;
-=======
     return true;
->>>>>>> e9e52ecef48166196b1741b855c41122eaa1c4dd:ros/src/fts_node.cpp
 }
 
 bool ForceTorqueNode::srvCallback_Calibrate(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res )
 {
-<<<<<<< HEAD:ros/src/forcetorque_node.cpp
-    if(!m_isInitialized) {
-	res.success.data = false;
-	res.error_message.data = "FTS not initialized!";
-	return false;
-    }
-    
-    int measurements = 20;
-      
-    F_avg[0] = 0.0;
-    F_avg[1] = 0.0;
-    F_avg[2] = 0.0;
-    F_avg[3] = 0.0;
-    F_avg[4] = 0.0;
-    F_avg[5] = 0.0;
-    for(int i = 0; i < measurements; i++)
-    {
-	double Fx, Fy, Fz, Tx, Ty, Tz = 0;
-	p_Ftc->ReadSGData(Fx, Fy, Fz, Tx, Ty, Tz);
-	F_avg[0] += Fx;
-	F_avg[1] += Fy;
-	F_avg[2] += Fz;
-	F_avg[3] += Tx;
-	F_avg[4] += Ty;
-	F_avg[5] += Tz;
-	usleep(10000);
-    }
-    for(int i = 0; i < 6; i++) {
-	F_avg[i] /= measurements;
-    }
-    
-    res.success.data = true;
-    res.error_message.data = "All good, you are nice person! :)";
-    return true;
-}
-
-bool ForceTorqueNode::srvCallback_SetBaudRate(cob_srvs::Trigger::Request &req,
-		      cob_srvs::Trigger::Response &res )
-{
- 
-    if(m_isInitialized) {
-	if (p_Ftc->SetBaudRate(ATI_BAUD_1M)) {
-	    res.success.data = true;
-	    res.error_message.data = "All good, you are nice person! :)";
-	}
-	else {
-	    res.success.data = false;
-	    res.error_message.data = "Don't know! But it's bad! :/";
-	}
-    }
-    else {
-	res.success.data = false;
-	res.error_message.data = "FTS not initialized!"; 
-    }
-    
-    return res.success.data;
-=======
     int measurements = 20;
     if(m_isInitialized)
     {
@@ -297,8 +200,9 @@ bool ForceTorqueNode::srvCallback_SetBaudRate(cob_srvs::Trigger::Request &req,
 	
 	for(int i = 0; i < measurements; i++) {
 	    
+	    int status = 0;
 	    double Fx, Fy, Fz, Tx, Ty, Tz = 0;
-	    p_Ftc->ReadSGData(Fx, Fy, Fz, Tx, Ty, Tz);
+	    p_Ftc->ReadSGData(status, Fx, Fy, Fz, Tx, Ty, Tz);
 	    F_avg[0] += Fx;
 	    F_avg[1] += Fy;
 	    F_avg[2] += Fz;
@@ -321,68 +225,16 @@ bool ForceTorqueNode::srvCallback_SetBaudRate(cob_srvs::Trigger::Request &req,
     }
     
     return true;
->>>>>>> e9e52ecef48166196b1741b855c41122eaa1c4dd:ros/src/fts_node.cpp
 }
 
 void ForceTorqueNode::updateFTData(const ros::TimerEvent& event)
 {
-<<<<<<< HEAD:ros/src/forcetorque_node.cpp
-    if(m_isInitialized)
-    {
-	ros::Time start = ros::Time::now();
+//     ros::Time start = ros::Time::now();
     
-	double Fx, Fy, Fz, Tx, Ty, Tz = 0;
-
-	p_Ftc->ReadSGData(Fx, Fy, Fz, Tx, Ty, Tz);
-// 	ROS_INFO("Read duration: %f", (ros::Time::now()-start).toSec());
-	
-
-	geometry_msgs::WrenchStamped msg, msg_transformed;
-
-	msg.header.frame_id = frame_id;
-	msg.header.stamp = ros::Time::now();
-	msg.wrench.force.x = Fx-F_avg[0];
-	msg.wrench.force.y = Fy-F_avg[1];
-	msg.wrench.force.z = Fz-F_avg[2];
-	msg.wrench.torque.x = Tx-F_avg[3];
-	msg.wrench.torque.y = Ty-F_avg[4];
-	msg.wrench.torque.z = Tz-F_avg[5];
-	topicPub_ForceData_.publish(msg);
-
-// 	tf2::Transform fdata_base;
-// 	tf2::Transform fdata;
-// 	fdata.setOrigin(tf2::Vector3(Fx-F_avg[0], Fy-F_avg[1], Fz-F_avg[2]));
-// 
-// 	try{
-// 	transform_ee_base_stamped = p_tfBuffer->lookupTransform(transform_frame_id, frame_id, ros::Time(0));
-// 	}
-// 	catch (tf2::TransformException ex ){
-// 	ROS_ERROR("%s",ex.what());
-// 	}
-// 
-// 	topicPub_transData_.publish(transform_ee_base_stamped);
-// 
-// 	geometry_msgs::Vector3Stamped temp_vector_in, temp_vector_out;      
-// 
-// 	temp_vector_in.header = msg.header;
-// 	temp_vector_in.vector = msg.wrench.force;      
-// 	tf2::doTransform(temp_vector_in, temp_vector_out, transform_ee_base_stamped);      
-// 	msg_transformed.header = temp_vector_out.header;
-// 	msg_transformed.wrench.force = temp_vector_out.vector;
-// 
-// 	temp_vector_in.vector = msg.wrench.torque;      
-// 	tf2::doTransform(temp_vector_in, temp_vector_out, transform_ee_base_stamped);
-// 	msg_transformed.wrench.torque = temp_vector_out.vector;
-// 
-// 	topicPub_ForceDataTrans_.publish(msg_transformed);
-	
-// 	ROS_INFO("Duration: %f", (ros::Time::now()-start).toSec());
-=======
-    ros::Time start = ros::Time::now();
-    
+    int status = 0;    
     double Fx, Fy, Fz, Tx, Ty, Tz = 0;
 
-    p_Ftc->ReadSGData(Fx, Fy, Fz, Tx, Ty, Tz);
+    p_Ftc->ReadSGData(status, Fx, Fy, Fz, Tx, Ty, Tz);    
 
     geometry_msgs::WrenchStamped msg, msg_transformed;
     
@@ -401,14 +253,11 @@ void ForceTorqueNode::updateFTData(const ros::TimerEvent& event)
     fdata.setOrigin(tf2::Vector3(Fx-F_avg[0], Fy-F_avg[1], Fz-F_avg[2]));
 
     try{
-    transform_ee_base_stamped = p_tfBuffer->lookupTransform(transform_frame_id, frame_id, ros::Time(0));
+	transform_ee_base_stamped = p_tfBuffer->lookupTransform(transform_frame_id, frame_id, ros::Time(0));
     }
     catch (tf2::TransformException ex ){
-    ROS_ERROR("%s",ex.what());
->>>>>>> e9e52ecef48166196b1741b855c41122eaa1c4dd:ros/src/fts_node.cpp
+	ROS_ERROR("%s",ex.what());
     }
-
-    topicPub_transData_.publish(transform_ee_base_stamped);
     
     geometry_msgs::Vector3Stamped temp_vector_in, temp_vector_out;      
     
@@ -431,29 +280,29 @@ void ForceTorqueNode::updateFTData(const ros::TimerEvent& event)
 
 void ForceTorqueNode::visualizeData(double x, double y, double z)
 {
-  visualization_msgs::Marker marker;
-  uint32_t shape = visualization_msgs::Marker::ARROW;
-  marker.header.frame_id = frame_id;
-  marker.header.stamp = ros::Time::now();
-  marker.ns = "ForceTorqueData";
-  marker.id = 0;
-  marker.type = shape;
-// first delete old markers
-  marker.action = visualization_msgs::Marker::DELETE;
-  topicPub_Marker_.publish(marker);
-  marker.action = visualization_msgs::Marker::ADD;
-  marker.pose.position.x = 0;
-  marker.pose.position.y = 0;
-  marker.pose.position.z = 0;
-  marker.scale.x = x/100;
-  marker.scale.y = y/100;
-  marker.scale.z = z/100;
-  marker.color.r = 0.0f;
-  marker.color.g = 1.0f;
-  marker.color.b = 0.0f;
-  marker.color.a = 1.0;
-  marker.lifetime = ros::Duration();
-  topicPub_Marker_.publish(marker);
+    visualization_msgs::Marker marker;
+    uint32_t shape = visualization_msgs::Marker::ARROW;
+    marker.header.frame_id = frame_id;
+    marker.header.stamp = ros::Time::now();
+    marker.ns = "ForceTorqueData";
+    marker.id = 0;
+    marker.type = shape;
+    // first delete old markers
+    marker.action = visualization_msgs::Marker::DELETE;
+    topicPub_Marker_.publish(marker);
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.pose.position.x = 0;
+    marker.pose.position.y = 0;
+    marker.pose.position.z = 0;
+    marker.scale.x = x/100;
+    marker.scale.y = y/100;
+    marker.scale.z = z/100;
+    marker.color.r = 0.0f;
+    marker.color.g = 1.0f;
+    marker.color.b = 0.0f;
+    marker.color.a = 1.0;
+    marker.lifetime = ros::Duration();
+    topicPub_Marker_.publish(marker);
 }
 
 int main(int argc, char ** argv)
@@ -464,16 +313,8 @@ int main(int argc, char ** argv)
 
   ROS_INFO("ForceTorque Sensor Node running.");
 
-<<<<<<< HEAD:ros/src/forcetorque_node.cpp
-  while(ros::ok())
-    {
-      ftn.updateFTData();
-      ros::spinOnce();
-    }
-=======
   ros::spin();
   
->>>>>>> e9e52ecef48166196b1741b855c41122eaa1c4dd:ros/src/fts_node.cpp
   return 0;
 }
 
