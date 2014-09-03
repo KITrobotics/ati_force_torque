@@ -82,7 +82,7 @@ public:
 
     bool srvCallback_Init(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res);
     bool srvCallback_Calibrate(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res);
-    void updateFTData();
+    void updateFTData(const ros::TimerEvent& event);
     void visualizeData(double x, double y, double z);
 
     // create a handle for this node, initialize node
@@ -90,10 +90,11 @@ public:
 
 private:
     // CAN parameters
-    int deviceType;
-    std::string devicePath;
-    int deviceBaudrate;
-    int deviceBaseIdentifier;
+    int canType;
+    std::string canPath;
+    int canBaudrate;
+    int ftsBaseID;
+    double nodePubFreq;
 
     std::string frame_id;
     std::string transform_frame_id;
@@ -113,10 +114,11 @@ private:
     tf2::Transform transform_ee_base;
     geometry_msgs::TransformStamped transform_ee_base_stamped;
 
+    ros::Timer ftUpdateTimer;
+    
     bool m_isInitialized;
     ForceTorqueCtrl* p_Ftc;
     std::vector<double> F_avg;
-
 };
 
 ForceTorqueNode::ForceTorqueNode()
@@ -133,10 +135,12 @@ ForceTorqueNode::ForceTorqueNode()
 	srvServer_Calibrate_ = nh_.advertiseService("Calibrate", &ForceTorqueNode::srvCallback_Calibrate, this);
 
 	// Read data from parameter server
-	nh_.param<int>("device/type", deviceType, -1);
-	nh_.param<std::string>("device/path", devicePath, "");
-	nh_.param<int>("device/baudrate", deviceBaudrate, -1);
-	nh_.param<int>("device/base_identifier", deviceBaseIdentifier, -1);
+	nh_.param<int>("CAN/type", canType, -1);
+	nh_.param<std::string>("CAN/path", canPath, "");
+	nh_.param<int>("CAN/baudrate", canBaudrate, -1);
+	nh_.param<int>("FTS/base_identifier", ftsBaseID, -1);
+	nh_.param<double>("node/ft_pub_freq", nodePubFreq, 100);
+	
 
 	ros::NodeHandle nh("~");
 	nh.getParam("frame", frame_id);
@@ -144,41 +148,44 @@ ForceTorqueNode::ForceTorqueNode()
 
 	p_tfBuffer = new tf2_ros::Buffer();
 	p_tfListener = new tf2_ros::TransformListener(*p_tfBuffer);
+	
+	ftUpdateTimer = nh_.createTimer(ros::Rate(nodePubFreq), &ForceTorqueNode::updateFTData, this, false, false);
 
-	p_Ftc = new ForceTorqueCtrl(deviceType, devicePath, deviceBaudrate, deviceBaseIdentifier);
-
+	p_Ftc = new ForceTorqueCtrl(canType, canPath, canBaudrate, ftsBaseID);
 }
 
-bool ForceTorqueNode::srvCallback_Init(cob_srvs::Trigger::Request &req,
-		      cob_srvs::Trigger::Response &res )
+bool ForceTorqueNode::srvCallback_Init(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res )
 {
-  if(!m_isInitialized)
+    if(!m_isInitialized)
     {
-		// read return init status and check it!
-		if (p_Ftc->Init()) {
-			ROS_INFO("FTC initialized");
+	// read return init status and check it!
+	if (p_Ftc->Init()) {
+	    ROS_INFO("FTC initialized");
 
-			//set Calibdata to zero
-			F_avg.resize(6);
-			F_avg[0] = 0.0;
-			F_avg[1] = 0.0;
-			F_avg[2] = 0.0;
-			F_avg[3] = 0.0;
-			F_avg[4] = 0.0;
-			F_avg[5] = 0.0;
+	    //set Calibdata to zero
+	    F_avg.resize(6);
+	    F_avg[0] = 0.0;
+	    F_avg[1] = 0.0;
+	    F_avg[2] = 0.0;
+	    F_avg[3] = 0.0;
+	    F_avg[4] = 0.0;
+	    F_avg[5] = 0.0;
 
 
-			m_isInitialized = true;
-			res.success.data = true;
-			res.error_message.data = "All good, you are nice person! :)";
-		}
-		else {
-			m_isInitialized = false;
-			res.success.data = false;
-			res.error_message.data = "Don't know! But it's bad! :/";
-		}
+	    m_isInitialized = true;
+	    res.success.data = true;
+	    res.error_message.data = "All good, you are nice person! :)";
+	    
+	    // start timer for reading FT-data
+	    ftUpdateTimer.start();
+	}
+	else {
+	    m_isInitialized = false;
+	    res.success.data = false;
+	    res.error_message.data = "Don't know! But it's bad! :/";
+	}
     }
-  return m_isInitialized;
+    return true;
 }
 
 bool ForceTorqueNode::srvCallback_Calibrate(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res )
@@ -221,53 +228,56 @@ bool ForceTorqueNode::srvCallback_Calibrate(cob_srvs::Trigger::Request &req, cob
     return true;
 }
 
-void ForceTorqueNode::updateFTData()
+void ForceTorqueNode::updateFTData(const ros::TimerEvent& event)
 {
-  if(m_isInitialized)
-    {
-      double Fx, Fy, Fz, Tx, Ty, Tz = 0;
+    ros::Time start = ros::Time::now();
+    
+    double Fx, Fy, Fz, Tx, Ty, Tz = 0;
 
-      p_Ftc->ReadSGData(Fx, Fy, Fz, Tx, Ty, Tz);
+    p_Ftc->ReadSGData(Fx, Fy, Fz, Tx, Ty, Tz);
 
-      geometry_msgs::WrenchStamped msg, msg_transformed;
-      
-      msg.header.frame_id = frame_id;
-      msg.header.stamp = ros::Time::now();
-      msg.wrench.force.x = Fx-F_avg[0];
-      msg.wrench.force.y = Fy-F_avg[1];
-      msg.wrench.force.z = Fz-F_avg[2];
-      msg.wrench.torque.x = Tx-F_avg[3];
-      msg.wrench.torque.y = Ty-F_avg[4];
-      msg.wrench.torque.z = Tz-F_avg[5];
-      topicPub_ForceData_.publish(msg);
+    geometry_msgs::WrenchStamped msg, msg_transformed;
+    
+    msg.header.frame_id = frame_id;
+    msg.header.stamp = ros::Time::now();
+    msg.wrench.force.x = Fx-F_avg[0];
+    msg.wrench.force.y = Fy-F_avg[1];
+    msg.wrench.force.z = Fz-F_avg[2];
+    msg.wrench.torque.x = Tx-F_avg[3];
+    msg.wrench.torque.y = Ty-F_avg[4];
+    msg.wrench.torque.z = Tz-F_avg[5];
+    topicPub_ForceData_.publish(msg);
 
-      tf2::Transform fdata_base;
-      tf2::Transform fdata;
-      fdata.setOrigin(tf2::Vector3(Fx-F_avg[0], Fy-F_avg[1], Fz-F_avg[2]));
+    tf2::Transform fdata_base;
+    tf2::Transform fdata;
+    fdata.setOrigin(tf2::Vector3(Fx-F_avg[0], Fy-F_avg[1], Fz-F_avg[2]));
 
-      try{
-        transform_ee_base_stamped = p_tfBuffer->lookupTransform(transform_frame_id, frame_id, ros::Time(0));
-      }
-      catch (tf2::TransformException ex ){
-	ROS_ERROR("%s",ex.what());
-      }
-
-      topicPub_transData_.publish(transform_ee_base_stamped);
-      
-      geometry_msgs::Vector3Stamped temp_vector_in, temp_vector_out;      
-      
-      temp_vector_in.header = msg.header;
-      temp_vector_in.vector = msg.wrench.force;      
-      tf2::doTransform(temp_vector_in, temp_vector_out, transform_ee_base_stamped);      
-      msg_transformed.header = temp_vector_out.header;
-      msg_transformed.wrench.force = temp_vector_out.vector;
-      
-      temp_vector_in.vector = msg.wrench.torque;      
-      tf2::doTransform(temp_vector_in, temp_vector_out, transform_ee_base_stamped);
-      msg_transformed.wrench.torque = temp_vector_out.vector;
-      
-      topicPub_ForceDataTrans_.publish(msg_transformed);
+    try{
+    transform_ee_base_stamped = p_tfBuffer->lookupTransform(transform_frame_id, frame_id, ros::Time(0));
     }
+    catch (tf2::TransformException ex ){
+    ROS_ERROR("%s",ex.what());
+    }
+
+    topicPub_transData_.publish(transform_ee_base_stamped);
+    
+    geometry_msgs::Vector3Stamped temp_vector_in, temp_vector_out;      
+    
+    temp_vector_in.header = msg.header;
+    temp_vector_in.vector = msg.wrench.force;      
+    tf2::doTransform(temp_vector_in, temp_vector_out, transform_ee_base_stamped);      
+    msg_transformed.header = temp_vector_out.header;
+    msg_transformed.wrench.force = temp_vector_out.vector;
+    
+    temp_vector_in.vector = msg.wrench.torque;      
+    tf2::doTransform(temp_vector_in, temp_vector_out, transform_ee_base_stamped);
+    msg_transformed.wrench.torque = temp_vector_out.vector;
+    
+    topicPub_ForceDataTrans_.publish(msg_transformed);
+    
+//     ROS_INFO("Duration time of calcuation: %f'", (ros::Time::now() - start).toSec());
+//     ROS_INFO("Time between calls: %f", (event.current_real - event.last_real).toSec());
+//     ROS_INFO("Error: %f", (event.current_expected - event.current_real).toSec());
 }
 
 void ForceTorqueNode::visualizeData(double x, double y, double z)
@@ -297,11 +307,6 @@ void ForceTorqueNode::visualizeData(double x, double y, double z)
   topicPub_Marker_.publish(marker);
 }
 
-
-
-
-
-
 int main(int argc, char ** argv)
 {
 
@@ -310,13 +315,8 @@ int main(int argc, char ** argv)
 
   ROS_INFO("ForceTorque Sensor Node running.");
 
-  ros::Rate loop_rate(10);
-  while(ros::ok())
-    {
-      ros::spinOnce();
-      loop_rate.sleep();
-      ftn.updateFTData();
-    }
+  ros::spin();
+  
   return 0;
 }
 

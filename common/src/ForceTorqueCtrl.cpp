@@ -365,12 +365,12 @@ void ForceTorqueCtrl::ReadMatrix(int axis, Eigen::VectorXf& vec)
 		std::cout<<"Error: Requesting Calibration Matrix!"<<std::endl;
 		return;
 	}
-
+	
 	CanMsg replyMsg;
 	bool ret2 = m_pCanCtrl->receiveMsgRetry(&replyMsg, 10);
 	if(ret2)
 	{
-		std::cout << "reply ID: \t" << replyMsg.getID()<<std::endl;
+		std::cout << "reply ID: \t" << std::hex << replyMsg.getID()<<std::endl;
 		std::cout << "reply Length: \t" << replyMsg.getLength()<<std::endl;
 		std::cout << "reply Data: \t" << replyMsg.getAt(0) << " " << replyMsg.getAt(1) << " "
 				      << replyMsg.getAt(2) << " " << replyMsg.getAt(3) << " "
@@ -492,69 +492,67 @@ bool ForceTorqueCtrl::ReadFirmwareVersion()
 
 void ForceTorqueCtrl::ReadSGData(double &Fx, double &Fy, double &Fz, double &Tx, double &Ty, double &Tz)
 {
-	int statusCode = 0, sg0 = 0, sg1 = 0, sg2 = 0, sg3 = 0, sg4 = 0, sg5 = 0;
+    int statusCode = 0, sg0 = 0, sg1 = 0, sg2 = 0, sg3 = 0, sg4 = 0, sg5 = 0;
 
-	CanMsg CMsg;
-	CMsg.setID(m_CanBaseIdentifier | READ_SG);
-	CMsg.setLength(0);
+    CanMsg CMsg;
+    CMsg.setID(m_CanBaseIdentifier | READ_SG);
+    CMsg.setLength(0);
 
-	bool ret = m_pCanCtrl->transmitMsg(CMsg, true);
+    bool ret = m_pCanCtrl->transmitMsg(CMsg, true);
 
-	CanMsg replyMsg;
-	bool ret2 = m_pCanCtrl->receiveMsgRetry(&replyMsg, 10);
-	unsigned char c[2];
-	if(ret2)
-	{
-		int length = replyMsg.getLength();
+    CanMsg replyMsg;
+    bool ret2 = m_pCanCtrl->receiveMsgRetry(&replyMsg, -1);
+    unsigned char c[2];
+    if(ret2)
+    {
+	int length = replyMsg.getLength();
 
-		c[0] = replyMsg.getAt(0); //status code
-		c[1] = replyMsg.getAt(1);
-		statusCode = (((char)c[0] << 8) | c[1]);
+	c[0] = replyMsg.getAt(0); //status code
+	c[1] = replyMsg.getAt(1);
+	statusCode = (((char)c[0] << 8) | c[1]);
 
-		c[0] = replyMsg.getAt(2); //sg0
-		c[1] = replyMsg.getAt(3);
-		sg0 = (short)((c[0] << 8) | c[1]);
+	c[0] = replyMsg.getAt(2); //sg0
+	c[1] = replyMsg.getAt(3);
+	sg0 = (short)((c[0] << 8) | c[1]);
 
-		c[0] = replyMsg.getAt(4); //sg2
-		c[1] = replyMsg.getAt(5);
-		sg2 = (short)((c[0] << 8) | c[1]);
+	c[0] = replyMsg.getAt(4); //sg2
+	c[1] = replyMsg.getAt(5);
+	sg2 = (short)((c[0] << 8) | c[1]);
 
-		c[0] = replyMsg.getAt(6); //sg4
-		c[1] = replyMsg.getAt(7);
-		sg4 = (short)((c[0] << 8) | c[1]);
-	}
-	else
-		return;
+	c[0] = replyMsg.getAt(6); //sg4
+	c[1] = replyMsg.getAt(7);
+	sg4 = (short)((c[0] << 8) | c[1]);
+    }
+    else
+	return;
 
-	ret2 = m_pCanCtrl->receiveMsgRetry(&replyMsg, 10);
-	if(ret2)
-	{
-		int length = replyMsg.getLength();
+    ret2 = m_pCanCtrl->receiveMsgRetry(&replyMsg, -1);
+    if(ret2)
+    {
+	int length = replyMsg.getLength();
 
-		c[0] = replyMsg.getAt(0); //sg1
-		c[1] = replyMsg.getAt(1);
-		sg1 = (short)((c[0] << 8) | c[1]);
+	c[0] = replyMsg.getAt(0); //sg1
+	c[1] = replyMsg.getAt(1);
+	sg1 = (short)((c[0] << 8) | c[1]);
 
-		c[0] = replyMsg.getAt(2); //sg3
-		c[1] = replyMsg.getAt(3);
-		sg3 = (short)((c[0] << 8) | c[1]);
+	c[0] = replyMsg.getAt(2); //sg3
+	c[1] = replyMsg.getAt(3);
+	sg3 = (short)((c[0] << 8) | c[1]);
 
-		c[0] = replyMsg.getAt(4); //sg5
-		c[1] = replyMsg.getAt(5);
-		sg5 = (short)((c[0] << 8) | c[1]);
-	}
-	else
-		return;
+	c[0] = replyMsg.getAt(4); //sg5
+	c[1] = replyMsg.getAt(5);
+	sg5 = (short)((c[0] << 8) | c[1]);
+    }
+    else
+	    return;
 
 
-// 	std::cout<<"\nsg0: "<<sg0<<" sg1: "<<sg1<<" sg2: "<<sg2<<" sg3: "<<sg3<<" sg4: "<<sg4<<" sg5: "<<sg5<<std::endl;
+//     std::cout<<"\nsg0: "<<sg0<<" sg1: "<<sg1<<" sg2: "<<sg2<<" sg3: "<<sg3<<" sg4: "<<sg4<<" sg5: "<<sg5<<std::endl;
 
-	StrainGaugeToForce(sg0, sg1, sg2, sg3, sg4, sg5);
+    StrainGaugeToForce(sg0, sg1, sg2, sg3, sg4, sg5);
 
-	Fx = m_vForceData(0); Fy = m_vForceData(1); Fz = m_vForceData(2);
-	Tx = m_vForceData(3); Ty= m_vForceData(4); Tz = m_vForceData(5);
-	out<<"Fx: "<<Fx<<" Fy: "<<Fy<<" Fz: "<<Fz<<" Tx: "<<Tx<<" Ty: "<<Ty<<" Tz: "<<Tz<<std::endl;
-
+    Fx = m_vForceData(0); Fy = m_vForceData(1); Fz = m_vForceData(2);
+    Tx = m_vForceData(3); Ty= m_vForceData(4); Tz = m_vForceData(5);
 }
 
 void ForceTorqueCtrl::StrainGaugeToForce(int& sg0, int& sg1, int& sg2, int& sg3, int& sg4, int& sg5)

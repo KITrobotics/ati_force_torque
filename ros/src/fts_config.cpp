@@ -26,12 +26,12 @@ public:
 
 private:
     // CAN parameters
-    int deviceType;
-    std::string devicePath;
-    int deviceBaudrate;
-    int deviceBaseIdentifier;
-    int futureBaudrate;
-    int futureIdentifier;
+    int canType;
+    std::string canPath;
+    int canBaudrate;
+    int ftsBaseID;
+    int ftsFutureBaudrate;
+    int ftsFutureBaseID;
 
     // service servers
     ros::ServiceServer srvServer_SetBaudRate_;
@@ -50,16 +50,15 @@ ForceTorqueNode::ForceTorqueNode()
 	srvServer_SetBaseIdentifier_ = nh_.advertiseService("SetBaseIdentifier", &ForceTorqueNode::srvCallback_SetBaseIdentifier, this);
 
 	// Read data from parameter server
-	nh_.param<int>("device/type", deviceType, -1);
-	nh_.param<std::string>("device/path", devicePath, "");
-	nh_.param<int>("device/baudrate", deviceBaudrate, -1);
-	nh_.param<int>("device/base_identifier", deviceBaseIdentifier, -1);
-	nh_.param<int>("device/future_baudrate", futureBaudrate, ATI_CAN_BAUD_250K);
-	nh_.param<int>("device/future_identifier", futureIdentifier, 0x20);
+	nh_.param<int>("CAN/type", canType, -1);
+	nh_.param<std::string>("CAN/path", canPath, "");
+	nh_.param<int>("CAN/baudrate", canBaudrate, -1);
+	nh_.param<int>("FTS/base_identifier", ftsBaseID, -1);
+	nh_.param<int>("FTS/future_baudrate", ftsFutureBaudrate, ATI_CAN_BAUD_250K);
+	nh_.param<int>("FTS/future_base_id", ftsFutureBaseID, 0x20);
 
-	p_Ftc = new ForceTorqueCtrl(deviceType, devicePath, deviceBaudrate, deviceBaseIdentifier);
+	p_Ftc = new ForceTorqueCtrl(canType, canPath, canBaudrate, ftsBaseID);
 	
-// 	usleep(10000);
 	initFts();
 
 }
@@ -85,9 +84,9 @@ bool ForceTorqueNode::srvCallback_SetBaudRate(cob_srvs::Trigger::Request &req, c
  
     if (m_isInitialized) {
 	
-	if (p_Ftc->SetBaudRate(futureBaudrate)) {
+	if (p_Ftc->SetBaudRate(ftsFutureBaudrate)) {
 	    
-	    ROS_INFO("New baud rate successfully set to: %d", futureBaudrate);
+	    ROS_INFO("New baud rate successfully set to: %d", ftsFutureBaudrate);
 	
 	res.success.data = true;
 	res.error_message.data = "All good, you are nice person! :)";
@@ -109,9 +108,9 @@ bool ForceTorqueNode::srvCallback_SetBaseIdentifier(cob_srvs::Trigger::Request &
  
     if (m_isInitialized) {
 	
-	if (p_Ftc->SetBaseIdentifier(futureIdentifier)) {
+	if (p_Ftc->SetBaseIdentifier(ftsFutureBaseID)) {
 	    
-	    ROS_INFO("New base identifier successfully set to HEX: %x", futureIdentifier);
+	    ROS_INFO("New base identifier successfully set to HEX: %x", ftsFutureBaseID);
 	
 	res.success.data = true;
 	res.error_message.data = "All good, you are nice person! :)";
@@ -132,10 +131,10 @@ bool ForceTorqueNode::srvCallback_SetBaseIdentifier(cob_srvs::Trigger::Request &
 int main(int argc, char ** argv)
 {
 
-  ros::init(argc, argv, "forcetorque_set_config");
+  ros::init(argc, argv, "forcetorque_config");
   ForceTorqueNode ftn;
 
-  ROS_INFO("ForceTorque Sensor Config Node running.");
+  ROS_INFO("ForceTorque Config Node running.");
   
   ros::spin();
 
