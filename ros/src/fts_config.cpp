@@ -46,23 +46,23 @@ private:
 ForceTorqueConfig::ForceTorqueConfig()
 {
 
-    m_isInitialized = false;
+	m_isInitialized = false;
 
-    srvServer_SetBaudRate_ = nh_.advertiseService("SetBaudRate", &ForceTorqueConfig::srvCallback_SetBaudRate, this);
-    srvServer_SetBaseIdentifier_ = nh_.advertiseService("SetBaseIdentifier", &ForceTorqueConfig::srvCallback_SetBaseIdentifier, this);
-    srvSever_Reset_ = nh_.advertiseService("Reset", &ForceTorqueConfig::srvCallback_Reset, this);
+	srvServer_SetBaudRate_ = nh_.advertiseService("SetBaudRate", &ForceTorqueConfig::srvCallback_SetBaudRate, this);
+	srvServer_SetBaseIdentifier_ = nh_.advertiseService("SetBaseIdentifier", &ForceTorqueConfig::srvCallback_SetBaseIdentifier, this);
+	srvSever_Reset_ = nh_.advertiseService("Reset", &ForceTorqueConfig::srvCallback_Reset, this);
 
-    // Read data from parameter server
-    nh_.param<int>("CAN/type", canType, -1);
-    nh_.param<std::string>("CAN/path", canPath, "");
-    nh_.param<int>("CAN/baudrate", canBaudrate, -1);
-    nh_.param<int>("FTS/base_identifier", ftsBaseID, -1);
-    nh_.param<int>("FTS/future_baudrate", ftsFutureBaudrate, ATI_CAN_BAUD_250K);
-    nh_.param<int>("FTS/future_base_id", ftsFutureBaseID, 0x20);
+	// Read data from parameter server
+	nh_.param<int>("CAN/type", canType, -1);
+	nh_.param<std::string>("CAN/path", canPath, "");
+	nh_.param<int>("CAN/baudrate", canBaudrate, -1);
+	nh_.param<int>("FTS/base_identifier", ftsBaseID, -1);
+	nh_.param<int>("FTS/future_baudrate", ftsFutureBaudrate, ATI_CAN_BAUD_250K);
+	nh_.param<int>("FTS/future_base_id", ftsFutureBaseID, 0x20);
 
-    p_Ftc = new ForceTorqueCtrl(canType, canPath, canBaudrate, ftsBaseID);
-    
-    initFts();
+	p_Ftc = new ForceTorqueCtrl(canType, canPath, canBaudrate, ftsBaseID);
+	
+	initFts();
 
 }
 

@@ -1,6 +1,10 @@
+//general includes
+#include <unistd.h>
+
 // Headrs provided by cob-packages
 //#include <cob_generic_can/CanESD.h>
 //#include <cob_generic_can/CanPeakSys.h>
+#include <cob_generic_can/CanPeakSysUSB.h>
 #include <cob_forcetorque/ForceTorqueCtrl.h>
 
 ForceTorqueCtrl::ForceTorqueCtrl()
@@ -124,45 +128,6 @@ bool ForceTorqueCtrl::ReadFTSerialNumber()
 	return ret;
 }
 
-bool ForceTorqueCtrl::SetActiveCalibrationMatrix(int num)
-{
-	std::cout << "\n\n*******Setting Active Calibration Matrix Num to: "<< num <<"********"<< std::endl;
-	bool ret = true;
-	CanMsg CMsg;
-	CMsg.setID(m_CanBaseIdentifier | SET_CALIB);
-	CMsg.setLength(1);
-	CMsg.setAt(num,0);
-
-	ret = m_pCanCtrl->transmitMsg(CMsg, true);
-
-	if (ret) {
-
-		CanMsg replyMsg;
-		ret = m_pCanCtrl->receiveMsgRetry(&replyMsg, 10);
-		if(ret)
-		{
-			std::cout<<"reply ID: \t"<< std::hex << replyMsg.getID()<<std::endl;
-			std::cout<<"reply Length: \t"<<replyMsg.getLength()<<std::endl;
-			if(replyMsg.getID() == (m_CanBaseIdentifier | SET_CALIB))
-			{
-				std::cout<<"Setting Calibration Matrix succeed!"<<std::endl;
-				std::cout<<"Calibration Matrix: "<<replyMsg.getAt(0)<<" is Activ!"<<std::endl;
-			}
-			else {
-			    std::cout<<"Error: Received wrong opcode!"<<std::endl;
-			}
-		}
-		else {
-		    std::cout<<"Error: Receiving Message failed!"<<std::endl;
-		}
-	}
-	else {
-	    std::cout << "ForceTorqueCtrl::SetActiveCalibrationMatrix(int num): Can not transmit message!" << std::endl;
-	}
-
-	return ret;
-}
-
 bool ForceTorqueCtrl::ReadCountsPerUnit()
 {
 	std::cout << "\n\n*********Read Counts Per Unit**********" << std::endl;
@@ -234,20 +199,20 @@ bool ForceTorqueCtrl::ReadUnitCodes()
 		}
 	}
 	else {
-	    std::cout << "ForceTorqueCtrl::ReadUnitCodes(): Can not transmit message!" << std::endl;
+		std::cout << "ForceTorqueCtrl::ReadUnitCodes(): Can not transmit message!" << std::endl;
 	}
 
 	return ret;
 }
 
-bool ForceTorqueCtrl::SetBaudRate(BYTE value)
+bool ForceTorqueCtrl::SetActiveCalibrationMatrix(int num)
 {
-	std::cout << "\n\n*******Setting Baud Rate Num to value (divisor = value + 1): " << value <<"********"<< std::endl;
+	std::cout << "\n\n*******Setting Active Calibration Matrix Num to: "<< num <<"********"<< std::endl;
 	bool ret = true;
 	CanMsg CMsg;
-	CMsg.setID(m_CanBaseIdentifier | SET_BAUD);
+	CMsg.setID(m_CanBaseIdentifier | SET_CALIB);
 	CMsg.setLength(1);
-	CMsg.setAt(value,0);
+	CMsg.setAt(num,0);
 
 	ret = m_pCanCtrl->transmitMsg(CMsg, true);
 
@@ -257,32 +222,31 @@ bool ForceTorqueCtrl::SetBaudRate(BYTE value)
 		ret = m_pCanCtrl->receiveMsgRetry(&replyMsg, 10);
 		if(ret)
 		{
-		    std::cout<<"reply ID: \t"<< std::hex << replyMsg.getID()<<std::endl;
-		    std::cout<<"reply Length: \t"<<replyMsg.getLength()<<std::endl;
-		    if(replyMsg.getID() == (m_CanBaseIdentifier | SET_BAUD))
-		    {
-			std::cout<<"Setting Baud Rate succeed!"<<std::endl;
-		    }
-		    else {
-			std::cout<<"Error: Received wrong opcode!"<<std::endl;
-		    }
+			std::cout<<"reply ID: \t"<< std::hex << replyMsg.getID()<<std::endl;
+			std::cout<<"reply Length: \t"<<replyMsg.getLength()<<std::endl;
+			if(replyMsg.getID() == (m_CanBaseIdentifier | SET_CALIB))
+			{
+				std::cout<<"Setting Calibration Matrix succeed!"<<std::endl;
+				std::cout<<"Calibration Matrix: "<<replyMsg.getAt(0)<<" is Activ!"<<std::endl;
+			}
+			else
+				std::cout<<"Error: Received wrong opcode!"<<std::endl;
 		}
-		else {
-		    std::cout<<"Error: Receiving Message failed!"<<std::endl;
-		}
+		else
+			std::cout<<"Error: Receiving Message failed!"<<std::endl;
 	}
 	else {
-	    std::cout << "ForceTorqueCtrl::SetBaudRate(BYTE value): Can not transmit message!" << std::endl;
+		std::cout << "ForceTorqueCtrl::SetActiveCalibrationMatrix(int num): Can not transmit message!" << std::endl;
 	}
 
 	return ret;
+
 }
 
 bool ForceTorqueCtrl::SetBaudRate(int value)
 {
     std::cout << "\n\n*******Setting Baud Rate value to: "<< value <<"********"<< std::endl;
     bool ret = true;
-    BYTE b = 0;
     CanMsg CMsg;
     CMsg.setID(m_CanBaseIdentifier | SET_BAUD);
     CMsg.setLength(1);
@@ -340,7 +304,6 @@ bool ForceTorqueCtrl::SetBaseIdentifier(int identifier)
 {
     std::cout << "\n\n*******Setting Base Identifier value to HEX : " << std::hex << identifier <<" ********"<< std::endl;
     bool ret = true;
-    BYTE b = 0;
     CanMsg CMsg;
     CMsg.setID(m_CanBaseIdentifier | SET_BASEID);
     CMsg.setLength(1);
@@ -372,6 +335,7 @@ bool ForceTorqueCtrl::SetBaseIdentifier(int identifier)
 
     return ret;
 }
+
 
 void ForceTorqueCtrl::ReadCalibrationMatrix()
 {
@@ -505,7 +469,6 @@ bool ForceTorqueCtrl::ReadFirmwareVersion()
 {
 	std::cout << "\n\n*******Reading Firmware Version*******"<< std::endl;
 	bool ret = true;
-	BYTE b = 0;
 	CanMsg CMsg;
 	CMsg.setID(m_CanBaseIdentifier | READ_FIRMWARE);
 	CMsg.setLength(0);

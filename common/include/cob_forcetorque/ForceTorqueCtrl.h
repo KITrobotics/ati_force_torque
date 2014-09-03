@@ -1,13 +1,11 @@
 #ifndef FORCETORQUECTRL_INCLUDEDEF_H
 #define FORCETORQUECTRL_INCLUDEDEF_H
 
-//general includes
-#include <unistd.h>
 #include <iostream>
+
 
 // Headers provided by other cob-packages
 #include <cob_generic_can/CanItf.h>
-#include <cob_generic_can/CanPeakSysUSB.h>
 
 #include <cob_forcetorque/Mutex.h>
 

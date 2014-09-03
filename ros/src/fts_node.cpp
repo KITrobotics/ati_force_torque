@@ -130,7 +130,6 @@ ForceTorqueNode::ForceTorqueNode()
 	topicPub_Marker_ = nh_.advertise<visualization_msgs::Marker>("visualization_marker", 1);
 	srvServer_Init_ = nh_.advertiseService("Init", &ForceTorqueNode::srvCallback_Init, this);
 	srvServer_Calibrate_ = nh_.advertiseService("Calibrate", &ForceTorqueNode::srvCallback_Calibrate, this);
-	srvServer_SetBaudRate_ = nh_.advertiseService("SetBaudRate", &ForceTorqueNode::srvCallback_SetBaudRate, this);
 
 	// Read data from parameter server
 	nh_.param<int>("CAN/type", canType, -1);
@@ -255,7 +254,7 @@ void ForceTorqueNode::updateFTData(const ros::TimerEvent& event)
     try{
 	transform_ee_base_stamped = p_tfBuffer->lookupTransform(transform_frame_id, frame_id, ros::Time(0));
     }
-    catch (tf2::TransformException ex ){
+	catch (tf2::TransformException ex ){
 	ROS_ERROR("%s",ex.what());
     }
     
@@ -280,29 +279,29 @@ void ForceTorqueNode::updateFTData(const ros::TimerEvent& event)
 
 void ForceTorqueNode::visualizeData(double x, double y, double z)
 {
-    visualization_msgs::Marker marker;
-    uint32_t shape = visualization_msgs::Marker::ARROW;
-    marker.header.frame_id = frame_id;
-    marker.header.stamp = ros::Time::now();
-    marker.ns = "ForceTorqueData";
-    marker.id = 0;
-    marker.type = shape;
-    // first delete old markers
-    marker.action = visualization_msgs::Marker::DELETE;
-    topicPub_Marker_.publish(marker);
-    marker.action = visualization_msgs::Marker::ADD;
-    marker.pose.position.x = 0;
-    marker.pose.position.y = 0;
-    marker.pose.position.z = 0;
-    marker.scale.x = x/100;
-    marker.scale.y = y/100;
-    marker.scale.z = z/100;
-    marker.color.r = 0.0f;
-    marker.color.g = 1.0f;
-    marker.color.b = 0.0f;
-    marker.color.a = 1.0;
-    marker.lifetime = ros::Duration();
-    topicPub_Marker_.publish(marker);
+  visualization_msgs::Marker marker;
+  uint32_t shape = visualization_msgs::Marker::ARROW;
+  marker.header.frame_id = frame_id;
+  marker.header.stamp = ros::Time::now();
+  marker.ns = "ForceTorqueData";
+  marker.id = 0;
+  marker.type = shape;
+// first delete old markers
+  marker.action = visualization_msgs::Marker::DELETE;
+  topicPub_Marker_.publish(marker);
+  marker.action = visualization_msgs::Marker::ADD;
+  marker.pose.position.x = 0;
+  marker.pose.position.y = 0;
+  marker.pose.position.z = 0;
+  marker.scale.x = x/100;
+  marker.scale.y = y/100;
+  marker.scale.z = z/100;
+  marker.color.r = 0.0f;
+  marker.color.g = 1.0f;
+  marker.color.b = 0.0f;
+  marker.color.a = 1.0;
+  marker.lifetime = ros::Duration();
+  topicPub_Marker_.publish(marker);
 }
 
 int main(int argc, char ** argv)
