@@ -67,8 +67,6 @@ typedef unsigned char uint8_t;
 #include <tf2_ros/transform_listener.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
-#include <visualization_msgs/Marker.h>
-
 #include <math.h>
 #include <iostream>
 #define PI 3.14159265
@@ -83,7 +81,6 @@ public:
     bool srvCallback_Init(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res);
     bool srvCallback_Calibrate(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res);
     void updateFTData(const ros::TimerEvent& event);
-    void visualizeData(double x, double y, double z);
 
     // create a handle for this node, initialize node
     ros::NodeHandle nh_;
@@ -127,7 +124,6 @@ ForceTorqueNode::ForceTorqueNode()
 
 	topicPub_ForceData_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values", 100);
 	topicPub_ForceDataTrans_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values_transformed", 100);
-	topicPub_Marker_ = nh_.advertise<visualization_msgs::Marker>("visualization_marker", 1);
 	srvServer_Init_ = nh_.advertiseService("Init", &ForceTorqueNode::srvCallback_Init, this);
 	srvServer_Calibrate_ = nh_.advertiseService("Calibrate", &ForceTorqueNode::srvCallback_Calibrate, this);
 
@@ -275,33 +271,6 @@ void ForceTorqueNode::updateFTData(const ros::TimerEvent& event)
 //     ROS_INFO("Duration time of calcuation: %f'", (ros::Time::now() - start).toSec());
 //     ROS_INFO("Time between calls: %f", (event.current_real - event.last_real).toSec());
 //     ROS_INFO("Error: %f", (event.current_expected - event.current_real).toSec());
-}
-
-void ForceTorqueNode::visualizeData(double x, double y, double z)
-{
-  visualization_msgs::Marker marker;
-  uint32_t shape = visualization_msgs::Marker::ARROW;
-  marker.header.frame_id = frame_id;
-  marker.header.stamp = ros::Time::now();
-  marker.ns = "ForceTorqueData";
-  marker.id = 0;
-  marker.type = shape;
-// first delete old markers
-  marker.action = visualization_msgs::Marker::DELETE;
-  topicPub_Marker_.publish(marker);
-  marker.action = visualization_msgs::Marker::ADD;
-  marker.pose.position.x = 0;
-  marker.pose.position.y = 0;
-  marker.pose.position.z = 0;
-  marker.scale.x = x/100;
-  marker.scale.y = y/100;
-  marker.scale.z = z/100;
-  marker.color.r = 0.0f;
-  marker.color.g = 1.0f;
-  marker.color.b = 0.0f;
-  marker.color.a = 1.0;
-  marker.lifetime = ros::Duration();
-  topicPub_Marker_.publish(marker);
 }
 
 int main(int argc, char ** argv)
