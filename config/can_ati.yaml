@@ -8,3 +8,7 @@ FTS:
     
 node:
     ft_pub_freq: 650
+
+Filter:
+    gain: 0.093029207
+    time_const: 0.906970792

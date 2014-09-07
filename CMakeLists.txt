@@ -59,6 +59,6 @@ install(DIRECTORY common/include
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
 
-install(DIRECTORY ros/launch
+install(DIRECTORY ros/launch config
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )

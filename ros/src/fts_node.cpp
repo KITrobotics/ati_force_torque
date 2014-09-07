@@ -93,11 +93,18 @@ private:
     int ftsBaseID;
     double nodePubFreq;
 
+    // Filter parametrs
+    double filterGain;
+    double filterTimeConst;
+
+    geometry_msgs::WrenchStamped msg_filtered_old, msg_old;
+
     std::string frame_id;
     std::string transform_frame_id;
 
     // declaration of topics to publish
     ros::Publisher topicPub_ForceData_;
+    ros::Publisher topicPub_ForceDataFiltered_;
     ros::Publisher topicPub_ForceDataTrans_;
     ros::Publisher topicPub_Marker_;
 
@@ -120,31 +127,34 @@ private:
 ForceTorqueNode::ForceTorqueNode()
 {
 
-	m_isInitialized = false;
+    m_isInitialized = false;
 
-	topicPub_ForceData_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values", 100);
-	topicPub_ForceDataTrans_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values_transformed", 100);
-	srvServer_Init_ = nh_.advertiseService("Init", &ForceTorqueNode::srvCallback_Init, this);
-	srvServer_Calibrate_ = nh_.advertiseService("Calibrate", &ForceTorqueNode::srvCallback_Calibrate, this);
+    topicPub_ForceData_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values", 100);
+    topicPub_ForceDataFiltered_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values_filtered", 100);
+    topicPub_ForceDataTrans_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values_transformed", 100);
+    srvServer_Init_ = nh_.advertiseService("Init", &ForceTorqueNode::srvCallback_Init, this);
+    srvServer_Calibrate_ = nh_.advertiseService("Calibrate", &ForceTorqueNode::srvCallback_Calibrate, this);
 
-	// Read data from parameter server
-	nh_.param<int>("CAN/type", canType, -1);
-	nh_.param<std::string>("CAN/path", canPath, "");
-	nh_.param<int>("CAN/baudrate", canBaudrate, -1);
-	nh_.param<int>("FTS/base_identifier", ftsBaseID, -1);
-	nh_.param<double>("node/ft_pub_freq", nodePubFreq, 100);
-	
+    // Read data from parameter server
+    nh_.param<int>("CAN/type", canType, -1);
+    nh_.param<std::string>("CAN/path", canPath, "");
+    nh_.param<int>("CAN/baudrate", canBaudrate, -1);
+    nh_.param<int>("FTS/base_identifier", ftsBaseID, -1);
+    nh_.param<double>("node/ft_pub_freq", nodePubFreq, 100);
+    nh_.param<double>("Filter/gain", filterGain, 0);
+    nh_.param<double>("Filter/time_const", filterTimeConst, 1);
+    
 
-	ros::NodeHandle nh("~");
-	nh.getParam("frame", frame_id);
-	nh.getParam("transform_frame", transform_frame_id);
+    ros::NodeHandle nh("~");
+    nh.getParam("frame", frame_id);
+    nh.getParam("transform_frame", transform_frame_id);
 
-	p_tfBuffer = new tf2_ros::Buffer();
-	p_tfListener = new tf2_ros::TransformListener(*p_tfBuffer, true);
-	
-	ftUpdateTimer = nh_.createTimer(ros::Rate(nodePubFreq), &ForceTorqueNode::updateFTData, this, false, false);
+    p_tfBuffer = new tf2_ros::Buffer();
+    p_tfListener = new tf2_ros::TransformListener(*p_tfBuffer, true);
+    
+    ftUpdateTimer = nh_.createTimer(ros::Rate(nodePubFreq), &ForceTorqueNode::updateFTData, this, false, false);
 
-	p_Ftc = new ForceTorqueCtrl(canType, canPath, canBaudrate, ftsBaseID);
+    p_Ftc = new ForceTorqueCtrl(canType, canPath, canBaudrate, ftsBaseID);
 }
 
 bool ForceTorqueNode::srvCallback_Init(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res )
@@ -231,7 +241,7 @@ void ForceTorqueNode::updateFTData(const ros::TimerEvent& event)
 
     p_Ftc->ReadSGData(status, Fx, Fy, Fz, Tx, Ty, Tz);    
 
-    geometry_msgs::WrenchStamped msg, msg_transformed;
+    geometry_msgs::WrenchStamped msg, msg_filtered, msg_transformed;
     
     msg.header.frame_id = frame_id;
     msg.header.stamp = ros::Time::now();
@@ -243,9 +253,17 @@ void ForceTorqueNode::updateFTData(const ros::TimerEvent& event)
     msg.wrench.torque.z = Tz-F_avg[5];
     topicPub_ForceData_.publish(msg);
 
-    tf2::Transform fdata_base;
-    tf2::Transform fdata;
-    fdata.setOrigin(tf2::Vector3(Fx-F_avg[0], Fy-F_avg[1], Fz-F_avg[2]));
+    msg_filtered.header = msg.header;
+    msg_filtered.wrench.force.x = filterGain*msg_old.wrench.force.x + filterTimeConst*msg_filtered_old.wrench.force.x;
+    msg_filtered.wrench.force.y = filterGain*msg_old.wrench.force.y +filterTimeConst*msg_filtered_old.wrench.force.y;
+    msg_filtered.wrench.force.z = filterGain*msg_old.wrench.force.z + filterTimeConst*msg_filtered_old.wrench.force.z;
+    msg_filtered.wrench.torque.x = filterGain*msg_old.wrench.torque.x + filterTimeConst*msg_filtered_old.wrench.torque.x;
+    msg_filtered.wrench.torque.y = filterGain*msg_old.wrench.torque.y + filterTimeConst*msg_filtered_old.wrench.torque.y;
+    msg_filtered.wrench.torque.z = filterGain*msg_old.wrench.torque.z + filterTimeConst*msg_filtered_old.wrench.torque.z;
+
+    topicPub_ForceDataFiltered_.publish(msg_filtered);
+    msg_filtered_old = msg_filtered;
+    msg_old = msg;
 
     try{
 	transform_ee_base_stamped = p_tfBuffer->lookupTransform(transform_frame_id, frame_id, ros::Time(0));
