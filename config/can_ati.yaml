@@ -8,7 +8,14 @@ FTS:
     
 node:
     ft_pub_freq: 650
-
-Filter:
-    gain: 0.093029207
-    time_const: 0.906970792
+    frame: "kms_real"
+    transform_frame: "kms_transformed_link"
+    
+Calibration:
+    n_measurements: 50
+    T_between_meas: 10000
+    
+CoordinateSystemCal:
+    n_measurements: 10
+    T_between_meas: 10000
+    push_direction: 1      # angle to +y (0 to +x)

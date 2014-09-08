@@ -80,6 +80,7 @@ public:
 
     bool srvCallback_Init(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res);
     bool srvCallback_Calibrate(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res);
+    bool srvCallback_DetermineCoordinateSystem(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res);
     void updateFTData(const ros::TimerEvent& event);
 
     // create a handle for this node, initialize node
@@ -92,12 +93,11 @@ private:
     int canBaudrate;
     int ftsBaseID;
     double nodePubFreq;
-
-    // Filter parametrs
-    double filterGain;
-    double filterTimeConst;
-
-    geometry_msgs::WrenchStamped msg_filtered_old, msg_old;
+    int calibrationNMeasurements;
+    int calibrationTBetween;
+    int coordinateSystemNMeasurements;
+    int coordinateSystemTBetween;
+    int coordinateSystemPushDirection;
 
     std::string frame_id;
     std::string transform_frame_id;
@@ -111,6 +111,7 @@ private:
     // service servers
     ros::ServiceServer srvServer_Init_;
     ros::ServiceServer srvServer_Calibrate_;
+    ros::ServiceServer srvServer_DetermineCoordianteSystem_;
 
     tf2_ros::Buffer *p_tfBuffer;
     tf2_ros::TransformListener* p_tfListener;
@@ -120,6 +121,7 @@ private:
     ros::Timer ftUpdateTimer;
     
     bool m_isInitialized;
+    bool m_isCalibrated;
     ForceTorqueCtrl* p_Ftc;
     std::vector<double> F_avg;
 };
@@ -128,12 +130,14 @@ ForceTorqueNode::ForceTorqueNode()
 {
 
     m_isInitialized = false;
+    m_isCalibrated = false;
 
-    topicPub_ForceData_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values", 100);
-    topicPub_ForceDataFiltered_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values_filtered", 100);
-    topicPub_ForceDataTrans_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values_transformed", 100);
+    topicPub_ForceData_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values", 1);
+    topicPub_ForceDataFiltered_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values_filtered", 1);
+    topicPub_ForceDataTrans_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values_transformed", 1);
     srvServer_Init_ = nh_.advertiseService("Init", &ForceTorqueNode::srvCallback_Init, this);
     srvServer_Calibrate_ = nh_.advertiseService("Calibrate", &ForceTorqueNode::srvCallback_Calibrate, this);
+    srvServer_DetermineCoordianteSystem_ = nh_.advertiseService("DetermineCoordinateSystem", &ForceTorqueNode::srvCallback_DetermineCoordinateSystem, this);
 
     // Read data from parameter server
     nh_.param<int>("CAN/type", canType, -1);
@@ -141,13 +145,13 @@ ForceTorqueNode::ForceTorqueNode()
     nh_.param<int>("CAN/baudrate", canBaudrate, -1);
     nh_.param<int>("FTS/base_identifier", ftsBaseID, -1);
     nh_.param<double>("node/ft_pub_freq", nodePubFreq, 100);
-    nh_.param<double>("Filter/gain", filterGain, 0);
-    nh_.param<double>("Filter/time_const", filterTimeConst, 1);
-    
-
-    ros::NodeHandle nh("~");
-    nh.getParam("frame", frame_id);
-    nh.getParam("transform_frame", transform_frame_id);
+    nh_.param<std::string>("node/frame", frame_id, "fts_link");
+    nh_.param<std::string>("node/transform_frame", transform_frame_id, "base_link");
+    nh_.param<int>("Calibration/n_measurements", calibrationNMeasurements, 20);
+    nh_.param<int>("Calibration/T_between_meas", calibrationTBetween, 10000);
+    nh_.param<int>("CoordinateSystemCal/n_measurements", coordinateSystemNMeasurements, 20);
+    nh_.param<int>("CoordinateSystemCal/T_between_meas", coordinateSystemTBetween, 10000);
+    nh_.param<int>("CoordinateSystemCal/push_direction", coordinateSystemPushDirection, 0);
 
     p_tfBuffer = new tf2_ros::Buffer();
     p_tfListener = new tf2_ros::TransformListener(*p_tfBuffer, true);
@@ -193,7 +197,6 @@ bool ForceTorqueNode::srvCallback_Init(cob_srvs::Trigger::Request &req, cob_srvs
 
 bool ForceTorqueNode::srvCallback_Calibrate(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res )
 {
-    int measurements = 20;
     if(m_isInitialized)
     {
 	F_avg[0] = 0.0;
@@ -203,7 +206,7 @@ bool ForceTorqueNode::srvCallback_Calibrate(cob_srvs::Trigger::Request &req, cob
 	F_avg[4] = 0.0;
 	F_avg[5] = 0.0;
 	
-	for(int i = 0; i < measurements; i++) {
+	for(int i = 0; i < calibrationNMeasurements; i++) {
 	    
 	    int status = 0;
 	    double Fx, Fy, Fz, Tx, Ty, Tz = 0;
@@ -214,19 +217,62 @@ bool ForceTorqueNode::srvCallback_Calibrate(cob_srvs::Trigger::Request &req, cob
 	    F_avg[3] += Tx;
 	    F_avg[4] += Ty;
 	    F_avg[5] += Tz;
-	    usleep(10000);
+	    usleep(calibrationTBetween);
 	}
 	
 	for(int i = 0; i < 6; i++) {
-	    F_avg[i] /= measurements;
+	    F_avg[i] /= calibrationNMeasurements;
 	}
 	
+	m_isCalibrated = true;	
 	res.success.data = true;
 	res.error_message.data = "Calibration successfull! :)";
     }
     else {
 	res.success.data = false;
 	res.error_message.data = "FTS not initialised! :/";
+    }
+    
+    return true;
+}
+
+bool ForceTorqueNode::srvCallback_DetermineCoordinateSystem(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res)
+{
+    if(m_isInitialized && m_isCalibrated)
+    {
+	double angle;
+	
+	ROS_INFO("Please push FTS with force larger than 10 N in desired direction of new axis %d", coordinateSystemPushDirection);
+	
+	for(int i = 0; i < coordinateSystemNMeasurements; i++) {
+	    
+	    int status = 0;
+	    double Fx, Fy, Fz, Tx, Ty, Tz = 0;
+	    p_Ftc->ReadSGData(status, Fx, Fy, Fz, Tx, Ty, Tz);
+	    
+	    if ((Fy-F_avg[1]) > 10.0) {	    
+		angle += atan2(Fy, Fx);
+	    }
+	    else {
+		i--;		
+	    }
+	    usleep(coordinateSystemTBetween);
+	}
+	
+	angle /= coordinateSystemNMeasurements;
+	
+	if (coordinateSystemPushDirection) {
+	    angle -= M_PI/2;	   
+	}
+	
+	ROS_INFO("Please rotate your coordinate system for %f rad around z-axis", angle);
+	
+	res.success.data = true;
+	res.error_message.data = "CoordianteSystem  successfull! :)";
+    }
+    else {
+	res.success.data = false;
+	res.error_message.data = "FTS not initialised or not calibrated! :/";
     }
     
     return true;
@@ -241,7 +287,7 @@ void ForceTorqueNode::updateFTData(const ros::TimerEvent& event)
 
     p_Ftc->ReadSGData(status, Fx, Fy, Fz, Tx, Ty, Tz);    
 
-    geometry_msgs::WrenchStamped msg, msg_filtered, msg_transformed;
+    geometry_msgs::WrenchStamped msg, msg_transformed;
     
     msg.header.frame_id = frame_id;
     msg.header.stamp = ros::Time::now();
@@ -253,17 +299,6 @@ void ForceTorqueNode::updateFTData(const ros::TimerEvent& event)
     msg.wrench.torque.z = Tz-F_avg[5];
     topicPub_ForceData_.publish(msg);
 
-    msg_filtered.header = msg.header;
-    msg_filtered.wrench.force.x = filterGain*msg_old.wrench.force.x + filterTimeConst*msg_filtered_old.wrench.force.x;
-    msg_filtered.wrench.force.y = filterGain*msg_old.wrench.force.y +filterTimeConst*msg_filtered_old.wrench.force.y;
-    msg_filtered.wrench.force.z = filterGain*msg_old.wrench.force.z + filterTimeConst*msg_filtered_old.wrench.force.z;
-    msg_filtered.wrench.torque.x = filterGain*msg_old.wrench.torque.x + filterTimeConst*msg_filtered_old.wrench.torque.x;
-    msg_filtered.wrench.torque.y = filterGain*msg_old.wrench.torque.y + filterTimeConst*msg_filtered_old.wrench.torque.y;
-    msg_filtered.wrench.torque.z = filterGain*msg_old.wrench.torque.z + filterTimeConst*msg_filtered_old.wrench.torque.z;
-
-    topicPub_ForceDataFiltered_.publish(msg_filtered);
-    msg_filtered_old = msg_filtered;
-    msg_old = msg;
 
     try{
 	transform_ee_base_stamped = p_tfBuffer->lookupTransform(transform_frame_id, frame_id, ros::Time(0));
