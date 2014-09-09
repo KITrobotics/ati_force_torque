@@ -80,6 +80,7 @@ public:
 
     bool srvCallback_Init(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res);
     bool srvCallback_Calibrate(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res);
+    bool calibrate();
     bool srvCallback_DetermineCoordinateSystem(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res);
     void updateFTData(const ros::TimerEvent& event);
 
@@ -104,7 +105,6 @@ private:
 
     // declaration of topics to publish
     ros::Publisher topicPub_ForceData_;
-    ros::Publisher topicPub_ForceDataFiltered_;
     ros::Publisher topicPub_ForceDataTrans_;
     ros::Publisher topicPub_Marker_;
 
@@ -133,7 +133,6 @@ ForceTorqueNode::ForceTorqueNode()
     m_isCalibrated = false;
 
     topicPub_ForceData_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values", 1);
-    topicPub_ForceDataFiltered_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values_filtered", 1);
     topicPub_ForceDataTrans_ = nh_.advertise<geometry_msgs::WrenchStamped>("force_values_transformed", 1);
     srvServer_Init_ = nh_.advertiseService("Init", &ForceTorqueNode::srvCallback_Init, this);
     srvServer_Calibrate_ = nh_.advertiseService("Calibrate", &ForceTorqueNode::srvCallback_Calibrate, this);
@@ -167,18 +166,14 @@ bool ForceTorqueNode::srvCallback_Init(cob_srvs::Trigger::Request &req, cob_srvs
     {
 	// read return init status and check it!
 	if (p_Ftc->Init()) {
-	    ROS_INFO("FTC initialized");
 
-	    //set Calibdata to zero
-	    F_avg.resize(6);
-	    F_avg[0] = 0.0;
-	    F_avg[1] = 0.0;
-	    F_avg[2] = 0.0;
-	    F_avg[3] = 0.0;
-	    F_avg[4] = 0.0;
-	    F_avg[5] = 0.0;
-
-
+	    //Calibrate sensor
+	    F_avg.resize(6);   
+	    if (calibrate()) {		
+		res.success.data = false;
+		res.error_message.data = "Calibration failed! :/";
+	    }
+	    
 	    m_isInitialized = true;
 	    res.success.data = true;
 	    res.error_message.data = "All good, you are nice person! :)";
@@ -189,7 +184,7 @@ bool ForceTorqueNode::srvCallback_Init(cob_srvs::Trigger::Request &req, cob_srvs
 	else {
 	    m_isInitialized = false;
 	    res.success.data = false;
-	    res.error_message.data = "Don't know! But it's bad! :/";
+	    res.error_message.data = "FTS could not be initilised! :/";
 	}
     }
     return true;
@@ -199,34 +194,17 @@ bool ForceTorqueNode::srvCallback_Calibrate(cob_srvs::Trigger::Request &req, cob
 {
     if(m_isInitialized)
     {
-	F_avg[0] = 0.0;
-	F_avg[1] = 0.0;
-	F_avg[2] = 0.0;
-	F_avg[3] = 0.0;
-	F_avg[4] = 0.0;
-	F_avg[5] = 0.0;
+    
+    if (calibrate()) {
 	
-	for(int i = 0; i < calibrationNMeasurements; i++) {
-	    
-	    int status = 0;
-	    double Fx, Fy, Fz, Tx, Ty, Tz = 0;
-	    p_Ftc->ReadSGData(status, Fx, Fy, Fz, Tx, Ty, Tz);
-	    F_avg[0] += Fx;
-	    F_avg[1] += Fy;
-	    F_avg[2] += Fz;
-	    F_avg[3] += Tx;
-	    F_avg[4] += Ty;
-	    F_avg[5] += Tz;
-	    usleep(calibrationTBetween);
-	}
-	
-	for(int i = 0; i < 6; i++) {
-	    F_avg[i] /= calibrationNMeasurements;
-	}
-	
-	m_isCalibrated = true;	
 	res.success.data = true;
 	res.error_message.data = "Calibration successfull! :)";
+    }
+    else {
+	
+	res.success.data = false;
+	res.error_message.data = "Calibration failed! :/";
+	}
     }
     else {
 	res.success.data = false;
@@ -234,6 +212,38 @@ bool ForceTorqueNode::srvCallback_Calibrate(cob_srvs::Trigger::Request &req, cob
     }
     
     return true;
+}
+
+bool ForceTorqueNode::calibrate() {
+
+    F_avg[0] = 0.0;
+    F_avg[1] = 0.0;
+    F_avg[2] = 0.0;
+    F_avg[3] = 0.0;
+    F_avg[4] = 0.0;
+    F_avg[5] = 0.0;
+    
+    for(int i = 0; i < calibrationNMeasurements; i++) {
+	
+	int status = 0;
+	double Fx, Fy, Fz, Tx, Ty, Tz = 0;
+	p_Ftc->ReadSGData(status, Fx, Fy, Fz, Tx, Ty, Tz);
+	F_avg[0] += Fx;
+	F_avg[1] += Fy;
+	F_avg[2] += Fz;
+	F_avg[3] += Tx;
+	F_avg[4] += Ty;
+	F_avg[5] += Tz;
+	usleep(calibrationTBetween);
+    }
+    
+    for(int i = 0; i < 6; i++) {
+	F_avg[i] /= calibrationNMeasurements;
+    }
+    
+    m_isCalibrated = true;
+    
+    return m_isCalibrated;
 }
 
 bool ForceTorqueNode::srvCallback_DetermineCoordinateSystem(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res)
@@ -265,7 +275,7 @@ bool ForceTorqueNode::srvCallback_DetermineCoordinateSystem(cob_srvs::Trigger::R
 	    angle -= M_PI/2;	   
 	}
 	
-	ROS_INFO("Please rotate your coordinate system for %f rad around z-axis", angle);
+	ROS_INFO("Please rotate your coordinate system for %f rad (%f deg) around z-axis", angle, angle/M_PI*180.0);
 	
 	res.success.data = true;
 	res.error_message.data = "CoordianteSystem  successfull! :)";
@@ -309,10 +319,11 @@ void ForceTorqueNode::updateFTData(const ros::TimerEvent& event)
     
     geometry_msgs::Vector3Stamped temp_vector_in, temp_vector_out;      
     
-    temp_vector_in.header = msg.header;
+    temp_vector_in.header = msg.header; 
     temp_vector_in.vector = msg.wrench.force;      
     tf2::doTransform(temp_vector_in, temp_vector_out, transform_ee_base_stamped);      
-    msg_transformed.header = temp_vector_out.header;
+    msg_transformed.header.stamp = msg.header.stamp;
+    msg_transformed.header.frame_id = temp_vector_out.header.frame_id;
     msg_transformed.wrench.force = temp_vector_out.vector;
     
     temp_vector_in.vector = msg.wrench.torque;      

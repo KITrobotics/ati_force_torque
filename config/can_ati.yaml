@@ -9,7 +9,7 @@ FTS:
 node:
     ft_pub_freq: 650
     frame: "kms_real"
-    transform_frame: "kms_transformed_link"
+    transform_frame: "kms_link"
     
 Calibration:
     n_measurements: 50
