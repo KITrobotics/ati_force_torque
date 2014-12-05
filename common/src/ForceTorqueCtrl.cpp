@@ -13,7 +13,7 @@ ForceTorqueCtrl::ForceTorqueCtrl()
 	m_pCanCtrl = NULL;
 
 	// for types and baudrates see: https://github.com/ipa320/cob_robots/blob/hydro_dev/cob_hardware_config/raw3-5/config/base/CanCtrl.ini
-	m_CanType = CANITFTYPE_CAN_PEAK_USN;
+	m_CanType = CANITFTYPE_CAN_PEAK_USB;
 	m_CanDevice = "/dev/pcan32";
 	m_CanBaudrate = CANITFBAUD_250K;
 	m_CanBaseIdentifier = 0x20 << 4;
@@ -84,7 +84,7 @@ bool ForceTorqueCtrl::initCan()
 
 	// current implementation only for CanPeakSysUSB
 	// Should be changed to static in CanItf.h
-	if (m_CanType == CANITFTYPE_CAN_PEAK_USN)
+	if (m_CanType == CANITFTYPE_CAN_PEAK_USB)
 	{
 		m_pCanCtrl = new CANPeakSysUSB(m_CanDevice.c_str(), m_CanBaudrate);
 		std::cout << "Uses CAN-Peak-USB" << std::endl;
