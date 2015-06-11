@@ -7,6 +7,7 @@
 #include <cob_generic_can/CanPeakSysUSB.h>
 #include <cob_forcetorque/ForceTorqueCtrl.h>
 
+
 ForceTorqueCtrl::ForceTorqueCtrl()
 {
 	// ------------- first of all set used CanItf

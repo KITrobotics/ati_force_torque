@@ -9,5 +9,8 @@
 <!-- start powercube_chain -->
   <node pkg="ati_mini_45" type="ati_mini_45_node" name="fts_node" ns="fts" cwd="node" respawn="false" output="screen">
   </node>
+  
+<!-- launch Visualisation -->
+	<node  pkg="rviz" type="rviz" name="visualisation" output="screen" args="-d $(find ati_mini_45)/config/sensor_nonrotated.rviz" />
 
 </launch>
