@@ -18,6 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
 find_package(Eigen REQUIRED)
 
 add_service_files(
+    FILES
     DiagnosticVoltage.srv
     )
 

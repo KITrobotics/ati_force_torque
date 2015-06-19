@@ -210,7 +210,7 @@ bool ForceTorqueCtrl::ReadUnitCodes()
 	return ret;
 }
 
-bool ForceTorqueCtrl::ReadDiagnosticADCVoltages(byte index, short int &value)
+bool ForceTorqueCtrl::ReadDiagnosticADCVoltages(char index, short int &value)
 {
     std::cout << "\n\n*******Read Diagnostic ADC Voltages on index: "<< index <<"********"<< std::endl;
 
