@@ -61,11 +61,12 @@ typedef unsigned char uint8_t;
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Vector3Stamped.h>
 
-#include <cob_srvs/Trigger.h>
-
 #include <tf2/LinearMath/Transform.h>
 #include <tf2_ros/transform_listener.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+
+#include <std_srvs/Trigger.h>
+#include <ati_mini_45/DiagnosticVoltage.h>
 
 #include <math.h>
 #include <iostream>
@@ -78,10 +79,11 @@ public:
 
     ForceTorqueNode();
 
-    bool srvCallback_Init(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res);
-    bool srvCallback_Calibrate(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res);
+    bool srvCallback_Init(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
+    bool srvCallback_Calibrate(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
     bool calibrate();
-    bool srvCallback_DetermineCoordinateSystem(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res);
+    bool srvCallback_DetermineCoordinateSystem(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
+    bool srvReadDiagnosticVoltages(ati_mini_45::DiagnosticVoltage::Request &req, ati_mini_45::DiagnosticVoltage::Response &res);
     void updateFTData(const ros::TimerEvent& event);
 
     // create a handle for this node, initialize node
@@ -312,6 +314,13 @@ bool ForceTorqueNode::srvCallback_DetermineCoordinateSystem(cob_srvs::Trigger::R
 	res.error_message.data = "FTS not initialised or not calibrated! :/";
     }
     
+    return true;
+}
+
+bool srvReadDiagnosticVoltages(ati_mini_45::DiagnosticVoltages::Request &req, ati_mini_45::DiagnosticVoltages::Response &res)
+{
+    p_Ftc->ReadDiagnosticADCVoltages(req.index, res.adc_value)
+
     return true;
 }
 

@@ -42,6 +42,7 @@ class ForceTorqueCtrl
 	bool ReadFTSerialNumber();
 	bool ReadCountsPerUnit();
 	bool ReadUnitCodes();
+    bool ReadDiagnosticADCVoltages(char index, short int &value);
 	bool SetActiveCalibrationMatrix(int num);
 	bool SetBaudRate(int value);
 	bool SetBaseIdentifier(int identifier);

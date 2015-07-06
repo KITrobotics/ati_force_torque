@@ -1,0 +1,11 @@
+# Values of input are:
+# 0 - MID_VSG
+# 1 - Unused
+# 2 - Thermistor
+# 3 - Power
+# 4 - DAC
+# 5 - Ground
+
+byte index
+---
+int16 adc_value

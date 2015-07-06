@@ -3,11 +3,12 @@ project(ati_mini_45)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  message_generation
   std_msgs
+  std_srvs
   tf2
   tf2_ros
   tf2_geometry_msgs
-  cob_srvs
   visualization_msgs
   geometry_msgs
   cob_generic_can
@@ -16,12 +17,21 @@ find_package(catkin REQUIRED COMPONENTS
 
 find_package(Eigen REQUIRED)
 
+add_service_files(
+    FILES
+    DiagnosticVoltage.srv
+    )
+
+generate_messages(
+    DEPENDENCIES
+    std_msgs)
+
 ###################################
 ## catkin specific configuration ##
 ###################################
 catkin_package(
  INCLUDE_DIRS common/include
- CATKIN_DEPENDS roscpp cob_generic_can geometry_msgs tf2 tf2_ros tf2_geometry_msgs
+ CATKIN_DEPENDS roscpp message_runtime std_msgs std_srvs cob_generic_can geometry_msgs tf2 tf2_ros tf2_geometry_msgs
  DEPENDS Eigen
 )
 

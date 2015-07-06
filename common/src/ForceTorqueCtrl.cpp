@@ -193,7 +193,11 @@ bool ForceTorqueCtrl::ReadUnitCodes()
 		if (ret) {
 			std::cout << "reply ID: \t" << std::hex << replyMsg.getID()<<std::endl;
 			std::cout << "reply Length: \t" << replyMsg.getLength()<<std::endl;
-			std::cout << "reply Data: \t" << replyMsg.getAt(0) << " " << replyMsg.getAt(1) << std::endl;
+            if(replyMsg.getID() == (m_CanBaseIdentifier | READ_UNITCODE))
+            {
+                std::cout<<"Reading Unit codes succeed!"<<std::endl;
+                std::cout << "reply Data: \t" << replyMsg.getAt(0) << " " << replyMsg.getAt(1) << std::endl;
+            }
 		}
 		else {
 			std::cout << "ForceTorqueCtrl::ReadUnitCodes(): Can not read message!" << std::endl;
@@ -204,6 +208,48 @@ bool ForceTorqueCtrl::ReadUnitCodes()
 	}
 
 	return ret;
+}
+
+bool ForceTorqueCtrl::ReadDiagnosticADCVoltages(char index, short int &value)
+{
+    std::cout << "\n\n*******Read Diagnostic ADC Voltages on index: "<< index <<"********"<< std::endl;
+
+    bool ret = true;
+    CanMsg CMsg;
+    CMsg.setID(m_CanBaseIdentifier | READ_DIAGNOV);
+    CMsg.setLength(1);
+    CMsg.setAt(index,0);
+
+    ret = m_pCanCtrl->transmitMsg(CMsg, true);
+
+    if (ret) {
+
+        CanMsg replyMsg;
+        ret = m_pCanCtrl->receiveMsgRetry(&replyMsg, 10);
+        if(ret)
+        {
+            std::cout<<"reply ID: \t"<< std::hex << replyMsg.getID()<<std::endl;
+            std::cout<<"reply Length: \t"<<replyMsg.getLength()<<std::endl;
+            if(replyMsg.getID() == (m_CanBaseIdentifier | READ_DIAGNOV))
+            {
+                std::cout<<"Reading Diagnostic ADC Voltage succeed!"<<std::endl;
+                std::cout<<"ADC Voltage of diagnostic value " << index << " : "<<replyMsg.getAt(0) << " " << replyMsg.getAt(1)<<std::endl;
+
+                ibBuf.bytes[0] = replyMsg.getAt(1);
+                ibBuf.bytes[1] = replyMsg.getAt(0);
+                value = ibBuf.value;
+            }
+            else
+                std::cout<<"Error: Received wrong opcode!"<<std::endl;
+        }
+        else
+            std::cout<<"Error: Receiving Message failed!"<<std::endl;
+    }
+    else {
+        std::cout << "ForceTorqueCtrl::ReadDiagnosticADCVoltages(byte index): Can not transmit message!" << std::endl;
+    }
+
+    return ret;
 }
 
 bool ForceTorqueCtrl::SetActiveCalibrationMatrix(int num)
