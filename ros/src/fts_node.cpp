@@ -122,6 +122,11 @@ private:
     
     bool m_isInitialized;
     bool m_isCalibrated;
+    
+    // Variables for Static offset
+    bool m_staticCalibration;
+    geometry_msgs::Wrench m_calibOffset;
+    
     ForceTorqueCtrl* p_Ftc;
     std::vector<double> F_avg;
 };
@@ -148,6 +153,13 @@ ForceTorqueNode::ForceTorqueNode()
     nh_.param<std::string>("node/transform_frame", transform_frame_id, "base_link");
     nh_.param<int>("Calibration/n_measurements", calibrationNMeasurements, 20);
     nh_.param<int>("Calibration/T_between_meas", calibrationTBetween, 10000);
+    nh_.param<bool>("Calibration/static", m_staticCalibration, 0);
+    nh_.param<double>("Calibration/offset_fx", m_calibOffset.force.x, 0);
+    nh_.param<double>("Calibration/offset_fy", m_calibOffset.force.y, 0);
+    nh_.param<double>("Calibration/offset_fz", m_calibOffset.force.z, 0);
+    nh_.param<double>("Calibration/offset_mx", m_calibOffset.torque.x, 0);
+    nh_.param<double>("Calibration/offset_my", m_calibOffset.torque.y, 0);
+    nh_.param<double>("Calibration/offset_mz", m_calibOffset.torque.z, 0);
     nh_.param<int>("CoordinateSystemCal/n_measurements", coordinateSystemNMeasurements, 20);
     nh_.param<int>("CoordinateSystemCal/T_between_meas", coordinateSystemTBetween, 10000);
     nh_.param<int>("CoordinateSystemCal/push_direction", coordinateSystemPushDirection, 0);
@@ -165,13 +177,27 @@ bool ForceTorqueNode::srvCallback_Init(cob_srvs::Trigger::Request &req, cob_srvs
     if(!m_isInitialized)
     {
 	// read return init status and check it!
-	if (p_Ftc->Init()) {
+	if (p_Ftc->Init()) 
+	{
 
 	    //Calibrate sensor
-	    F_avg.resize(6);   
-	    if (calibrate()) {		
-		res.success.data = false;
-		res.error_message.data = "Calibration failed! :/";
+	    if (m_staticCalibration)
+	    {
+			F_avg.resize(6);
+			F_avg[0] = m_calibOffset.force.x;
+			F_avg[1] = m_calibOffset.force.y;
+			F_avg[2] = m_calibOffset.force.z;
+			F_avg[3] = m_calibOffset.torque.x;
+			F_avg[4] = m_calibOffset.torque.y;
+			F_avg[5] = m_calibOffset.torque.z;
+		}
+		else
+		{
+			if (calibrate())
+			{		
+			res.success.data = false;
+			res.error_message.data = "Calibration failed! :/";
+			}
 	    }
 	    
 	    m_isInitialized = true;
@@ -240,6 +266,7 @@ bool ForceTorqueNode::calibrate() {
     for(int i = 0; i < 6; i++) {
 	F_avg[i] /= calibrationNMeasurements;
     }
+    ROS_INFO("Calibration Data: Fx: %f; Fy: %f; Fz: %f; Mx: %f; My: %f; Mz: %f", F_avg[0], F_avg[1], F_avg[2], F_avg[3], F_avg[4], F_avg[5]);
     
     m_isCalibrated = true;
     
@@ -260,12 +287,12 @@ bool ForceTorqueNode::srvCallback_DetermineCoordinateSystem(cob_srvs::Trigger::R
 	    double Fx, Fy, Fz, Tx, Ty, Tz = 0;
 	    p_Ftc->ReadSGData(status, Fx, Fy, Fz, Tx, Ty, Tz);
 	    
-	    if ((Fy-F_avg[1]) > 10.0) {	    
+	    // if ((Fy-F_avg[1]) > 10.0) {	    
 		angle += atan2(Fy, Fx);
-	    }
-	    else {
-		i--;		
-	    }
+	    //}
+	    //else {
+		//i--;		
+	    //}
 	    usleep(coordinateSystemTBetween);
 	}
 	

@@ -54,13 +54,13 @@ Visualization Manager:
       Arrow Scale: 0.5
       Arrow Width: 0.5
       Class: rviz/WrenchStamped
-      Enabled: false
+      Enabled: true
       Force Color: 204; 51; 51
       History Length: 1
       Name: FT Values
       Topic: /fts/force_values
       Torque Color: 204; 204; 51
-      Value: false
+      Value: true
     - Alpha: 1
       Arrow Scale: 0.5
       Arrow Width: 0.5
@@ -69,7 +69,7 @@ Visualization Manager:
       Force Color: 255; 255; 255
       History Length: 1
       Name: FT Filtered
-      Topic: /fts/force_values_filtered
+      Topic: /fts/force_values_transformed_filtered
       Torque Color: 85; 0; 0
       Value: true
     - Class: rviz/Axes
@@ -140,11 +140,11 @@ Visualization Manager:
       Arrow Width: 0.5
       Class: rviz/WrenchStamped
       Enabled: true
-      Force Color: 204; 51; 51
+      Force Color: 255; 170; 127
       History Length: 1
       Name: WrenchStamped
-      Topic: /fts/force_values_transformed
-      Torque Color: 204; 204; 51
+      Topic: /fts/force_values_compensated
+      Torque Color: 85; 255; 255
       Value: true
   Enabled: true
   Global Options:
@@ -170,22 +170,22 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 8.13518
+      Distance: 12.9558
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -4.65661e-09
-        Y: 0.00852031
-        Z: 0.00796946
+        X: -5.31844
+        Y: 2.04266
+        Z: -2.53924
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.43
+      Pitch: 0.485001
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 5.70819
+      Yaw: 6.0382
     Saved: ~
 Window Geometry:
   Displays:

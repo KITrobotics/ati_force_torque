@@ -3,9 +3,11 @@
 
   <rosparam command="load" ns="fts" file="$(find ati_mini_45)/config/can_ati.yaml"/>
   <rosparam command="load" ns="fts" file="$(find heika_filters)/config/fts_filter.yaml"/>
+  <rosparam command="load" ns="fts" file="$(find gravity_compensation)/config/config_adapter+stangen.yaml"/>
 
-  <node pkg="tf2_ros" type="static_transform_publisher" name="fts_real_transform" args="0 0 0 1 0 0.0 0.0 /base_link /kms_real"/>
-  <node pkg="tf2_ros" type="static_transform_publisher" name="fts_transform" args="0 0 0.0822 0 0 0.923 0.382 /arm_6_link /kms_transformed_link"/>
+<!-- Transform Broadcasters for Transformation Link to Sensor -->
+  <!--node pkg="tf2_ros" type="static_transform_publisher" name="fts_real_transform" args="0 0 0 1 0 0.0 0.0 /base_link /kms_real"/-->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="fts_transform" args="0 0 0.0822 0 0 0.923 0.382 /arm_6_link /kms_real"/>
 
 <!-- start FTS Driver Node -->
   <node pkg="ati_mini_45" type="ati_mini_45_node" name="fts_node" ns="fts" cwd="node" respawn="false" output="screen">
@@ -13,8 +15,9 @@
 <!-- start Filter Node -->
   <node pkg="heika_filters" type="heika_filters_node" name="fts_filter" ns="fts" cwd="node" respawn="false" output="screen">
   </node>
-  
+<!-- Launch Gravity Compensation Node -->
+  <node pkg="gravity_compensation" type="gravity_compensation_node" name="compensator" ns="fts" cwd="node" respawn="false" output="screen"/>
 <!-- launch Visualisation -->
-	<node  pkg="rviz" type="rviz" name="visualisation" output="screen" args="-d $(find ati_mini_45)/config/temp_config_robot.rviz" />
+  <node  pkg="rviz" type="rviz" name="visualisation" output="screen" args="-d $(find ati_mini_45)/config/temp_config_robot.rviz" />
 
 </launch>
