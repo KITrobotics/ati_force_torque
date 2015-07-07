@@ -3,7 +3,7 @@
 
   <rosparam command="load" ns="fts" file="$(find ati_mini_45)/config/can_ati.yaml"/>
   <rosparam command="load" ns="fts" file="$(find heika_filters)/config/fts_filter.yaml"/>
-  <rosparam command="load" ns="fts" file="$(find gravity_compensation)/config/config_adapter+stangen.yaml"/>
+  <rosparam command="load" ns="fts" file="$(find gravity_compensation)/config/config_adapter.yaml"/>
 
 <!-- Transform Broadcasters for Transformation Link to Sensor -->
   <!--node pkg="tf2_ros" type="static_transform_publisher" name="fts_real_transform" args="0 0 0 1 0 0.0 0.0 /base_link /kms_real"/-->

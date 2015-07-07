@@ -65,7 +65,7 @@ typedef unsigned char uint8_t;
 #include <tf2_ros/transform_listener.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
-#include <std_srvs/Trigger.h>
+#include <cob_srvs/Trigger.h>
 #include <ati_mini_45/DiagnosticVoltage.h>
 
 #include <math.h>
@@ -79,10 +79,10 @@ public:
 
     ForceTorqueNode();
 
-    bool srvCallback_Init(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
-    bool srvCallback_Calibrate(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
+    bool srvCallback_Init(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res);
+    bool srvCallback_Calibrate(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res);
     bool calibrate();
-    bool srvCallback_DetermineCoordinateSystem(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
+    bool srvCallback_DetermineCoordinateSystem(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res);
     bool srvReadDiagnosticVoltages(ati_mini_45::DiagnosticVoltage::Request &req, ati_mini_45::DiagnosticVoltage::Response &res);
     void updateFTData(const ros::TimerEvent& event);
 
@@ -114,6 +114,7 @@ private:
     ros::ServiceServer srvServer_Init_;
     ros::ServiceServer srvServer_Calibrate_;
     ros::ServiceServer srvServer_DetermineCoordianteSystem_;
+    ros::ServiceServer srvServer_Temp_;
 
     tf2_ros::Buffer *p_tfBuffer;
     tf2_ros::TransformListener* p_tfListener;
@@ -144,6 +145,7 @@ ForceTorqueNode::ForceTorqueNode()
     srvServer_Init_ = nh_.advertiseService("Init", &ForceTorqueNode::srvCallback_Init, this);
     srvServer_Calibrate_ = nh_.advertiseService("Calibrate", &ForceTorqueNode::srvCallback_Calibrate, this);
     srvServer_DetermineCoordianteSystem_ = nh_.advertiseService("DetermineCoordinateSystem", &ForceTorqueNode::srvCallback_DetermineCoordinateSystem, this);
+    srvServer_Temp_ = nh_.advertiseService("GetTemperature", &ForceTorqueNode::srvReadDiagnosticVoltages,this);
 
     // Read data from parameter server
     nh_.param<int>("CAN/type", canType, -1);
@@ -317,9 +319,9 @@ bool ForceTorqueNode::srvCallback_DetermineCoordinateSystem(cob_srvs::Trigger::R
     return true;
 }
 
-bool srvReadDiagnosticVoltages(ati_mini_45::DiagnosticVoltages::Request &req, ati_mini_45::DiagnosticVoltages::Response &res)
+bool ForceTorqueNode::srvReadDiagnosticVoltages(ati_mini_45::DiagnosticVoltage::Request &req, ati_mini_45::DiagnosticVoltage::Response &res)
 {
-    p_Ftc->ReadDiagnosticADCVoltages(req.index, res.adc_value)
+    p_Ftc->ReadDiagnosticADCVoltages(req.index, res.adc_value);
 
     return true;
 }
