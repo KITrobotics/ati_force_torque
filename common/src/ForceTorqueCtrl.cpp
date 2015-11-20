@@ -210,14 +210,17 @@ bool ForceTorqueCtrl::ReadUnitCodes()
 	return ret;
 }
 
-bool ForceTorqueCtrl::ReadDiagnosticADCVoltages(char index, short int &value)
+bool ForceTorqueCtrl::ReadDiagnosticADCVoltages(int index, short int &value)
 {
+	// TODO: Check for Init
+	
     std::cout << "\n\n*******Read Diagnostic ADC Voltages on index: "<< index <<"********"<< std::endl;
 
     bool ret = true;
     CanMsg CMsg;
     CMsg.setID(m_CanBaseIdentifier | READ_DIAGNOV);
     CMsg.setLength(1);
+    //TODO: offset or typecast index
     CMsg.setAt(index,0);
 
     ret = m_pCanCtrl->transmitMsg(CMsg, true);

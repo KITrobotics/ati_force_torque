@@ -83,7 +83,7 @@ public:
     bool srvCallback_Calibrate(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
     bool calibrate();
     bool srvCallback_DetermineCoordinateSystem(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
-    bool srvReadDiagnosticVoltagess(ati_mini_45::DiagnosticVoltages::Request &req, ati_mini_45::DiagnosticVoltages::Response &res);
+    bool srvReadDiagnosticVoltages(ati_mini_45::DiagnosticVoltages::Request &req, ati_mini_45::DiagnosticVoltages::Response &res);
     void updateFTData(const ros::TimerEvent& event);
 
     // create a handle for this node, initialize node
@@ -114,6 +114,7 @@ private:
     ros::ServiceServer srvServer_Init_;
     ros::ServiceServer srvServer_Calibrate_;
     ros::ServiceServer srvServer_DetermineCoordianteSystem_;
+    ros::ServiceServer srvServer_Temp_;
 
     tf2_ros::Buffer *p_tfBuffer;
     tf2_ros::TransformListener* p_tfListener;
@@ -124,6 +125,11 @@ private:
 
     bool m_isInitialized;
     bool m_isCalibrated;
+
+    // Variables for Static offset
+    bool m_staticCalibration;
+    geometry_msgs::Wrench m_calibOffset;
+
     ForceTorqueCtrl* p_Ftc;
     std::vector<double> F_avg;
 };
@@ -139,6 +145,7 @@ ForceTorqueNode::ForceTorqueNode()
     srvServer_Init_ = nh_.advertiseService("Init", &ForceTorqueNode::srvCallback_Init, this);
     srvServer_Calibrate_ = nh_.advertiseService("Calibrate", &ForceTorqueNode::srvCallback_Calibrate, this);
     srvServer_DetermineCoordianteSystem_ = nh_.advertiseService("DetermineCoordinateSystem", &ForceTorqueNode::srvCallback_DetermineCoordinateSystem, this);
+    srvServer_Temp_ = nh_.advertiseService("GetTemperature", &ForceTorqueNode::srvReadDiagnosticVoltages,this);
 
     // Read data from parameter server
     nh_.param<int>("CAN/type", canType, -1);
@@ -150,6 +157,13 @@ ForceTorqueNode::ForceTorqueNode()
     nh_.param<std::string>("node/transform_frame", transform_frame_id, "base_link");
     nh_.param<int>("Calibration/n_measurements", calibrationNMeasurements, 20);
     nh_.param<int>("Calibration/T_between_meas", calibrationTBetween, 10000);
+    nh_.param<bool>("Calibration/static", m_staticCalibration, 0);
+    nh_.param<double>("Calibration/offset_fx", m_calibOffset.force.x, 0);
+    nh_.param<double>("Calibration/offset_fy", m_calibOffset.force.y, 0);
+    nh_.param<double>("Calibration/offset_fz", m_calibOffset.force.z, 0);
+    nh_.param<double>("Calibration/offset_mx", m_calibOffset.torque.x, 0);
+    nh_.param<double>("Calibration/offset_my", m_calibOffset.torque.y, 0);
+    nh_.param<double>("Calibration/offset_mz", m_calibOffset.torque.z, 0);
     nh_.param<int>("CoordinateSystemCal/n_measurements", coordinateSystemNMeasurements, 20);
     nh_.param<int>("CoordinateSystemCal/T_between_meas", coordinateSystemTBetween, 10000);
     nh_.param<int>("CoordinateSystemCal/push_direction", coordinateSystemPushDirection, 0);
@@ -167,13 +181,27 @@ bool ForceTorqueNode::srvCallback_Init(std_srvs::Trigger::Request &req, std_srvs
     if(!m_isInitialized)
     {
 	// read return init status and check it!
-	if (p_Ftc->Init()) {
+	if (p_Ftc->Init())
+	{
 
 	    //Calibrate sensor
-	    F_avg.resize(6);
-	    if (calibrate()) {
-		res.success = false;
-		res.message = "Calibration failed! :/";
+        F_avg.resize(6);
+	    if (m_staticCalibration)
+	    {
+			F_avg[0] = m_calibOffset.force.x;
+			F_avg[1] = m_calibOffset.force.y;
+			F_avg[2] = m_calibOffset.force.z;
+			F_avg[3] = m_calibOffset.torque.x;
+			F_avg[4] = m_calibOffset.torque.y;
+			F_avg[5] = m_calibOffset.torque.z;
+		}
+		else
+		{
+			if (calibrate())
+			{
+                res.success = false;
+                res.message = "Calibration failed! :/";
+			}
 	    }
 
 	    m_isInitialized = true;
@@ -243,6 +271,8 @@ bool ForceTorqueNode::calibrate() {
 	F_avg[i] /= calibrationNMeasurements;
     }
 
+    ROS_INFO("Calibration Data: Fx: %f; Fy: %f; Fz: %f; Mx: %f; My: %f; Mz: %f", F_avg[0], F_avg[1], F_avg[2], F_avg[3], F_avg[4], F_avg[5]);
+
     m_isCalibrated = true;
 
     return m_isCalibrated;
@@ -262,12 +292,8 @@ bool ForceTorqueNode::srvCallback_DetermineCoordinateSystem(std_srvs::Trigger::R
 	    double Fx, Fy, Fz, Tx, Ty, Tz = 0;
 	    p_Ftc->ReadSGData(status, Fx, Fy, Fz, Tx, Ty, Tz);
 
-	    if ((Fy-F_avg[1]) > 10.0) {
 		angle += atan2(Fy, Fx);
-	    }
-	    else {
-		i--;
-	    }
+
 	    usleep(coordinateSystemTBetween);
 	}
 
@@ -290,7 +316,8 @@ bool ForceTorqueNode::srvCallback_DetermineCoordinateSystem(std_srvs::Trigger::R
     return true;
 }
 
-bool ForceTorqueNode::srvReadDiagnosticVoltagess(ati_mini_45::DiagnosticVoltages::Request &req, ati_mini_45::DiagnosticVoltages::Response &res)
+
+bool ForceTorqueNode::srvReadDiagnosticVoltages(ati_mini_45::DiagnosticVoltages::Request &req, ati_mini_45::DiagnosticVoltages::Response &res)
 {
     p_Ftc->ReadDiagnosticADCVoltages(req.index, res.adc_value);
 
@@ -299,8 +326,6 @@ bool ForceTorqueNode::srvReadDiagnosticVoltagess(ati_mini_45::DiagnosticVoltages
 
 void ForceTorqueNode::updateFTData(const ros::TimerEvent& event)
 {
-//     ros::Time start = ros::Time::now();
-
     int status = 0;
     double Fx, Fy, Fz, Tx, Ty, Tz = 0;
 
@@ -340,10 +365,6 @@ void ForceTorqueNode::updateFTData(const ros::TimerEvent& event)
     msg_transformed.wrench.torque = temp_vector_out.vector;
 
     topicPub_ForceDataTrans_.publish(msg_transformed);
-
-//     ROS_INFO("Duration time of calcuation: %f'", (ros::Time::now() - start).toSec());
-//     ROS_INFO("Time between calls: %f", (event.current_real - event.last_real).toSec());
-//     ROS_INFO("Error: %f", (event.current_expected - event.current_real).toSec());
 }
 
 int main(int argc, char ** argv)
