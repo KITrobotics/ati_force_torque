@@ -5,7 +5,7 @@ typedef unsigned char uint8_t;
 #include <ros/ros.h>
 #include <cob_forcetorque/ForceTorqueCtrl.h>
 
-#include <cob_srvs/Trigger.h>
+#include <std_srvs/Trigger.h>
 
 #include <math.h>
 #include <iostream>
@@ -17,11 +17,11 @@ class ForceTorqueConfig
 public:
 
     ForceTorqueConfig();
-    
+
     bool initFts();
-    bool srvCallback_SetBaudRate(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res);
-    bool srvCallback_SetBaseIdentifier(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res);
-    bool srvCallback_Reset(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res);
+    bool srvCallback_SetBaudRate(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
+    bool srvCallback_SetBaseIdentifier(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
+    bool srvCallback_Reset(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
     // create a handle for this node, initialize node
     ros::NodeHandle nh_;
 
@@ -38,7 +38,7 @@ private:
     ros::ServiceServer srvServer_SetBaudRate_;
     ros::ServiceServer srvServer_SetBaseIdentifier_;
     ros::ServiceServer srvSever_Reset_;
-    
+
     bool m_isInitialized;
     ForceTorqueCtrl* p_Ftc;
 };
@@ -61,7 +61,7 @@ ForceTorqueConfig::ForceTorqueConfig()
 	nh_.param<int>("FTS/future_base_id", ftsFutureBaseID, 0x20);
 
 	p_Ftc = new ForceTorqueCtrl(canType, canPath, canBaudrate, ftsBaseID);
-	
+
 	initFts();
 
 }
@@ -83,70 +83,70 @@ bool ForceTorqueConfig::initFts()
     return m_isInitialized;
 }
 
-bool ForceTorqueConfig::srvCallback_SetBaudRate(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res) {
- 
+bool ForceTorqueConfig::srvCallback_SetBaudRate(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res) {
+
     if (m_isInitialized) {
-	
+
 	if (p_Ftc->SetBaudRate(ftsFutureBaudrate)) {
-	    
+
 	    ROS_INFO("New baud rate successfully set to: %d", ftsFutureBaudrate);
-	
-	res.success.data = true;
-	res.error_message.data = "All good, you are nice person! :)";
+
+	res.success = true;
+	res.message = "All good, you are nice person! :)";
 	}
 	else {
-	    res.success.data = false;
-	    res.error_message.data = "Could not set baud rate :)";
+	    res.success = false;
+	    res.message = "Could not set baud rate :)";
 	}
     }
     else {
-	res.success.data = false;
-	res.error_message.data = "FTS not initialised! :/";
+	res.success = false;
+	res.message = "FTS not initialised! :/";
     }
-    
-    return true;    
+
+    return true;
 }
 
-bool ForceTorqueConfig::srvCallback_SetBaseIdentifier(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res) {
- 
+bool ForceTorqueConfig::srvCallback_SetBaseIdentifier(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res) {
+
     if (m_isInitialized) {
-	
+
 	if (p_Ftc->SetBaseIdentifier(ftsFutureBaseID)) {
-	    
+
 	    ROS_INFO("New base identifier successfully set to HEX: %x", ftsFutureBaseID);
-	
-	res.success.data = true;
-	res.error_message.data = "All good, you are nice person! :)";
+
+	res.success = true;
+	res.message = "All good, you are nice person! :)";
 	}
 	else {
-	    res.success.data = false;
-	    res.error_message.data = "Could not set base identifier :)";
+	    res.success = false;
+	    res.message = "Could not set base identifier :)";
 	}
     }
     else {
-	res.success.data = false;
-	res.error_message.data = "FTS not initialised! :/";
+	res.success = false;
+	res.message = "FTS not initialised! :/";
     }
-    
-    return true;    
+
+    return true;
 }
 
-bool ForceTorqueConfig::srvCallback_Reset(cob_srvs::Trigger::Request &req, cob_srvs::Trigger::Response &res) {
-    
+bool ForceTorqueConfig::srvCallback_Reset(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res) {
+
     ROS_WARN("Going to reset NETCANOEM!");
-    
+
     if (p_Ftc->Reset()) {
-	res.success.data = true;
-	res.error_message.data = "Reset succeded!";
+	res.success = true;
+	res.message = "Reset succeded!";
     }
     else {
-	res.success.data = false;
-	res.error_message.data = "Reset NOT succeded!";
+	res.success = false;
+	res.message = "Reset NOT succeded!";
     }
-    
-    return true;   
+
+    return true;
 }
-    
+
 
 int main(int argc, char ** argv)
 {
@@ -155,7 +155,7 @@ int main(int argc, char ** argv)
   ForceTorqueConfig ftn;
 
   ROS_INFO("ForceTorque Config Node running.");
-  
+
   ros::spin();
 
   return 0;
