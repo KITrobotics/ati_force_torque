@@ -61,7 +61,7 @@ bool ForceTorqueCtrl::Init()
 		{
 			std::cout << "Can not read Counts Per Unit from FTS!" << std::endl;
 			ret = false;
-		}		
+		}
 		if (! ReadUnitCodes())
 		{
 			std::cout << "Can not read Unit Codes from FTS!" << std::endl;
@@ -83,14 +83,22 @@ bool ForceTorqueCtrl::initCan()
 {
 	bool ret = true;
 
-	// current implementation only for CanPeakSysUSB
+	// current implementation only for CanPeakSysUSB and CANITFTYPE_SOCKET_CAN
 	// Should be changed to static in CanItf.h
-	if (m_CanType == CANITFTYPE_CAN_PEAK_USB)
-	{
-		m_pCanCtrl = new CANPeakSysUSB(m_CanDevice.c_str(), m_CanBaudrate);
-		std::cout << "Uses CAN-Peak-USB" << std::endl;
-		ret = m_pCanCtrl->init_ret();
-	}
+    switch (m_CanType)
+    {
+        case CANITFTYPE_CAN_PEAK_USB:
+            m_pCanCtrl = new CANPeakSysUSB(m_CanDevice.c_str(), m_CanBaudrate);
+            std::cout << "Uses CAN-Peak-USB" << std::endl;
+            ret = m_pCanCtrl->init_ret();
+            break;
+
+        case CANITFTYPE_SOCKET_CAN:
+            m_pCanCtrl = new CANPeakSysUSB(m_CanDevice.c_str());
+            std::cout << "Uses SocketCAN" << std::endl;
+            ret = m_pCanCtrl->init_ret();
+            break;
+    }
 
 	return ret;
 }
@@ -213,7 +221,7 @@ bool ForceTorqueCtrl::ReadUnitCodes()
 bool ForceTorqueCtrl::ReadDiagnosticADCVoltages(int index, short int &value)
 {
 	// TODO: Check for Init
-	
+
     std::cout << "\n\n*******Read Diagnostic ADC Voltages on index: "<< index <<"********"<< std::endl;
 
     bool ret = true;
@@ -344,7 +352,7 @@ bool ForceTorqueCtrl::Reset()
 	std::cout << "ForceTorqueCtrl::Reset(): Can not transmit message!" << std::endl;
 	ret = false;
     }
-    
+
     usleep(10000);
 
     return ret;
@@ -433,7 +441,7 @@ void ForceTorqueCtrl::ReadMatrix(int axis, Eigen::VectorXf& vec)
 		std::cout<<"Error: Requesting Calibration Matrix!"<<std::endl;
 		return;
 	}
-	
+
 	CanMsg replyMsg;
 	bool ret2 = m_pCanCtrl->receiveMsgRetry(&replyMsg, 10);
 	if(ret2)
@@ -566,7 +574,7 @@ void ForceTorqueCtrl::ReadSGData(int statusCode, double &Fx, double &Fy, double 
     CMsg.setLength(0);
 
     bool ret = m_pCanCtrl->transmitMsg(CMsg, true);
-    
+
     if (!ret) {
 	std::cout << "ForceTorqueCtrl::ReadSGData: Error: Transmiting message failed!" << std::endl;
 	return;
@@ -578,7 +586,7 @@ void ForceTorqueCtrl::ReadSGData(int statusCode, double &Fx, double &Fy, double 
     if(ret2)
     {
 	if(replyMsg.getID() != (m_CanBaseIdentifier | 0x0)) {
-	    
+
 	    std::cout << "ForceTorqueCtrl::ReadSGData: Error: Received wrong opcode (Should be 0x200)!" << std::endl;
 	    std::cout << "reply ID: \t" << std::hex << replyMsg.getID()<<std::endl;
 	    std::cout << "reply Length: \t" << replyMsg.getLength()<<std::endl;
@@ -586,14 +594,14 @@ void ForceTorqueCtrl::ReadSGData(int statusCode, double &Fx, double &Fy, double 
 				    << replyMsg.getAt(2) << " " << replyMsg.getAt(3) << " "
 				    << replyMsg.getAt(4) << " " << replyMsg.getAt(5) << " "
 				    << replyMsg.getAt(6) << " " << replyMsg.getAt(7) << std::endl;
-	    return;	    
+	    return;
 	}
 
 	c[0] = replyMsg.getAt(0); //status code
 	c[1] = replyMsg.getAt(1);
 	statusCode = (short)((c[0] << 8) | c[1]);
-	
-	if (statusCode != 0) {	    
+
+	if (statusCode != 0) {
 	    if (statusCode & 0x4000) {
 		std::cout << "ForceTorqueCtrl::ReadSGData: CAN bus error detected!" << std::endl;
 		Reset();
@@ -624,7 +632,7 @@ void ForceTorqueCtrl::ReadSGData(int statusCode, double &Fx, double &Fy, double 
     if(ret2)
     {
 	if(replyMsg.getID() != (m_CanBaseIdentifier | 0x1)) {
-	    
+
 	    std::cout<<"ForceTorqueCtrl::ReadSGData: Error: Received wrong opcode (Should be 0x201)!"<<std::endl;
 	    std::cout << "reply ID: \t" << std::hex << replyMsg.getID()<<std::endl;
 	    std::cout << "reply Length: \t" << replyMsg.getLength()<<std::endl;
@@ -632,7 +640,7 @@ void ForceTorqueCtrl::ReadSGData(int statusCode, double &Fx, double &Fy, double 
 				    << replyMsg.getAt(2) << " " << replyMsg.getAt(3) << " "
 				    << replyMsg.getAt(4) << " " << replyMsg.getAt(5) << " "
 				    << replyMsg.getAt(6) << " " << replyMsg.getAt(7) << std::endl;
-	    return;    
+	    return;
 	}
 
 	c[0] = replyMsg.getAt(0); //sg1
