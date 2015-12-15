@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
 
-    <rosparam command="load" ns="fts" file="$(find ati_mini_45)/config/can_ati.yaml"/>
+    <rosparam command="load" ns="fts" file="$(find ati_mini_45)/config/socket_can_ati.yaml"/>
 
     <!-- Transform Broadcasters for Transformation Link to Sensor -->
     <node pkg="tf2_ros" type="static_transform_publisher" name="fts_real_transform" args="0 0 0 1 0 0.0 0.0 /base_link /kms_real"/>

@@ -5,6 +5,7 @@
 //#include <cob_generic_can/CanESD.h>
 //#include <cob_generic_can/CanPeakSys.h>
 #include <cob_generic_can/CanPeakSysUSB.h>
+#include <cob_generic_can/SocketCan.h>
 #include <cob_forcetorque/ForceTorqueCtrl.h>
 
 
@@ -83,18 +84,18 @@ bool ForceTorqueCtrl::initCan()
 {
 	bool ret = true;
 
-	// current implementation only for CanPeakSysUSB and CANITFTYPE_SOCKET_CAN
+	// current implementation only for CanPeakSysUSB and SocketCan
 	// Should be changed to static in CanItf.h
     switch (m_CanType)
     {
         case CANITFTYPE_CAN_PEAK_USB:
             m_pCanCtrl = new CANPeakSysUSB(m_CanDevice.c_str(), m_CanBaudrate);
-            std::cout << "Uses CAN-Peak-USB" << std::endl;
+            std::cout << "Uses CANPeakSysUSB" << std::endl;
             ret = m_pCanCtrl->init_ret();
             break;
 
         case CANITFTYPE_SOCKET_CAN:
-            m_pCanCtrl = new CANPeakSysUSB(m_CanDevice.c_str());
+            m_pCanCtrl = new SocketCan(m_CanDevice.c_str());            
             std::cout << "Uses SocketCAN" << std::endl;
             ret = m_pCanCtrl->init_ret();
             break;
