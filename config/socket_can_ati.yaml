@@ -1,0 +1,15 @@
+CAN:
+    type: 5           # CAN_PEAK_USN
+    path: can0
+
+FTS:
+    base_identifier: 0x20
+
+node:
+    ft_pub_freq: 650
+    frame: "kms_real"
+    transform_frame: "base_link"
+
+Calibration:
+    n_measurements: 500
+    T_between_meas: 10000
