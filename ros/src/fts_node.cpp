@@ -173,7 +173,12 @@ ForceTorqueNode::ForceTorqueNode()
 
     ftUpdateTimer = nh_.createTimer(ros::Rate(nodePubFreq), &ForceTorqueNode::updateFTData, this, false, false);
 
-    p_Ftc = new ForceTorqueCtrl(canType, canPath, canBaudrate, ftsBaseID);
+    if (canType != -1) {
+    	p_Ftc = new ForceTorqueCtrl(canType, canPath, canBaudrate, ftsBaseID);
+    }
+    else {
+        p_Ftc = new ForceTorqueCtrl();
+    }
 }
 
 bool ForceTorqueNode::srvCallback_Init(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res )

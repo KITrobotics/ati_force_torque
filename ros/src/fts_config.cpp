@@ -60,10 +60,14 @@ ForceTorqueConfig::ForceTorqueConfig()
 	nh_.param<int>("FTS/future_baudrate", ftsFutureBaudrate, ATI_CAN_BAUD_250K);
 	nh_.param<int>("FTS/future_base_id", ftsFutureBaseID, 0x20);
 
-	p_Ftc = new ForceTorqueCtrl(canType, canPath, canBaudrate, ftsBaseID);
+	if (canType != -1) {
+		p_Ftc = new ForceTorqueCtrl(canType, canPath, canBaudrate, ftsBaseID);
+	}
+	else {
+	 	p_Ftc = new ForceTorqueCtrl();
+	}
 
 	initFts();
-
 }
 
 bool ForceTorqueConfig::initFts()
