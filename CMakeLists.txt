@@ -51,9 +51,11 @@ include_directories(
 add_library(${PROJECT_NAME} common/src/ForceTorqueCtrl.cpp)
 
 add_executable(${PROJECT_NAME}_node ros/src/fts_node.cpp)
+add_dependencies(${PROJECT_NAME}_node ${PROJECT_NAME}_generate_messages_cpp)
 target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
 add_executable(${PROJECT_NAME}_config ros/src/fts_config.cpp)
 target_link_libraries(${PROJECT_NAME}_config ${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
+add_dependencies(${PROJECT_NAME}_node ${PROJECT_NAME}_generate_messages_cpp)
 
 #############
 ## Install ##
