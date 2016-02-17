@@ -6,7 +6,7 @@ FTS:
     base_identifier: 0x20
 
 node:
-    ft_pub_freq: 600
+    ft_pub_freq: 650
     frame: "kms_real"
     transform_frame: "base_link"
 
