@@ -4,10 +4,13 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
+        - /Global Options1
+        - /Status1
+        - /Grid1
         - /FT Values1
         - /FT Filtered1
         - /FT Base COS1
-        - /WrenchStamped1
+        - /Target Frame1
       Splitter Ratio: 0.554217
     Tree Height: 719
   - Class: rviz/Selection
@@ -51,25 +54,27 @@ Visualization Manager:
       Reference Frame: <Fixed Frame>
       Value: true
     - Alpha: 1
-      Arrow Scale: 0.5
       Arrow Width: 0.5
       Class: rviz/WrenchStamped
       Enabled: true
+      Force Arrow Scale: 0.5
       Force Color: 204; 51; 51
       History Length: 1
       Name: FT Values
       Topic: /fts/force_values
+      Torque Arrow Scale: 0.5
       Torque Color: 204; 204; 51
       Value: true
     - Alpha: 1
-      Arrow Scale: 0.5
       Arrow Width: 0.5
       Class: rviz/WrenchStamped
       Enabled: true
+      Force Arrow Scale: 0.5
       Force Color: 255; 255; 255
       History Length: 1
       Name: FT Filtered
       Topic: /fts/force_values_transformed_filtered
+      Torque Arrow Scale: 0.5
       Torque Color: 85; 0; 0
       Value: true
     - Class: rviz/Axes
@@ -77,7 +82,7 @@ Visualization Manager:
       Length: 0.5
       Name: base_link
       Radius: 0.05
-      Reference Frame: base_link
+      Reference Frame: arm_base_link
       Value: true
     - Class: rviz/Axes
       Enabled: false
@@ -136,20 +141,35 @@ Visualization Manager:
       Reference Frame: kms_real
       Value: true
     - Alpha: 1
-      Arrow Scale: 0.5
       Arrow Width: 0.5
       Class: rviz/WrenchStamped
       Enabled: true
+      Force Arrow Scale: 2
       Force Color: 255; 170; 127
       History Length: 1
-      Name: WrenchStamped
+      Name: FT Compensated
       Topic: /fts/force_values_compensated
+      Torque Arrow Scale: 2
       Torque Color: 85; 255; 255
+      Value: true
+    - Alpha: 1
+      Axes Length: 0.5
+      Axes Radius: 0.02
+      Class: rviz/Pose
+      Color: 255; 25; 0
+      Enabled: true
+      Head Length: 0.3
+      Head Radius: 0.1
+      Name: Target Frame
+      Shaft Length: 1
+      Shaft Radius: 0.05
+      Shape: Axes
+      Topic: /target_frame
       Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: base_link
+    Fixed Frame: arm_base_link
     Frame Rate: 30
   Name: root
   Tools:
@@ -170,22 +190,22 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 12.9558
+      Distance: 10.033
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -5.31844
-        Y: 2.04266
-        Z: -2.53924
+        X: -4.00796
+        Y: 2.90211
+        Z: -3.16812
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.485001
+      Pitch: 0.665001
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 6.0382
+      Yaw: 5.7682
     Saved: ~
 Window Geometry:
   Displays:
@@ -203,5 +223,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1280
-  X: 1913
-  Y: 64
+  X: 1920
+  Y: 24
