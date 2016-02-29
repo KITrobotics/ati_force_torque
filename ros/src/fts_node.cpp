@@ -84,6 +84,7 @@ public:
     bool calibrate();
     bool srvCallback_DetermineCoordinateSystem(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
     bool srvReadDiagnosticVoltages(ati_mini_45::DiagnosticVoltages::Request &req, ati_mini_45::DiagnosticVoltages::Response &res);
+    bool srvCallback_recalibrate(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
     void updateFTData(const ros::TimerEvent& event);
 
     // create a handle for this node, initialize node
@@ -115,6 +116,7 @@ private:
     ros::ServiceServer srvServer_Calibrate_;
     ros::ServiceServer srvServer_DetermineCoordianteSystem_;
     ros::ServiceServer srvServer_Temp_;
+    ros::ServiceServer srvServer_ReCalibrate;
 
     tf2_ros::Buffer *p_tfBuffer;
     tf2_ros::TransformListener* p_tfListener;
@@ -146,6 +148,7 @@ ForceTorqueNode::ForceTorqueNode()
     srvServer_Calibrate_ = nh_.advertiseService("Calibrate", &ForceTorqueNode::srvCallback_Calibrate, this);
     srvServer_DetermineCoordianteSystem_ = nh_.advertiseService("DetermineCoordinateSystem", &ForceTorqueNode::srvCallback_DetermineCoordinateSystem, this);
     srvServer_Temp_ = nh_.advertiseService("GetTemperature", &ForceTorqueNode::srvReadDiagnosticVoltages,this);
+    srvServer_ReCalibrate = nh_.advertiseService("Recalibrate", &ForceTorqueNode::srvCallback_recalibrate, this);
 
     // Read data from parameter server
     nh_.param<int>("CAN/type", canType, -1);
@@ -247,6 +250,45 @@ bool ForceTorqueNode::srvCallback_Calibrate(std_srvs::Trigger::Request &req, std
     }
 
     return true;
+}
+
+bool ForceTorqueNode::srvCallback_recalibrate(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
+{
+	if(!m_isInitialized)
+	{
+		ROS_WARN("FTS-Node is not initialized, please initialize first!");
+		res.success=false;
+		res.message= "Failed to recalibrate because Node is not initiliazed.";
+		return true;
+	}
+	if (!(nh_.hasParam("force") && nh_.hasParam("CoG/x") && nh_.hasParam("CoG/y") && nh_.hasParam("CoG/z")))
+	{
+		ROS_ERROR("Cannot use dynamic recalibration without all values for Gravity Compensation, set parameters or use 'Calibrate' service instead.");
+		res.success=false;
+		res.message= "Failed to recalibrate because of missing Parameters for Gravity Compensation.";
+		return true;
+	}
+	geometry_msgs::Vector3Stamped gravity, gravity_transformed;
+	geometry_msgs::Vector3 cog;
+	double force_value;
+	nh_.getParam("CoG/x", cog.x);
+	nh_.getParam("CoG/y", cog.y);
+	nh_.getParam("CoG/z", cog.z);
+	nh_.getParam("force",force_value);
+	gravity.vector.z=-force_value;
+	//~ gravity.header.frame_id=transform_frame_id;
+	//~ tf2::Transform tf_base_to_kms = p_tfBuffer->lookupTransform(frame_id,transform_frame_id,ros::Time(0));
+	tf2::doTransform(gravity, gravity_transformed, p_tfBuffer->lookupTransform(frame_id,transform_frame_id,ros::Time(0)));
+	calibrate();
+	F_avg[0]-= gravity_transformed.vector.x;
+	F_avg[1]-= gravity_transformed.vector.y;
+	F_avg[2]-= gravity_transformed.vector.z;
+	F_avg[3]-= (gravity_transformed.vector.y*cog.z -gravity_transformed.vector.z*cog.y);
+	F_avg[4]-= (gravity_transformed.vector.z*cog.x -gravity_transformed.vector.x*cog.z);
+	F_avg[5]-= (gravity_transformed.vector.x*cog.y -gravity_transformed.vector.y*cog.x);
+	res.success=true;
+	res.message="Successfully recalibrated FTS!";
+	return true;
 }
 
 bool ForceTorqueNode::calibrate() {
