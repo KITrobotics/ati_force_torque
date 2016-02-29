@@ -1,23 +1,25 @@
 /****************************************************************
  *
+ * Copyright 2016 Intelligent Industrial Robotics (IIROB) Group,
+ * Institute for Anthropomatics and Robotics (IAR) -
+ * Intelligent Process Control and Robotics (IPR),
+ * Karlsruhe Institute of Technology
+ *
+ * Maintainer: Denis Štogl, email: denis.stogl@kit.edu
+ *
+ * Date of update: 2014-2016
+ *
+ * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ *
  * Copyright (c) 2010
  *
  * Fraunhofer Institute for Manufacturing Engineering
  * and Automation (IPA)
  *
- * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- *
- * Project name: care-o-bot
- * ROS stack name: cob_driver
- * ROS package name: cob_forcetorque
- *
- * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- *
  * Author: Alexander Bubeck, email:alexander.bubeck@ipa.fhg.de
  * Supervised by: Alexander Bubeck, email:alexander.bubeck@ipa.fhg.de
  *
  * Date of creation: June 2010
- * ToDo:
  *
  * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  *
@@ -33,6 +35,12 @@
  *       Engineering and Automation (IPA) nor the names of its
  *       contributors may be used to endorse or promote products derived from
  *       this software without specific prior written permission.
+ *     * Neither the name of the Intelligent Industrial Robotics (IIROB) Group,
+ *       Institute for Anthropomatics and Robotics (IAR) - Intelligent Process
+ *       Control and Robotics (IPR), Karlsruhe Institute of Technology (KIT)
+ *       nor the names of its contributors may be used to endorse or
+ *       promote products derived from this software without specific
+ *       prior written permission.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License LGPL as
