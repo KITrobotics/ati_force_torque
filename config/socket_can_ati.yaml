@@ -1,14 +1,14 @@
 CAN:
     type: 5           # CANITFTYPE_SOCKET_CAN
-    path: can0
+    path: can1
 
 FTS:
     base_identifier: 0x20
 
 node:
-    ft_pub_freq: 600
+    ft_pub_freq: 300
     frame: "kms_real"
-    transform_frame: "base_link"
+    transform_frame: "arm_base_link"
 
 Calibration:
     n_measurements: 500
