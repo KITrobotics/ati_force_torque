@@ -1,13 +1,13 @@
 <package format="2">
-  <name>ati_mini_45</name>
+  <name>ati_force_torque</name>
   <version>0.9.0</version>
-  <description>This package implements driver for ATI Mini 45 up to firmware 3.x. Char and Net CAN devices are supported through cob_generic_can package. The code if based on cob_forcetorque package.</description>
+  <description>This package implements driver for ATI force torque sensors up to firmware 3.x. Char and Net CAN devices are supported through cob_generic_can package. The code if based on cob_forcetorque package.</description>
   <maintainer email="denis.stogl@kit.edu">Denis Štogl</maintainer>
 
   <license>LGPLv3</license>
 
-  <url type="website">http://ros.org/wiki/ati_mini_45</url>
-  <url type="bugtracker">https://github.com/iirob/ati_mini_45/issues</url>
+  <url type="website">http://ros.org/wiki/ati_force_torque</url>
+  <url type="bugtracker">https://github.com/iirob/ati_force_torque/issues</url>
 
   <author>Denis Štogl</author>
   <author>Alexander Bubeck</author>
