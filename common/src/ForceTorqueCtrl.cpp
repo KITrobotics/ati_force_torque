@@ -153,7 +153,9 @@ bool ForceTorqueCtrl::initCan()
 
 bool ForceTorqueCtrl::ReadFTSerialNumber()
 {
+#if DEBUG
   std::cout << "\n\n*********FTSerialNumber**********" << std::endl;
+#endif
   bool ret = true;
   CanMsg CMsg;
   CMsg.setID(m_CanBaseIdentifier | READ_SERIALNR);
@@ -167,30 +169,40 @@ bool ForceTorqueCtrl::ReadFTSerialNumber()
 
     if (ret)
     {
+#if DEBUG
       std::cout << "reply ID: \t" << std::hex << replyMsg.getID() << std::endl;
       std::cout << "reply Length: \t" << replyMsg.getLength() << std::endl;
+#endif
       if (replyMsg.getID() == (m_CanBaseIdentifier | READ_SERIALNR))
       {
+#if DEBUG
         std::cout << "Reading Serial Number Succeeded!" << std::endl;
         std::cout << "reply Data: \t" << (char)replyMsg.getAt(0) << " " << (char)replyMsg.getAt(1) << " "
                   << (char)replyMsg.getAt(2) << " " << (char)replyMsg.getAt(3) << " " << (char)replyMsg.getAt(4) << " "
                   << (char)replyMsg.getAt(5) << " " << (char)replyMsg.getAt(6) << " " << (char)replyMsg.getAt(7)
                   << std::endl;
+#endif
       }
       else
       {
+#if DEBUG
         std::cout << "Error: Received wrong opcode!" << std::endl;
+#endif
         ret = false;
       }
     }
     else
     {
+#if DEBUG
       std::cout << "ForceTorqueCtrl::ReadFTSerialNumber(): Can not read message!" << std::endl;
+#endif
     }
   }
   else
   {
+#if DEBUG
     std::cout << "ForceTorqueCtrl::ReadFTSerialNumber(): Can not transmit message!" << std::endl;
+#endif
   }
 
   return ret;
@@ -198,7 +210,9 @@ bool ForceTorqueCtrl::ReadFTSerialNumber()
 
 bool ForceTorqueCtrl::ReadCountsPerUnit()
 {
+#if DEBUG
   std::cout << "\n\n*********Read Counts Per Unit**********" << std::endl;
+#endif
   bool ret = true;
   float countsPerForce = 0, countsPerTorque = 0;
   CanMsg CMsg;
@@ -214,19 +228,25 @@ bool ForceTorqueCtrl::ReadCountsPerUnit()
 
     if (ret)
     {
+#if DEBUG
       std::cout << "reply ID: \t" << std::hex << replyMsg.getID() << std::endl;
       std::cout << "reply Length: \t" << replyMsg.getLength() << std::endl;
+#endif
       if (replyMsg.getID() == (m_CanBaseIdentifier | READ_COUNTSPERU))
       {
+#if DEBUG
         std::cout << "Reading Counts Per Unit Succeeded!" << std::endl;
         std::cout << "reply Data: \t" << (char)replyMsg.getAt(0) << " " << (char)replyMsg.getAt(1) << " "
                   << (char)replyMsg.getAt(2) << " " << (char)replyMsg.getAt(3) << " " << (char)replyMsg.getAt(4) << " "
                   << (char)replyMsg.getAt(5) << " " << (char)replyMsg.getAt(6) << " " << (char)replyMsg.getAt(7)
                   << std::endl;
+#endif
       }
       else
       {
+#if DEBUG
         std::cout << "Error: Received wrong opcode!" << std::endl;
+#endif
         ret = false;
       }
 
@@ -251,14 +271,17 @@ bool ForceTorqueCtrl::ReadCountsPerUnit()
   {
     std::cout << "ForceTorqueCtrl::ReadCountsPerUnit(): Can not transmit message!" << std::endl;
   }
-
+#if DEBUG
   std::cout << "CountsPerforce: " << countsPerForce << "  CountsPerTorque: " << countsPerTorque << std::endl;
+#endif
   return ret;
 }
 
 bool ForceTorqueCtrl::ReadUnitCodes()
 {
+#if DEBUG
   std::cout << "\n\n*********Read Unit Codes**********" << std::endl;
+#endif
   bool ret = true;
   CanMsg CMsg;
   CMsg.setID(m_CanBaseIdentifier | READ_UNITCODE);
@@ -273,12 +296,16 @@ bool ForceTorqueCtrl::ReadUnitCodes()
 
     if (ret)
     {
+#if DEBUG
       std::cout << "reply ID: \t" << std::hex << replyMsg.getID() << std::endl;
       std::cout << "reply Length: \t" << replyMsg.getLength() << std::endl;
+#endif
       if (replyMsg.getID() == (m_CanBaseIdentifier | READ_UNITCODE))
       {
+#if DEBUG
         std::cout << "Reading Unit codes Succeed!" << std::endl;
         std::cout << "reply Data: \t" << replyMsg.getAt(0) << " " << replyMsg.getAt(1) << std::endl;
+#endif
       }
     }
     else
@@ -297,9 +324,9 @@ bool ForceTorqueCtrl::ReadUnitCodes()
 bool ForceTorqueCtrl::ReadDiagnosticADCVoltages(int index, short int &value)
 {
   // TODO: Check for Init
-
+#if DEBUG
   std::cout << "\n\n*******Read Diagnostic ADC Voltages on index: " << index << "********" << std::endl;
-
+#endif
   bool ret = true;
   CanMsg CMsg;
   CMsg.setID(m_CanBaseIdentifier | READ_DIAGNOV);
@@ -315,13 +342,17 @@ bool ForceTorqueCtrl::ReadDiagnosticADCVoltages(int index, short int &value)
     ret = m_pCanCtrl->receiveMsgRetry(&replyMsg, 10);
     if (ret)
     {
+#if DEBUG
       std::cout << "reply ID: \t" << std::hex << replyMsg.getID() << std::endl;
       std::cout << "reply Length: \t" << replyMsg.getLength() << std::endl;
+#endif
       if (replyMsg.getID() == (m_CanBaseIdentifier | READ_DIAGNOV))
       {
+#if DEBUG
         std::cout << "Reading Diagnostic ADC Voltage succeed!" << std::endl;
         std::cout << "ADC Voltage of diagnostic value " << index << " : " << replyMsg.getAt(0) << " "
                   << replyMsg.getAt(1) << std::endl;
+#endif
 
         ibBuf.bytes[0] = replyMsg.getAt(1);
         ibBuf.bytes[1] = replyMsg.getAt(0);
@@ -343,7 +374,9 @@ bool ForceTorqueCtrl::ReadDiagnosticADCVoltages(int index, short int &value)
 
 bool ForceTorqueCtrl::SetActiveCalibrationMatrix(int num)
 {
+#if DEBUG
   std::cout << "\n\n*******Setting Active Calibration Matrix Num to: " << num << "********" << std::endl;
+#endif
   bool ret = true;
   CanMsg CMsg;
   CMsg.setID(m_CanBaseIdentifier | SET_CALIB);
@@ -358,16 +391,22 @@ bool ForceTorqueCtrl::SetActiveCalibrationMatrix(int num)
     ret = m_pCanCtrl->receiveMsgRetry(&replyMsg, 10);
     if (ret)
     {
+#if DEBUG
       std::cout << "reply ID: \t" << std::hex << replyMsg.getID() << std::endl;
       std::cout << "reply Length: \t" << replyMsg.getLength() << std::endl;
+#endif
       if (replyMsg.getID() == (m_CanBaseIdentifier | SET_CALIB))
       {
+#if DEBUG
         std::cout << "Setting Calibration Matrix succeed!" << std::endl;
         std::cout << "Calibration Matrix: " << replyMsg.getAt(0) << " is Activ!" << std::endl;
+#endif
       }
       else
       {
+#if DEBUG
         std::cout << "Error: Received wrong opcode!" << std::endl;
+#endif
         ret = false;
       }
     }
@@ -388,7 +427,9 @@ bool ForceTorqueCtrl::SetActiveCalibrationMatrix(int num)
 
 bool ForceTorqueCtrl::SetBaudRate(int value)
 {
+#if DEBUG
   std::cout << "\n\n*******Setting Baud Rate value to: " << value << "********" << std::endl;
+#endif
   bool ret = true;
   CanMsg CMsg;
   CMsg.setID(m_CanBaseIdentifier | SET_BAUD);
@@ -403,12 +444,16 @@ bool ForceTorqueCtrl::SetBaudRate(int value)
     ret = m_pCanCtrl->receiveMsgRetry(&replyMsg, 10);
     if (ret)
     {
+#if DEBUG
       std::cout << "reply ID: \t" << std::hex << replyMsg.getID() << std::endl;
       std::cout << "reply Length: \t" << replyMsg.getLength() << std::endl;
+#endif
       if (replyMsg.getID() == (m_CanBaseIdentifier | SET_BAUD))
       {
+#if DEBUG
         std::cout << "Send Baud Rate value: " << CMsg.getAt(0) << "!" << std::endl;
         std::cout << "Setting Baud Rate succeed!" << std::endl;
+#endif
       }
       else
       {
@@ -454,8 +499,10 @@ bool ForceTorqueCtrl::Reset()
 
 bool ForceTorqueCtrl::SetBaseIdentifier(int identifier)
 {
+#if DEBUG
   std::cout << "\n\n*******Setting Base Identifier value to HEX : " << std::hex << identifier << " ********"
             << std::endl;
+#endif
   bool ret = true;
   CanMsg CMsg;
   CMsg.setID(m_CanBaseIdentifier | SET_BASEID);
@@ -470,13 +517,17 @@ bool ForceTorqueCtrl::SetBaseIdentifier(int identifier)
     ret = m_pCanCtrl->receiveMsgRetry(&replyMsg, 10);
     if (ret)
     {
+#if DEBUG
       std::cout << "reply ID: \t" << std::hex << replyMsg.getID() << std::endl;
       std::cout << "reply Length: \t" << replyMsg.getLength() << std::endl;
+#endif
       if (replyMsg.getID() == (m_CanBaseIdentifier | SET_BASEID))
       {
+#if DEBUG
         std::cout << "Setting Base Identifier succeed!" << std::endl;
         std::cout << "Send Base Identifier value: " << std::hex << CMsg.getAt(0) << "!" << std::endl;
-        ret = false;
+#endif
+        ret = true;
       }
       else
       {
@@ -531,7 +582,9 @@ void ForceTorqueCtrl::ReadCalibrationMatrix()
 
 void ForceTorqueCtrl::ReadMatrix(int axis, Eigen::VectorXf &vec)
 {
+#if DEBUG
   std::cout << "\n\n*******Read Matrix**********" << std::endl;
+#endif
   float statusCode = 0, sg0 = 0.0, sg1 = 0.0, sg2 = 0.0, sg3 = 0.0, sg4 = 0.0, sg5 = 0.0;
 
   CanMsg CMsg;
@@ -550,14 +603,18 @@ void ForceTorqueCtrl::ReadMatrix(int axis, Eigen::VectorXf &vec)
   bool ret2 = m_pCanCtrl->receiveMsgRetry(&replyMsg, 10);
   if (ret2)
   {
+#if DEBUG
     std::cout << "reply ID: \t" << std::hex << replyMsg.getID() << std::endl;
     std::cout << "reply Length: \t" << replyMsg.getLength() << std::endl;
+#endif
     if (replyMsg.getID() == (m_CanBaseIdentifier | READ_MATRIX))
     {
+#if DEBUG
       std::cout << "Reading Matrix Succeeded!" << std::endl;
       std::cout << "reply Data: \t" << replyMsg.getAt(0) << " " << replyMsg.getAt(1) << " " << replyMsg.getAt(2) << " "
                 << replyMsg.getAt(3) << " " << replyMsg.getAt(4) << " " << replyMsg.getAt(5) << " " << replyMsg.getAt(6)
                 << " " << replyMsg.getAt(7) << std::endl;
+#endif
     }
     else
     {
@@ -583,11 +640,13 @@ void ForceTorqueCtrl::ReadMatrix(int axis, Eigen::VectorXf &vec)
   ret2 = m_pCanCtrl->receiveMsgRetry(&replyMsg, 10);
   if (ret2)
   {
+#if DEBUG
     std::cout << "reply ID: \t" << std::hex << replyMsg.getID() << std::endl;
     std::cout << "reply Length: \t" << replyMsg.getLength() << std::endl;
     std::cout << "reply Data: \t" << replyMsg.getAt(0) << " " << replyMsg.getAt(1) << " " << replyMsg.getAt(2) << " "
               << replyMsg.getAt(3) << " " << replyMsg.getAt(4) << " " << replyMsg.getAt(5) << " " << replyMsg.getAt(6)
               << " " << replyMsg.getAt(7) << std::endl;
+#endif
 
     fbBuf.bytes[0] = replyMsg.getAt(3);
     fbBuf.bytes[1] = replyMsg.getAt(2);
@@ -607,11 +666,13 @@ void ForceTorqueCtrl::ReadMatrix(int axis, Eigen::VectorXf &vec)
   ret2 = m_pCanCtrl->receiveMsgRetry(&replyMsg, 10);
   if (ret2)
   {
+#if DEBUG
     std::cout << "reply ID: \t" << std::hex << replyMsg.getID() << std::endl;
     std::cout << "reply Length: \t" << replyMsg.getLength() << std::endl;
     std::cout << "reply Data: \t" << replyMsg.getAt(0) << " " << replyMsg.getAt(1) << " " << replyMsg.getAt(2) << " "
               << replyMsg.getAt(3) << " " << replyMsg.getAt(4) << " " << replyMsg.getAt(5) << " " << replyMsg.getAt(6)
               << " " << replyMsg.getAt(7) << std::endl;
+#endif
 
     fbBuf.bytes[0] = replyMsg.getAt(3);
     fbBuf.bytes[1] = replyMsg.getAt(2);
@@ -634,13 +695,17 @@ void ForceTorqueCtrl::ReadMatrix(int axis, Eigen::VectorXf &vec)
   vec[3] = sg3;
   vec[4] = sg4;
   vec[5] = sg5;
+#if DEBUG
   std::cout << "Matix:  SG0: " << sg0 << " SG1: " << sg1 << " SG2: " << sg2 << " SG3: " << sg3 << " SG4: " << sg4
             << " SG5: " << sg5 << std::endl;
+#endif
 }
 
 bool ForceTorqueCtrl::ReadFirmwareVersion()
 {
+#if DEBUG
   std::cout << "\n\n*******Reading Firmware Version*******" << std::endl;
+#endif
   bool ret = true;
   CanMsg CMsg;
   CMsg.setID(m_CanBaseIdentifier | READ_FIRMWARE);
@@ -654,13 +719,17 @@ bool ForceTorqueCtrl::ReadFirmwareVersion()
     ret = m_pCanCtrl->receiveMsgRetry(&replyMsg, 10);
     if (ret)
     {
+#if DEBUG
       std::cout << "reply ID: \t" << std::hex << replyMsg.getID() << std::endl;
       std::cout << "reply Length: \t" << replyMsg.getLength() << std::endl;
+#endif
       if (replyMsg.getID() == (m_CanBaseIdentifier | READ_FIRMWARE))
       {
+#if DEBUG
         std::cout << "Reading Firmware Succeed!" << std::endl;
         std::cout << "reply Data: \t" << replyMsg.getAt(0) << " " << replyMsg.getAt(1) << " " << replyMsg.getAt(2)
                   << " " << replyMsg.getAt(3) << std::endl;
+#endif
       }
       else
       {
@@ -683,7 +752,7 @@ bool ForceTorqueCtrl::ReadFirmwareVersion()
   return ret;
 }
 
-void ForceTorqueCtrl::ReadSGData(int statusCode, double &Fx, double &Fy, double &Fz, double &Tx, double &Ty, double &Tz)
+bool ForceTorqueCtrl::ReadSGData(int statusCode, double &Fx, double &Fy, double &Fz, double &Tx, double &Ty, double &Tz)
 {
   int sg0 = 0, sg1 = 0, sg2 = 0, sg3 = 0, sg4 = 0, sg5 = 0;
 
@@ -695,7 +764,7 @@ void ForceTorqueCtrl::ReadSGData(int statusCode, double &Fx, double &Fy, double 
   if (!ret)
   {
     std::cout << "ForceTorqueCtrl::ReadSGData: Error: Transmiting message failed!" << std::endl;
-    return;
+    return false;
   }
 
   CanMsg replyMsg;
@@ -711,8 +780,7 @@ void ForceTorqueCtrl::ReadSGData(int statusCode, double &Fx, double &Fy, double 
       std::cout << "reply Data: \t" << replyMsg.getAt(0) << " " << replyMsg.getAt(1) << " " << replyMsg.getAt(2) << " "
                 << replyMsg.getAt(3) << " " << replyMsg.getAt(4) << " " << replyMsg.getAt(5) << " " << replyMsg.getAt(6)
                 << " " << replyMsg.getAt(7) << std::endl;
-      exit(1);
-      return;
+      return false ;
     }
 
     c[0] = replyMsg.getAt(0);  // status code
@@ -747,7 +815,7 @@ void ForceTorqueCtrl::ReadSGData(int statusCode, double &Fx, double &Fy, double 
     sg4 = (short)((c[0] << 8) | c[1]);
   }
   else
-    return;
+    return false;
 
   ret2 = m_pCanCtrl->receiveMsgRetry(&replyMsg, 10);
   if (ret2)
@@ -760,8 +828,7 @@ void ForceTorqueCtrl::ReadSGData(int statusCode, double &Fx, double &Fy, double 
       std::cout << "reply Data: \t" << replyMsg.getAt(0) << " " << replyMsg.getAt(1) << " " << replyMsg.getAt(2) << " "
                 << replyMsg.getAt(3) << " " << replyMsg.getAt(4) << " " << replyMsg.getAt(5) << " " << replyMsg.getAt(6)
                 << " " << replyMsg.getAt(7) << std::endl;
-      exit(1);
-      return;
+      return false ;
     }
 
     c[0] = replyMsg.getAt(0);  // sg1
@@ -777,7 +844,7 @@ void ForceTorqueCtrl::ReadSGData(int statusCode, double &Fx, double &Fy, double 
     sg5 = (short)((c[0] << 8) | c[1]);
   }
   else
-    return;
+    return false;
 
   StrainGaugeToForce(sg0, sg1, sg2, sg3, sg4, sg5);
   Fx = m_vForceData(0);
@@ -786,6 +853,7 @@ void ForceTorqueCtrl::ReadSGData(int statusCode, double &Fx, double &Fy, double 
   Tx = m_vForceData(3);
   Ty = m_vForceData(4);
   Tz = m_vForceData(5);
+  return true;
 }
 
 void ForceTorqueCtrl::StrainGaugeToForce(int &sg0, int &sg1, int &sg2, int &sg3, int &sg4, int &sg5)

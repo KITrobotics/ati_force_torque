@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:macro name="ati_ftm115" params="parent name *origin">
+
+        <joint name="${name}_base_joint" type="fixed">
+            <insert_block name="origin" />
+            <parent link="${parent}"/>
+            <child link="${name}_base_link" />
+        </joint>
+
+        <link name="${name}_base_link">
+            <xacro:default_inertial/>
+            <visual>
+                <origin xyz="0 0 0" rpy="0 0 ${-M_PI*3/4}" />
+                <geometry>
+                <mesh filename="package://ati_force_torque/description/meshes/ftm115.stl" scale="0.001 0.001 0.001" />
+                </geometry>
+                <material name="Schunk/DarkGrey" />
+            </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 ${-M_PI*3/4}" />
+                <geometry>
+                    <mesh filename="package://ati_force_torque/description/meshes/ftm115.stl" scale="0.001 0.001 0.001" />
+                </geometry>
+            </collision>
+        </link>
+
+        <joint name="${name}_reference_joint" type="fixed">
+            <origin xyz="0 0 ${0.0749-0.01715}" rpy="0 0 ${-M_PI/4}" /> 
+            <parent link="${name}_base_link"/>
+            <child link="${name}_reference_link" />
+        </joint>
+
+        <link name="${name}_reference_link">
+            <xacro:default_inertial/>
+        </link>
+
+        <joint name="${name}_tool_joint" type="fixed">
+            <origin xyz="0 0 0.0749" rpy="0 0 ${-M_PI/12}" />
+            <parent link="${name}_base_link"/>
+            <child link="${name}_tool_link" />
+        </joint>
+
+        <link name="${name}_tool_link">
+            <xacro:default_inertial/>
+        </link>
+
+  </xacro:macro>
+
+</robot>
+

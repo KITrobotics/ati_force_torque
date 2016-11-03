@@ -58,6 +58,8 @@
 // Headers provided by other cob-packages
 #include <cob_generic_can/CanItf.h>
 
+#define DEBUG 0
+
 // opCodes for the ForceTorque Can Interface
 // set as Can Message ID
 #define READ_SG 0x0
@@ -93,7 +95,7 @@ public:
   bool SetBaudRate(int value);
   bool SetBaseIdentifier(int identifier);
   bool Reset();
-  void ReadSGData(int statusCode, double& Fx, double& Fy, double& Fz, double& Tx, double& Ty, double& Tz);
+  bool ReadSGData(int statusCode, double& Fx, double& Fy, double& Fz, double& Tx, double& Ty, double& Tz);
   bool ReadFirmwareVersion();
   void ReadCalibrationMatrix();
 

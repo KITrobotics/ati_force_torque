@@ -26,6 +26,8 @@
   <depend>visualization_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>cob_generic_can</depend>
+  <depend>schunk_description</depend>
+  <depend>iirob_filters</depend>
 
   <exec_depend>message_runtime</exec_depend>
 

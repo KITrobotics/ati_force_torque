@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   cob_generic_can
   cmake_modules
+  iirob_filters
 )
 
 find_package(Eigen REQUIRED)
@@ -30,9 +31,10 @@ generate_messages(
 ## catkin specific configuration ##
 ###################################
 catkin_package(
- INCLUDE_DIRS common/include
- CATKIN_DEPENDS roscpp message_runtime std_msgs std_srvs cob_generic_can geometry_msgs tf2 tf2_ros tf2_geometry_msgs
+ INCLUDE_DIRS common/include ros/include
+ CATKIN_DEPENDS roscpp message_runtime std_msgs std_srvs cob_generic_can geometry_msgs tf2 tf2_ros tf2_geometry_msgs iirob_filters
  DEPENDS Eigen
+ LIBRARIES ${PROJECT_NAME}
 )
 
 ###########
@@ -40,19 +42,24 @@ catkin_package(
 ###########
 
 include_directories(
+  include
   common/include
+  ros/include
   ${catkin_INCLUDE_DIRS}
   ${Eigen_INCLUDE_DIRS}
 )
 
-add_library(${PROJECT_NAME} common/src/ForceTorqueCtrl.cpp)
+add_library(${PROJECT_NAME} common/src/ForceTorqueCtrl.cpp ros/src/force_torque_sensor.cpp ros/src/force_torque_sensor_handle.cpp)
+add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_generate_messages_cpp)
+target_link_libraries(${PROJECT_NAME} gravity_compensation low_pass_filter median_filter threshold_filter)
 
-add_executable(${PROJECT_NAME}_node ros/src/fts_node.cpp)
+add_executable(${PROJECT_NAME}_node ros/src/force_torque_sensor_node.cpp)
 add_dependencies(${PROJECT_NAME}_node ${PROJECT_NAME}_generate_messages_cpp)
-target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
-add_executable(${PROJECT_NAME}_config ros/src/fts_config.cpp)
+target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES} gravity_compensation low_pass_filter median_filter threshold_filter)
+
+add_executable(${PROJECT_NAME}_config ros/src/force_torque_sensor_config.cpp)
 target_link_libraries(${PROJECT_NAME}_config ${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
-add_dependencies(${PROJECT_NAME}_node ${PROJECT_NAME}_generate_messages_cpp)
+add_dependencies(${PROJECT_NAME}_config ${PROJECT_NAME}_generate_messages_cpp)
 
 #############
 ## Install ##
@@ -65,6 +72,10 @@ install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_node ${PROJECT_NAME}_config
 )
 
 install(DIRECTORY common/include
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+)
+
+install(DIRECTORY ros/include
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
 
