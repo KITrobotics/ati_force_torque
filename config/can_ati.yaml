@@ -7,12 +7,3 @@ FTS:
     base_identifier: 0x20
     auto_init: true
     fts_name: "ATI_45_Mini"
-
-node:
-    ft_pub_freq: 650
-    frame: "fts_reference_link"
-    transform_frame: "fts_base_link"
-
-Calibration:
-    n_measurements: 500
-    T_between_meas: 10000

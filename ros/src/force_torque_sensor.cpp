@@ -73,9 +73,9 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh)
     nh_.param<std::string>("CAN/path", canPath, "");
     nh_.param<int>("CAN/baudrate", canBaudrate, -1);
     nh_.param<int>("FTS/base_identifier", ftsBaseID, -1);
-    nh_.param<double>("node/ft_pub_freq", nodePubFreq, 100);
-    nh_.param<double>("node/ft_pull_freq", nodePullFreq, 100);
-    nh_.param<std::string>("node/sensor_frame", sensor_frame_, "frame");
+    nh_.param<double>("Node/ft_pub_freq", nodePubFreq, 100);
+    nh_.param<double>("Node/ft_pull_freq", nodePullFreq, 100);
+    nh_.param<std::string>("Node/sensor_frame", sensor_frame_, "frame");
 
     nh_.param<int>("Calibration/n_measurements", calibrationNMeasurements, 20);
     nh_.param<int>("Calibration/T_between_meas", calibrationTBetween, 10000);
@@ -130,12 +130,12 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh)
     lp_filter_torque_z_.init(ros::NodeHandle(nh_, "LowPassFilter/Torque_z"));
 
     //Median Filter
-    median_filter_force_x_.init(ros::NodeHandle(nh_, "MedianFilter/Force_x"));
-    median_filter_force_y_.init(ros::NodeHandle(nh_, "MedianFilter/Force_y"));
-    median_filter_force_z_.init(ros::NodeHandle(nh_, "MedianFilter/Force_z"));
-    median_filter_torque_x_.init(ros::NodeHandle(nh_, "MedianFilter/Torque_x"));
-    median_filter_torque_y_.init(ros::NodeHandle(nh_, "MedianFilter/Torque_y"));
-    median_filter_torque_z_.init(ros::NodeHandle(nh_, "MedianFilter/Torque_z"));
+    moving_mean_filter_force_x_.init(ros::NodeHandle(nh_, "MovingMeanFilter/Force_x"));
+    moving_mean_filter_force_y_.init(ros::NodeHandle(nh_, "MovingMeanFilter/Force_y"));
+    moving_mean_filter_force_z_.init(ros::NodeHandle(nh_, "MovingMeanFilter/Force_z"));
+    moving_mean_filter_torque_x_.init(ros::NodeHandle(nh_, "MovingMeanFilter/Torque_x"));
+    moving_mean_filter_torque_y_.init(ros::NodeHandle(nh_, "MovingMeanFilter/Torque_y"));
+    moving_mean_filter_torque_z_.init(ros::NodeHandle(nh_, "MovingMeanFilter/Torque_z"));
 
     //Gravity Compenstation
     gravity_compensator_.init(ros::NodeHandle(nh_, "GravityCompensation"));
@@ -403,14 +403,14 @@ void ForceTorqueSensor::pullFTData(const ros::TimerEvent &event)
         low_pass_filtered_data.wrench.torque.z = lp_filter_torque_z_.applyFilter(sensor_data.wrench.torque.z);
 
 
-        //median
-        median_filtered_wrench.header = low_pass_filtered_data.header;
-        median_filtered_wrench.wrench.force.x = median_filter_force_x_.applyFilter(low_pass_filtered_data.wrench.force.x);
-        median_filtered_wrench.wrench.force.y = median_filter_force_y_.applyFilter(low_pass_filtered_data.wrench.force.y);
-        median_filtered_wrench.wrench.force.z = median_filter_force_z_.applyFilter(low_pass_filtered_data.wrench.force.z);
-        median_filtered_wrench.wrench.torque.x = median_filter_torque_x_.applyFilter(low_pass_filtered_data.wrench.torque.x);
-        median_filtered_wrench.wrench.torque.y = median_filter_torque_y_.applyFilter(low_pass_filtered_data.wrench.torque.y);
-        median_filtered_wrench.wrench.torque.z = median_filter_torque_z_.applyFilter(low_pass_filtered_data.wrench.torque.z);
+        //moving_mean
+        moving_mean_filtered_wrench.header = low_pass_filtered_data.header;
+        moving_mean_filtered_wrench.wrench.force.x = moving_mean_filter_force_x_.applyFilter(low_pass_filtered_data.wrench.force.x);
+        moving_mean_filtered_wrench.wrench.force.y = moving_mean_filter_force_y_.applyFilter(low_pass_filtered_data.wrench.force.y);
+        moving_mean_filtered_wrench.wrench.force.z = moving_mean_filter_force_z_.applyFilter(low_pass_filtered_data.wrench.force.z);
+        moving_mean_filtered_wrench.wrench.torque.x = moving_mean_filter_torque_x_.applyFilter(low_pass_filtered_data.wrench.torque.x);
+        moving_mean_filtered_wrench.wrench.torque.y = moving_mean_filter_torque_y_.applyFilter(low_pass_filtered_data.wrench.torque.y);
+        moving_mean_filtered_wrench.wrench.torque.z = moving_mean_filter_torque_z_.applyFilter(low_pass_filtered_data.wrench.torque.z);
 
 
         if(is_pub_sensor_data_)
@@ -436,11 +436,11 @@ void ForceTorqueSensor::filterFTData(){
     transformed_data.header.stamp = sensor_data.header.stamp;
     transformed_data.header.frame_id = transform_frame_;
 
-    temp_vector_in.vector = median_filtered_wrench.wrench.force;
+    temp_vector_in.vector = moving_mean_filtered_wrench.wrench.force;
     tf2::doTransform(temp_vector_in, temp_vector_out, transform_ee_base_stamped);
     transformed_data.wrench.force = temp_vector_out.vector;
 
-    temp_vector_in.vector = median_filtered_wrench.wrench.torque;
+    temp_vector_in.vector = moving_mean_filtered_wrench.wrench.torque;
     tf2::doTransform(temp_vector_in, temp_vector_out, transform_ee_base_stamped);
     transformed_data.wrench.torque = temp_vector_out.vector;
 
