@@ -6,8 +6,8 @@
  * Karlsruhe Institute of Technology
  *
  * Maintainers: Denis Štogl, email: denis.stogl@kit.edu
- *              Florian Heller
- *              Vanessa Streuer
+ *                     Florian Heller
+ *                     Vanessa Streuer
  *
  * Date of update: 2014-2016
  *

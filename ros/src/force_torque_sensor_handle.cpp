@@ -5,9 +5,9 @@
  * Intelligent Process Control and Robotics (IPR),
  * Karlsruhe Institute of Technology
  *
- * Authors: Denis Štogl, email: denis.stogl@kit.edu
- *          Florian Heller
- *          Vanessa Streuer
+ * Maintainers: Denis Štogl, email: denis.stogl@kit.edu
+ *                     Florian Heller
+ *                     Vanessa Streuer
  *
  * Date of update: 2014-2016
  *
