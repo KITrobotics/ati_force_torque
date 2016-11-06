@@ -72,7 +72,7 @@ typedef unsigned char uint8_t;
 
 #include <iirob_filters/gravity_compensation.h>
 #include <iirob_filters/low_pass_filter.h>
-#include <iirob_filters/median_filter.h>
+#include <iirob_filters/moving_mean_filter.h>
 #include <iirob_filters/threshold_filter.h>
 
 #include <math.h>
@@ -103,7 +103,7 @@ protected:
   void filterFTData();
 
   // Arrays for dumping FT-Data
-  geometry_msgs::WrenchStamped gravity_compensated_force, median_filtered_wrench, threshold_filtered_force, transformed_data, sensor_data, low_pass_filtered_data;
+  geometry_msgs::WrenchStamped gravity_compensated_force, moving_mean_filtered_wrench, threshold_filtered_force, transformed_data, sensor_data, low_pass_filtered_data;
 
   double force_buffer_[3];
   double torque_buffer_[3];
@@ -162,12 +162,12 @@ private:
   LowPassFilter lp_filter_torque_x_;
   LowPassFilter lp_filter_torque_y_;
   LowPassFilter lp_filter_torque_z_;
-  MedianFilter median_filter_force_x_;
-  MedianFilter median_filter_force_y_;
-  MedianFilter median_filter_force_z_;
-  MedianFilter median_filter_torque_x_;
-  MedianFilter median_filter_torque_y_;
-  MedianFilter median_filter_torque_z_;
+  MovingMeanFilter moving_mean_filter_force_x_;
+  MovingMeanFilter moving_mean_filter_force_y_;
+  MovingMeanFilter moving_mean_filter_force_z_;
+  MovingMeanFilter moving_mean_filter_torque_x_;
+  MovingMeanFilter moving_mean_filter_torque_y_;
+  MovingMeanFilter moving_mean_filter_torque_z_;
 
   GravityCompensator gravity_compensator_;
 

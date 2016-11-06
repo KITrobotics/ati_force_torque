@@ -72,8 +72,8 @@ private:
 };
 
 ForceTorqueSensorNode::ForceTorqueSensorNode(ros::NodeHandle &nh) : ForceTorqueSensor(nh){
-    nh_.param<std::string>("node/frame", sensor_frame_, "fts_link");
-    nh_.param<std::string>("node/transform_frame", transform_frame_, "base_link");
+    nh_.param<std::string>("Node/frame", sensor_frame_, "fts_link");
+    nh_.param<std::string>("Node/transform_frame", transform_frame_, "base_link");
 }
 
 void ForceTorqueSensorNode::updateFTData(const ros::TimerEvent &event)
