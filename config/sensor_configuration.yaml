@@ -2,7 +2,7 @@ Node:
     ft_pub_freq: 200
     ft_pull_freq: 800
     sensor_frame: "fts_reference_link"
-    transform_frame: "arm_tool_link"
+    transform_frame: "fts_base_link"
 
 Calibration:
     n_measurements: 500
@@ -14,7 +14,6 @@ Calibration:
     offset_mx: -0.281 #-0.185 #-0.153 #-0.241 #-0.294
     offset_my: 0.046 #0.025 #0.066 #0.001 #-0.040
     offset_mz: 0.070 #0.118 #0.110 #0.117 #0.151
-
 
 ThresholdFilter:
   linear_threshold: 2.5
@@ -66,7 +65,8 @@ GravityCompensation:
      y: 0
      z: 0.027346102 # m
     force: 7.9459955 # f_G
-    world_frame: "arm_base_link"
+    sensor_frame: "fts_reference_link"
+    world_frame: "fts_base_link"
 
 Publish:
     sensor_data: true

@@ -67,13 +67,12 @@ private:
 
     tf2_ros::TransformListener *p_tfListener;
     tf2::Transform transform_ee_base;
-
-    ros::NodeHandle nh_;
 };
 
-ForceTorqueSensorNode::ForceTorqueSensorNode(ros::NodeHandle &nh) : ForceTorqueSensor(nh){
-    nh_.param<std::string>("Node/frame", sensor_frame_, "fts_link");
-    nh_.param<std::string>("Node/transform_frame", transform_frame_, "base_link");
+ForceTorqueSensorNode::ForceTorqueSensorNode(ros::NodeHandle &nh) : ForceTorqueSensor(nh)
+{
+    nh_.param<std::string>("Node/sensor_frame", sensor_frame_, "fts_reference_link");
+    nh_.param<std::string>("Node/transform_frame", transform_frame_, "fts_base_link");
 }
 
 void ForceTorqueSensorNode::updateFTData(const ros::TimerEvent &event)

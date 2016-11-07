@@ -273,8 +273,6 @@ bool ForceTorqueSensor::srvCallback_recalibrate(std_srvs::Trigger::Request& req,
     nh_.getParam("CoG/z", cog.z);
     nh_.getParam("force", force_value);
     gravity.vector.z = -force_value;
-    //~ gravity.header.frame_id=transform_frame_id;
-    //~ tf2::Transform tf_base_to_kms = p_tfBuffer->lookupTransform(frame_id,transform_frame_id,ros::Time(0));
     tf2::doTransform(gravity, gravity_transformed,
                      p_tfBuffer->lookupTransform(sensor_frame_, transform_frame_, ros::Time(0)));
     calibrate();

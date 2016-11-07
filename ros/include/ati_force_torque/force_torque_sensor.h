@@ -109,10 +109,11 @@ protected:
   double torque_buffer_[3];
   double force_buffer_transformed_[3];
   double torque_buffer_transformed_[3];
+  
+  ros::NodeHandle nh_;
 
 private:
   virtual void updateFTData(const ros::TimerEvent &event)  = 0;
-
 
   //FT Data
   ForceTorqueCtrl *p_Ftc;
@@ -121,7 +122,6 @@ private:
   tf2_ros::Buffer *p_tfBuffer;
   ros::Publisher gravity_compensated_pub_, threshold_filtered_pub_, transformed_data_pub_, sensor_data_pub_, low_pass_pub_;
   bool is_pub_gravity_compensated_, is_pub_threshold_filtered_, is_pub_transformed_data_, is_pub_sensor_data_, is_pub_low_pass_;
-
 
   // CAN parameters
   int canType;
@@ -170,6 +170,4 @@ private:
   MovingMeanFilter moving_mean_filter_torque_z_;
 
   GravityCompensator gravity_compensator_;
-
-  ros::NodeHandle nh_;
 };
