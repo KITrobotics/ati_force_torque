@@ -2,7 +2,7 @@ CAN:
     type: 5           # CANITFTYPE_SOCKET_CAN
     path: can2
 
-    FTS:
+FTS:
     base_identifier: 0x20
     auto_init: true
     fts_name: "ATI_45_Mini"
