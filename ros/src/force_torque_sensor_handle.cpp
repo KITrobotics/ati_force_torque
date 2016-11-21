@@ -47,7 +47,6 @@ ForceTorqueSensorHandle::ForceTorqueSensorHandle(ros::NodeHandle& nh, std::strin
     ForceTorqueSensor(nh), hardware_interface::ForceTorqueSensorHandle(sensor_name, output_frame, interface_force_, interface_torque_)
 {
     transform_frame_ = output_frame;
-
 }
 
 void ForceTorqueSensorHandle::updateFTData(const ros::TimerEvent& event)

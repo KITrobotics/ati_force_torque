@@ -449,16 +449,11 @@ void ForceTorqueSensor::filterFTData(){
     //treshhold filtering
     threshold_filtered_force = threshold_filter_.applyFilter(gravity_compensated_force);
 
-
-
-
-
     if(is_pub_transformed_data_)
         transformed_data_pub_.publish(transformed_data);
     if(is_pub_gravity_compensated_)
         gravity_compensated_pub_.publish(gravity_compensated_force);
     if(is_pub_threshold_filtered_)
         threshold_filtered_pub_.publish(threshold_filtered_force);
-
 }
 
