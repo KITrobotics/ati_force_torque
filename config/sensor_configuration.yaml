@@ -66,7 +66,7 @@ GravityCompensation:
      z: 0.027346102 # m
     force: 7.9459955 # f_G
     sensor_frame: "fts_reference_link"
-    world_frame: "world"
+    world_frame: "fts_base_link"
 
 Publish:
     sensor_data: true
