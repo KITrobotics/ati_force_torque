@@ -73,6 +73,7 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh)
     nh_.param<std::string>("CAN/path", canPath, "");
     nh_.param<int>("CAN/baudrate", canBaudrate, -1);
     nh_.param<int>("FTS/base_identifier", ftsBaseID, -1);
+    nh_.param<bool>("FTS/auto_init", isAutoInit, false);
     nh_.param<double>("Node/ft_pub_freq", nodePubFreq, 100);
     nh_.param<double>("Node/ft_pull_freq", nodePullFreq, 100);
     nh_.param<std::string>("Node/sensor_frame", sensor_frame_, "frame");
@@ -89,7 +90,6 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh)
     nh_.param<int>("CoordinateSystemCal/n_measurements", coordinateSystemNMeasurements, 20);
     nh_.param<int>("CoordinateSystemCal/T_between_meas", coordinateSystemTBetween, 10000);
     nh_.param<int>("CoordinateSystemCal/push_direction", coordinateSystemPushDirection, 0);
-    nh_.param<bool>("FTS/auto_init", isAutoInit, false);
 
     p_tfBuffer = new tf2_ros::Buffer();
     p_tfListener = new tf2_ros::TransformListener(*p_tfBuffer, true);
