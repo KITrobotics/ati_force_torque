@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <launch>
-
+    
     <include file="$(arg ati_force_torque)/ros/launch/driver.launch">
-        <arg name="is_socket" value="$(arg true)" />
+        <arg name="is_socket" value="$(arg false)" />
     </include>
-
+    
 </launch>
