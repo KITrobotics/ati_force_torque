@@ -76,7 +76,7 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh)
     nh_.param<bool>("FTS/auto_init", isAutoInit, false);
     nh_.param<double>("Node/ft_pub_freq", nodePubFreq, 100);
     nh_.param<double>("Node/ft_pull_freq", nodePullFreq, 100);
-    nh_.param<std::string>("Node/sensor_frame", sensor_frame_, "frame");
+    nh_.param<std::string>("Node/sensor_frame", sensor_frame_, "fts_reference_link");
 
     nh_.param<int>("Calibration/n_measurements", calibrationNMeasurements, 20);
     nh_.param<int>("Calibration/T_between_meas", calibrationTBetween, 10000);
