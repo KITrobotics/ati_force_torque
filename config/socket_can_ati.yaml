@@ -1,6 +1,6 @@
 CAN:
     type: 5           # CANITFTYPE_SOCKET_CAN
-    path: can2
+    path: can0
 
 FTS:
     base_identifier: 0x20

@@ -71,7 +71,7 @@ GravityCompensation:
 Publish:
     sensor_data: true
     low_pass: true
-    #moving_mean: false
+    moving_mean: true
     transformed_data: true
     gravity_compensated: true
     threshold_filtered: true

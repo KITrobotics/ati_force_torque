@@ -103,6 +103,10 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh)
     if(is_pub_low_pass_){
         low_pass_pub_ = nh_.advertise<geometry_msgs::WrenchStamped>("low_pass", 1);
     }
+    nh_.param<bool>("Publish/moving_mean", is_pub_moving_mean_, false);
+    if(is_pub_moving_mean_){
+        moving_mean_pub_ = nh_.advertise<geometry_msgs::WrenchStamped>("moving_mean", 1);
+    }
     nh_.param<bool>("Publish/sensor_data", is_pub_sensor_data_, false);
     if(is_pub_sensor_data_){
         sensor_data_pub_ = nh_.advertise<geometry_msgs::WrenchStamped>("sensor_data", 1);
@@ -400,7 +404,6 @@ void ForceTorqueSensor::pullFTData(const ros::TimerEvent &event)
         low_pass_filtered_data.wrench.torque.y = lp_filter_torque_y_.applyFilter(sensor_data.wrench.torque.y);
         low_pass_filtered_data.wrench.torque.z = lp_filter_torque_z_.applyFilter(sensor_data.wrench.torque.z);
 
-
         //moving_mean
         moving_mean_filtered_wrench.header = low_pass_filtered_data.header;
         moving_mean_filtered_wrench.wrench.force.x = moving_mean_filter_force_x_.applyFilter(low_pass_filtered_data.wrench.force.x);
@@ -415,6 +418,8 @@ void ForceTorqueSensor::pullFTData(const ros::TimerEvent &event)
             sensor_data_pub_.publish(sensor_data);
         if(is_pub_low_pass_)
             low_pass_pub_.publish(low_pass_filtered_data);
+	if(is_pub_moving_mean_)
+            moving_mean_pub_.publish(moving_mean_filtered_wrench);
     }
 }
 
@@ -431,7 +436,7 @@ void ForceTorqueSensor::filterFTData(){
 
     geometry_msgs::Vector3Stamped temp_vector_in, temp_vector_out;
 
-    transformed_data.header.stamp = sensor_data.header.stamp;
+    transformed_data.header.stamp = moving_mean_filtered_wrench.header.stamp;
     transformed_data.header.frame_id = transform_frame_;
 
     temp_vector_in.vector = moving_mean_filtered_wrench.wrench.force;
@@ -441,7 +446,6 @@ void ForceTorqueSensor::filterFTData(){
     temp_vector_in.vector = moving_mean_filtered_wrench.wrench.torque;
     tf2::doTransform(temp_vector_in, temp_vector_out, transform_ee_base_stamped);
     transformed_data.wrench.torque = temp_vector_out.vector;
-
 
     //gravity compensation
     gravity_compensated_force = gravity_compensator_.compensate(transformed_data);
