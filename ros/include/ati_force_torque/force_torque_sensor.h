@@ -122,6 +122,8 @@ private:
   tf2_ros::Buffer *p_tfBuffer;
   ros::Publisher gravity_compensated_pub_, threshold_filtered_pub_, transformed_data_pub_, sensor_data_pub_, low_pass_pub_, moving_mean_pub_;
   bool is_pub_gravity_compensated_, is_pub_threshold_filtered_, is_pub_transformed_data_, is_pub_sensor_data_, is_pub_low_pass_, is_pub_moving_mean_;
+  
+  uint _num_transform_errors;
 
   // CAN parameters
   int canType;

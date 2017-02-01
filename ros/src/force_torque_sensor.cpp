@@ -147,7 +147,6 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh)
     //Threshold Filter
     threshold_filter_.init(ros::NodeHandle(nh_, "ThresholdFilter"));
 
-
     if (canType != -1)
     {
         p_Ftc = new ForceTorqueCtrl(canType, canPath, canBaudrate, ftsBaseID);
@@ -305,6 +304,8 @@ bool ForceTorqueSensor::calibrate()
         int status = 0;
         double Fx, Fy, Fz, Tx, Ty, Tz = 0;
         p_Ftc->ReadSGData(status, Fx, Fy, Fz, Tx, Ty, Tz);
+//         F_avg[0] += moving_mean_filtered_wrench.wrench.force.x;
+// 	ROS_INFO("Moving mean: %f", sensor_data.wrench.force.x);
         F_avg[0] += Fx;
         F_avg[1] += Fy;
         F_avg[2] += Fz;
@@ -428,10 +429,14 @@ void ForceTorqueSensor::filterFTData(){
     try
     {
         transform_ee_base_stamped = p_tfBuffer->lookupTransform(transform_frame_, sensor_frame_, ros::Time(0));
+	_num_transform_errors = 0;
     }
     catch (tf2::TransformException ex)
     {
-        ROS_ERROR("%s", ex.what());
+      if (_num_transform_errors%100 == 0){
+	ROS_ERROR("%s", ex.what());
+      }
+    _num_transform_errors++;
     }
 
     geometry_msgs::Vector3Stamped temp_vector_in, temp_vector_out;
