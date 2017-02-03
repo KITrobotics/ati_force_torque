@@ -6,7 +6,7 @@ Node:
 
 Calibration:
     n_measurements: 500
-    T_between_meas: 10000
+    T_between_meas: 0.01
     static: true # true= use static offset Calibration, false=use calibrate Sensor to 0 in current State
     offset_fx: -19.2 #-19.40 #-19.12 #20.05 #-19.81
     offset_fy: -2.2 #-2.31 #-0.67 #-3.38 #-5.44

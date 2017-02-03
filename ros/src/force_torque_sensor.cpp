@@ -62,7 +62,8 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh)
     m_isCalibrated = false;
 
     srvServer_Init_ = nh_.advertiseService("Init", &ForceTorqueSensor::srvCallback_Init, this);
-    srvServer_Calibrate_ = nh_.advertiseService("Calibrate", &ForceTorqueSensor::srvCallback_Calibrate, this);
+    srvServer_CalculateAverageMasurement_ = nh_.advertiseService("CalculateAverageMasurement", &ForceTorqueSensor::srvCallback_CalculateAverageMasurement, this);
+    srvServer_CalculateOffset_ = nh_.advertiseService("CalculateOffsets", &ForceTorqueSensor::srvCallback_CalculateOffset, this);
     srvServer_DetermineCoordianteSystem_ = nh_.advertiseService("DetermineCoordinateSystem", &ForceTorqueSensor::srvCallback_DetermineCoordinateSystem, this);
     srvServer_Temp_ = nh_.advertiseService("GetTemperature", &ForceTorqueSensor::srvReadDiagnosticVoltages, this);
     srvServer_ReCalibrate = nh_.advertiseService("Recalibrate", &ForceTorqueSensor::srvCallback_recalibrate, this);
@@ -78,8 +79,17 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh)
     nh_.param<double>("Node/ft_pull_freq", nodePullFreq, 100);
     nh_.param<std::string>("Node/sensor_frame", sensor_frame_, "fts_reference_link");
 
-    nh_.param<int>("Calibration/n_measurements", calibrationNMeasurements, 20);
-    nh_.param<int>("Calibration/T_between_meas", calibrationTBetween, 10000);
+    int calibNMeas;
+    nh_.param<int>("Calibration/n_measurements", calibNMeas, 20);
+    if (calibrationNMeasurements <= 0)
+    {
+        ROS_WARN("Parameter 'Calibration/n_measurements' is <=0 using default: 20");
+        calibrationNMeasurements = 20;
+    }
+    else {
+        calibrationNMeasurements = (uint)calibNMeas;
+    }
+    nh_.param<double>("Calibration/T_between_meas", calibrationTBetween, 0.01);
     nh_.param<bool>("Calibration/static", m_staticCalibration, 0);
     nh_.param<double>("Calibration/offset_fx", m_calibOffset.force.x, 0);
     nh_.param<double>("Calibration/offset_fy", m_calibOffset.force.y, 0);
@@ -175,21 +185,21 @@ void ForceTorqueSensor::init_sensor(std::string& msg, bool& success)
         if (p_Ftc->Init())
         {
             // Calibrate sensor
-            F_avg.resize(6);
             if (m_staticCalibration)
             {
                 ROS_INFO("Using static calibration from paramter server.");
-                F_avg[0] = m_calibOffset.force.x;
-                F_avg[1] = m_calibOffset.force.y;
-                F_avg[2] = m_calibOffset.force.z;
-                F_avg[3] = m_calibOffset.torque.x;
-                F_avg[4] = m_calibOffset.torque.y;
-                F_avg[5] = m_calibOffset.torque.z;
+                offset_.force.x = m_calibOffset.force.x;
+                offset_.force.y = m_calibOffset.force.y;
+                offset_.force.z = m_calibOffset.force.z;
+                offset_.torque.x= m_calibOffset.torque.x;
+                offset_.torque.y = m_calibOffset.torque.y;
+                offset_.torque.z = m_calibOffset.torque.z;
             }
             else
             {
                 ROS_INFO("Calibrating sensor. Plase wait...");
-                if (calibrate())
+                geometry_msgs::Wrench temp_offset;
+                if (calibrate(true, &temp_offset))
                 {
                     success = false;
                     msg = "Calibration failed! :/";
@@ -199,6 +209,8 @@ void ForceTorqueSensor::init_sensor(std::string& msg, bool& success)
             m_isInitialized = true;
             success = true;
             msg = "FTS initalised!";
+
+            apply_offset = true;
 
             // start timer for reading FT-data
             ftUpdateTimer_.start();
@@ -227,11 +239,28 @@ bool ForceTorqueSensor::srvCallback_Init(std_srvs::Trigger::Request& req, std_sr
     return true;
 }
 
-bool ForceTorqueSensor::srvCallback_Calibrate(std_srvs::Trigger::Request& req, std_srvs::Trigger::Response& res)
+bool ForceTorqueSensor::srvCallback_CalculateAverageMasurement(ati_force_torque::CalculateAverageMasurement::Request& req, ati_force_torque::CalculateAverageMasurement::Response& res)
 {
     if (m_isInitialized)
     {
-        if (calibrate())
+        res.success = true;
+        res.message = "Measurement successfull! :)";
+        res.measurement = makeAverageMeasurement(req.N_measurements, req.T_between_meas);
+    }
+    else
+    {
+        res.success = false;
+        res.message = "FTS not initialised! :/";
+    }
+
+    return true;
+}
+
+bool ForceTorqueSensor::srvCallback_CalculateOffset(ati_force_torque::CalculateSensorOffset::Request& req, ati_force_torque::CalculateSensorOffset::Response& res)
+{
+    if (m_isInitialized)
+    {
+        if (calibrate(req.apply_after_calculation, &res.offset))
         {
             res.success = true;
             res.message = "Calibration successfull! :)";
@@ -278,56 +307,67 @@ bool ForceTorqueSensor::srvCallback_recalibrate(std_srvs::Trigger::Request& req,
     gravity.vector.z = -force_value;
     tf2::doTransform(gravity, gravity_transformed,
                      p_tfBuffer->lookupTransform(sensor_frame_, transform_frame_, ros::Time(0)));
-    calibrate();
-    F_avg[0] -= gravity_transformed.vector.x;
-    F_avg[1] -= gravity_transformed.vector.y;
-    F_avg[2] -= gravity_transformed.vector.z;
-    F_avg[3] -= (gravity_transformed.vector.y * cog.z - gravity_transformed.vector.z * cog.y);
-    F_avg[4] -= (gravity_transformed.vector.z * cog.x - gravity_transformed.vector.x * cog.z);
-    F_avg[5] -= (gravity_transformed.vector.x * cog.y - gravity_transformed.vector.y * cog.x);
+    geometry_msgs::Wrench offset;
+    calibrate(false, &offset);
+    offset_.force.x -= gravity_transformed.vector.x;
+    offset_.force.y -= gravity_transformed.vector.y;
+    offset_.force.z -= gravity_transformed.vector.z;
+    offset_.torque.x -= (gravity_transformed.vector.y * cog.z - gravity_transformed.vector.z * cog.y);
+    offset_.torque.y -= (gravity_transformed.vector.z * cog.x - gravity_transformed.vector.x * cog.z);
+    offset_.torque.z -= (gravity_transformed.vector.x * cog.y - gravity_transformed.vector.y * cog.x);
     res.success = true;
     res.message = "Successfully recalibrated FTS!";
     return true;
 }
 
-bool ForceTorqueSensor::calibrate()
+bool ForceTorqueSensor::calibrate(bool apply_after_calculation, geometry_msgs::Wrench *new_offset)
 {
-    F_avg[0] = 0.0;
-    F_avg[1] = 0.0;
-    F_avg[2] = 0.0;
-    F_avg[3] = 0.0;
-    F_avg[4] = 0.0;
-    F_avg[5] = 0.0;
+    apply_offset = false;
 
-    for (int i = 0; i < calibrationNMeasurements; i++)
-    {
-        int status = 0;
-        double Fx, Fy, Fz, Tx, Ty, Tz = 0;
-        p_Ftc->ReadSGData(status, Fx, Fy, Fz, Tx, Ty, Tz);
-//         F_avg[0] += moving_mean_filtered_wrench.wrench.force.x;
-// 	ROS_INFO("Moving mean: %f", sensor_data.wrench.force.x);
-        F_avg[0] += Fx;
-        F_avg[1] += Fy;
-        F_avg[2] += Fz;
-        F_avg[3] += Tx;
-        F_avg[4] += Ty;
-        F_avg[5] += Tz;
-        usleep(calibrationTBetween);
+    geometry_msgs::Wrench temp_offset = makeAverageMeasurement(calibrationNMeasurements, calibrationTBetween);
+
+    apply_offset = true;
+
+    if (apply_after_calculation) {
+        offset_ = temp_offset;
     }
-
-    for (int i = 0; i < 6; i++)
-    {
-        F_avg[i] /= calibrationNMeasurements;
-    }
-
-    ROS_INFO("Calibration Data: Fx: %f; Fy: %f; Fz: %f; Mx: %f; My: %f; Mz: %f", F_avg[0], F_avg[1], F_avg[2], F_avg[3],
-            F_avg[4], F_avg[5]);
+    ROS_INFO("Calibration Data: Fx: %f; Fy: %f; Fz: %f; Mx: %f; My: %f; Mz: %f", temp_offset.force.x, temp_offset.force.y, temp_offset.force.z, temp_offset.torque.x, temp_offset.torque.y, temp_offset.torque.z);
 
     m_isCalibrated = true;
+    *new_offset = temp_offset;
 
     return m_isCalibrated;
 }
 
+geometry_msgs::Wrench ForceTorqueSensor::makeAverageMeasurement(uint number_of_measurements, double time_between_meas)
+{
+    geometry_msgs::Wrench measurement;
+
+    ros::Duration duration(time_between_meas);
+
+    for (int i = 0; i < number_of_measurements; i++)
+    {
+        measurement.force.x += moving_mean_filtered_wrench.wrench.force.x;
+        measurement.force.y += moving_mean_filtered_wrench.wrench.force.y;
+        measurement.force.z += moving_mean_filtered_wrench.wrench.force.z;
+        measurement.torque.x += moving_mean_filtered_wrench.wrench.torque.x;
+        measurement.torque.y += moving_mean_filtered_wrench.wrench.torque.y;
+        measurement.torque.z+= moving_mean_filtered_wrench.wrench.torque.z;
+
+        duration.sleep();
+    }
+    measurement.force.x /= number_of_measurements;
+    measurement.force.y /= number_of_measurements;
+    measurement.force.z /= number_of_measurements;
+    measurement.torque.x /= number_of_measurements;
+    measurement.torque.y /= number_of_measurements;
+    measurement.torque.z /= number_of_measurements;
+
+    return measurement;
+}
+
+
+// TODO: make this to use filtered data (see calibrate)
 bool ForceTorqueSensor::srvCallback_DetermineCoordinateSystem(std_srvs::Trigger::Request& req,
                                                               std_srvs::Trigger::Response& res)
 {
@@ -381,20 +421,22 @@ bool ForceTorqueSensor::srvReadDiagnosticVoltages(ati_force_torque::DiagnosticVo
 void ForceTorqueSensor::pullFTData(const ros::TimerEvent &event)
 {
     int status = 0;
-    double Fx, Fy, Fz, Tx, Ty, Tz = 0;
 
-    bool bRet = p_Ftc->ReadSGData(status, Fx, Fy, Fz, Tx, Ty, Tz);
+    bool bRet = p_Ftc->ReadSGData(status, sensor_data.wrench.force.x, sensor_data.wrench.force.y, sensor_data.wrench.force.z,
+                                                        sensor_data.wrench.torque.x, sensor_data.wrench.torque.y, sensor_data.wrench.torque.z);
     if (bRet != false)
     {
         sensor_data.header.stamp = ros::Time::now();
         sensor_data.header.frame_id = sensor_frame_;
 
-        sensor_data.wrench.force.x  = Fx - F_avg[0];
-        sensor_data.wrench.force.y  = Fy - F_avg[1];
-        sensor_data.wrench.force.z  = Fz - F_avg[2];
-        sensor_data.wrench.torque.x = Tx - F_avg[3];
-        sensor_data.wrench.torque.y = Ty - F_avg[4];
-        sensor_data.wrench.torque.z = Tz - F_avg[5];
+        if (apply_offset) {
+            sensor_data.wrench.force.x  -= offset_.force.x;
+            sensor_data.wrench.force.y  -= offset_.force.y;
+            sensor_data.wrench.force.z  -= offset_.force.z;
+            sensor_data.wrench.torque.x -= offset_.torque.x;
+            sensor_data.wrench.torque.y -= offset_.torque.y;
+            sensor_data.wrench.torque.z -= offset_.torque.z;
+        }
 
         //lowpass
         low_pass_filtered_data.header = sensor_data.header;

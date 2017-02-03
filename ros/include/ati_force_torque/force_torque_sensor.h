@@ -58,6 +58,7 @@ typedef unsigned char uint8_t;
 #include <iostream>
 #include <ros/ros.h>
 #include <cob_forcetorque/ForceTorqueCtrl.h>
+#include <geometry_msgs/Wrench.h>
 #include <geometry_msgs/WrenchStamped.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Vector3Stamped.h>
@@ -67,6 +68,8 @@ typedef unsigned char uint8_t;
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 #include <std_srvs/Trigger.h>
+#include <ati_force_torque/CalculateAverageMasurement.h>
+#include <ati_force_torque/CalculateSensorOffset.h>
 #include <ati_force_torque/DiagnosticVoltages.h>
 
 
@@ -87,8 +90,9 @@ public:
 
   void init_sensor(std::string &msg, bool &success);
   bool srvCallback_Init(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
-  bool srvCallback_Calibrate(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
-  bool calibrate();
+  bool srvCallback_CalculateOffset(ati_force_torque::CalculateSensorOffset::Request &req, ati_force_torque::CalculateSensorOffset::Response &res);
+  bool srvCallback_CalculateAverageMasurement(ati_force_torque::CalculateAverageMasurement::Request &req, ati_force_torque::CalculateAverageMasurement::Response &res);
+  bool calibrate(bool apply_after_calculation,  geometry_msgs::Wrench *new_offset);
   bool srvCallback_DetermineCoordinateSystem(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool srvReadDiagnosticVoltages(ati_force_torque::DiagnosticVoltages::Request &req,
                                  ati_force_torque::DiagnosticVoltages::Response &res);
@@ -114,10 +118,11 @@ protected:
 
 private:
   virtual void updateFTData(const ros::TimerEvent &event)  = 0;
+  geometry_msgs::Wrench makeAverageMeasurement(uint number_of_measurements, double time_between_meas);
 
   //FT Data
   ForceTorqueCtrl *p_Ftc;
-  std::vector<double> F_avg;
+  geometry_msgs::Wrench offset_;
   geometry_msgs::TransformStamped transform_ee_base_stamped;
   tf2_ros::Buffer *p_tfBuffer;
   ros::Publisher gravity_compensated_pub_, threshold_filtered_pub_, transformed_data_pub_, sensor_data_pub_, low_pass_pub_, moving_mean_pub_;
@@ -131,15 +136,16 @@ private:
   int canBaudrate;
   int ftsBaseID;
   double nodePubFreq;
-  int calibrationNMeasurements;
-  int calibrationTBetween;
+  uint calibrationNMeasurements;
+  double calibrationTBetween;
   int coordinateSystemNMeasurements;
   int coordinateSystemTBetween;
   int coordinateSystemPushDirection;
 
   // service servers
   ros::ServiceServer srvServer_Init_;
-  ros::ServiceServer srvServer_Calibrate_;
+  ros::ServiceServer srvServer_CalculateAverageMasurement_;
+  ros::ServiceServer srvServer_CalculateOffset_;
   ros::ServiceServer srvServer_DetermineCoordianteSystem_;
   ros::ServiceServer srvServer_Temp_;
   ros::ServiceServer srvServer_ReCalibrate;
@@ -151,6 +157,7 @@ private:
 
   bool m_isInitialized;
   bool m_isCalibrated;
+  bool apply_offset;
 
   // Variables for Static offset
   bool m_staticCalibration;

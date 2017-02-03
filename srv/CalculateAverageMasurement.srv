@@ -1,0 +1,6 @@
+uint32 N_measurements
+float64 T_between_meas
+---
+bool success
+string message
+geometry_msgs/Wrench measurement

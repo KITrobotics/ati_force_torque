@@ -28,12 +28,16 @@ endif()
 
 add_service_files(
     FILES
+    CalculateAverageMasurement.srv
+    CalculateSensorOffset.srv
     DiagnosticVoltages.srv
     )
 
 generate_messages(
     DEPENDENCIES
-    std_msgs)
+    geometry_msgs
+    std_msgs
+    )
 
 ###################################
 ## catkin specific configuration ##
