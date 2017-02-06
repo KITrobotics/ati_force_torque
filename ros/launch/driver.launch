@@ -16,6 +16,7 @@
     <rosparam command="load" ns="fts" file="$(find ati_force_torque)/config/socket_can_ati.yaml" if="$(arg is_socket)"/>
     <rosparam command="load" ns="fts" file="$(find ati_force_torque)/config/can_ati.yaml" unless="$(arg is_socket)"/>
     <rosparam command="load" ns="fts" file="$(find ati_force_torque)/config/sensor_configuration.yaml"/>
+    <rosparam command="load" ns="fts/Offset" file="$(find ati_force_torque)/config/sensor_offset.yaml"/>
 
     <!-- start FTS Driver Node -->
     <node pkg="ati_force_torque" type="ati_force_torque_node" name="fts_node" ns="fts" cwd="node" respawn="false" output="screen">
