@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+    
+    <node pkg="ati_force_torque" type="calculate_offsets.py" name="calculate_offsets" cwd="node" respawn="false" output="screen">
+    </node>
+
+</launch>

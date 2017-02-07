@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<launch>
+    
+    <node pkg="ati_force_torque" type="calibrate_tool.py" name="calibrate_tool" cwd="node" respawn="false" output="screen">
+        <param name="tool_name" value="force_tool"/>
+    </node>
+
+</launch>
