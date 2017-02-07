@@ -63,12 +63,11 @@ MovingMeanFilter:
         divider: 4
 
 GravityCompensation:
-    CoG:
-     x: 0
-     y: 0
-     z: 0.027346102 # m
-    force: 7.9459955 # f_G
-    sensor_frame: "fts_reference_link"
+    #CoG:
+     #x: 0
+     #y: 0
+     #z: 0.027346102 # m
+    #force: 7.9459955 # f_G
     world_frame: "world"
 
 Publish:

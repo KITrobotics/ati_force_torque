@@ -91,12 +91,12 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh)
     }
     nh_.param<double>("Calibration/T_between_meas", calibrationTBetween, 0.01);
     nh_.param<bool>("Calibration/static", m_staticCalibration, 0);
-    nh_.param<double>("Offset/force/x", m_calibOffset.force.x, 0);
-    nh_.param<double>("Offset/force/y", m_calibOffset.force.y, 0);
-    nh_.param<double>("Offset/force/z", m_calibOffset.force.z, 0);
-    nh_.param<double>("Offset/torque/x", m_calibOffset.torque.x, 0);
-    nh_.param<double>("Offset/torque/y", m_calibOffset.torque.y, 0);
-    nh_.param<double>("Offset/torque/z", m_calibOffset.torque.z, 0);
+    nh_.param<double>("Calibration/Offset/force/x", m_calibOffset.force.x, 0);
+    nh_.param<double>("Calibration/Offset/force/y", m_calibOffset.force.y, 0);
+    nh_.param<double>("Calibration/Offset/force/z", m_calibOffset.force.z, 0);
+    nh_.param<double>("Calibration/Offset/torque/x", m_calibOffset.torque.x, 0);
+    nh_.param<double>("Calibration/Offset/torque/y", m_calibOffset.torque.y, 0);
+    nh_.param<double>("Calibration/Offset/torque/z", m_calibOffset.torque.z, 0);
     nh_.param<int>("CoordinateSystemCal/n_measurements", coordinateSystemNMeasurements, 20);
     nh_.param<int>("CoordinateSystemCal/T_between_meas", coordinateSystemTBetween, 10000);
     nh_.param<int>("CoordinateSystemCal/push_direction", coordinateSystemPushDirection, 0);
