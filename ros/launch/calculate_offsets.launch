@@ -1,7 +1,10 @@
 <?xml version="1.0"?>
 <launch>
+  
+  <arg name="store_to_file" default="true"/>
     
-    <node pkg="ati_force_torque" type="calculate_offsets.py" name="calculate_offsets" cwd="node" respawn="false" output="screen">
-    </node>
+  <node pkg="ati_force_torque" type="calculate_offsets.py" name="calculate_offsets" cwd="node" respawn="false" output="screen">
+    <param name="store_to_file" value="$(arg store_to_file)"/>
+  </node>
 
 </launch>

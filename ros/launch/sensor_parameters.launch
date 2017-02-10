@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="is_socket" default="true"/>
+
+    <rosparam command="load" file="$(find ati_force_torque)/config/socket_can_ati.yaml" if="$(arg is_socket)"/>
+    <rosparam command="load" file="$(find ati_force_torque)/config/can_ati.yaml" unless="$(arg is_socket)"/>
+    <rosparam command="load" file="$(find ati_force_torque)/config/sensor_configuration.yaml"/>
+    <rosparam command="load" ns="Calibration/Offset" file="$(find ati_force_torque)/config/sensor_offset.yaml"/>
+
+<!--     <rosparam command="load" ns="fts/Offset/Calibration" file="$(find iirob_description)/config/sensor_offset.yaml"/>  -->
+
+</launch>

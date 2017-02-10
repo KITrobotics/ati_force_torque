@@ -118,7 +118,8 @@ protected:
 
 private:
   virtual void updateFTData(const ros::TimerEvent &event)  = 0;
-  geometry_msgs::Wrench makeAverageMeasurement(uint number_of_measurements, double time_between_meas);
+  geometry_msgs::Wrench makeAverageMeasurement(uint number_of_measurements, double time_between_meas, std::string frame_id="");
+  bool transform_wrench(std::string goal_frame, std::string source_frame, geometry_msgs::Wrench wrench, geometry_msgs::Wrench *transformed);
 
   //FT Data
   ForceTorqueCtrl *p_Ftc;

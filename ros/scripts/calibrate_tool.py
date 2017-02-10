@@ -18,6 +18,7 @@ def calibrate_tool():
     joint_names = rospy.get_param('/arm/joint_names')
 
     tool_name = rospy.get_param('~tool_name')
+    store_to_file = rospy.get_param('~store_to_file')
 
     # Posees
     poses = [[0.0, 0.0, 1.5707963, 0.0, -1.5707963, 0.0],
@@ -41,16 +42,17 @@ def calibrate_tool():
         
         rospy.sleep(10.0)
         
-        rospy.loginfo("Calculating offsets.")
-        ret = average_measurements_srv(100, 0.01)
-        #ret = average_measurements_srv(50, 0.1, "world_frame")
+        rospy.loginfo("Calculating tool force.")
+        #ret = average_measurements_srv(500, 0.01)
+        ret = average_measurements_srv(500, 0.01, "fts_base_link")
 
         measurement.append(ret.measurement)
 
     CoG = Vector3()
 
-    Fg = (measurement[0].force.z - measurement[1].force.z)/2.0;
-    CoG.z = (sqrt(measurement[2].torque.x*measurement[2].torque.x + measurement[2].torque.y*measurement[2].torque.y)) / Fg;
+    Fg = (abs(measurement[0].force.z) + abs(measurement[1].force.z))/2.0;
+    #CoG.z = (sqrt(measurement[2].torque.x*measurement[2].torque.x + measurement[2].torque.y*measurement[2].torque.y)) / Fg;
+    CoG.z = (measurement[2].torque.y) / Fg;
 
     rospy.loginfo("Setting parametes for tool: " + tool_name)
 
@@ -59,9 +61,8 @@ def calibrate_tool():
     rospy.set_param('/temp/tool/CoG/z', CoG.z)
     rospy.set_param('/temp/tool/force', Fg)
     
-    
-
-    call("rosparam dump -v `rospack find iirob_description`/tools/urdf/" + tool_name + "/gravity.yaml /temp/tool", shell=True)
+    if store_to_file:
+      call("rosparam dump -v `rospack find iirob_description`/tools/urdf/" + tool_name + "/gravity.yaml /temp/tool", shell=True)
 
 
 if __name__ == "__main__":

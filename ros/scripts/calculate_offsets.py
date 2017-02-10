@@ -14,6 +14,7 @@ def calculate_sensor_offsets():
     calculate_offsets_srv = rospy.ServiceProxy('/arm/CalculateOffsets', CalculateSensorOffset)
     
     joint_names = rospy.get_param('/arm/joint_names')
+    store_to_file = rospy.get_param('~store_to_file')    
     
     ##print call('rospack find ati_force_torque', shell=True)
     ##call('rosparam dump -v `rospack find ati_force_torque`/config/sensor_offset.yaml /fts/Offset')
@@ -24,7 +25,7 @@ def calculate_sensor_offsets():
 
     measurement = Wrench()
     
-    for i in range(0,len(poses)):   
+    for i in range(0,len(poses)):
         trajectory = JointTrajectory()
         point = JointTrajectoryPoint()
         trajectory.header.stamp = rospy.Time.now()
@@ -63,7 +64,8 @@ def calculate_sensor_offsets():
     rospy.set_param('/temp/Offset/torque/y', measurement.torque.y)
     rospy.set_param('/temp/Offset/torque/z', measurement.torque.z)
 
-    call('rosparam dump -v `rospack find ati_force_torque`/config/sensor_offset.yaml /temp/Offset', shell=True)
+    if store_to_file:
+      call('rosparam dump -v `rospack find ati_force_torque`/config/sensor_offset.yaml /temp/Offset', shell=True)
 
 
 if __name__ == "__main__":

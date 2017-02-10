@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
 <launch>
-    
     <arg name="is_socket" default="true"/>
 
     <!-- send urdf to param server -->
@@ -12,13 +11,10 @@
         <param name="tf_prefix" type="string" value="" />
         <remap from="robot_description" to="sensor_description" />
     </node>
-
-    <rosparam command="load" ns="fts" file="$(find ati_force_torque)/config/socket_can_ati.yaml" if="$(arg is_socket)"/>
-    <rosparam command="load" ns="fts" file="$(find ati_force_torque)/config/can_ati.yaml" unless="$(arg is_socket)"/>
-    <rosparam command="load" ns="fts" file="$(find ati_force_torque)/config/sensor_configuration.yaml"/>
-    <rosparam command="load" ns="fts/Offset/Calibration" file="$(find ati_force_torque)/config/sensor_offset.yaml"/>
-
-<!--     <rosparam command="load" ns="fts/Offset/Calibration" file="$(find iirob_description)/config/sensor_offset.yaml"/>  -->
+    
+    <include ns="fts" file="$(find ati_force_torque)/ros/launch/sensor_parameters.launch">
+      <arg name="is_socket" value="$(arg is_socket)"/>
+    </include>
 
     <!-- start FTS Driver Node -->
     <node pkg="ati_force_torque" type="ati_force_torque_node" name="fts_node" ns="fts" cwd="node" respawn="false" output="screen">

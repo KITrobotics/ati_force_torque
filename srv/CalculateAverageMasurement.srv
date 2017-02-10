@@ -1,5 +1,6 @@
 uint32 N_measurements
 float64 T_between_meas
+string frame_id
 ---
 bool success
 string message

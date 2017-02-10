@@ -1,8 +1,12 @@
 <?xml version="1.0"?>
 <launch>
     
-    <node pkg="ati_force_torque" type="calibrate_tool.py" name="calibrate_tool" cwd="node" respawn="false" output="screen">
-        <param name="tool_name" value="force_tool"/>
-    </node>
+  <arg name="tool_name" default="fts"/>
+  <arg name="store_to_file" default="true"/>
+  
+  <node pkg="ati_force_torque" type="calibrate_tool.py" name="calibrate_tool" cwd="node" respawn="false" output="screen">
+      <param name="tool_name" value="$(arg tool_name)"/>
+      <param name="store_to_file" value="$(arg store_to_file)"/>
+  </node>
 
 </launch>

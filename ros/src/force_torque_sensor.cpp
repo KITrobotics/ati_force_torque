@@ -81,9 +81,9 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh)
 
     int calibNMeas;
     nh_.param<int>("Calibration/n_measurements", calibNMeas, 20);
-    if (calibrationNMeasurements <= 0)
+    if (calibNMeas <= 0)
     {
-        ROS_WARN("Parameter 'Calibration/n_measurements' is <=0 using default: 20");
+        ROS_WARN("Parameter 'Calibration/n_measurements' is %d (<=0) using default: 20", calibNMeas);
         calibrationNMeasurements = 20;
     }
     else {
@@ -187,7 +187,10 @@ void ForceTorqueSensor::init_sensor(std::string& msg, bool& success)
             // Calibrate sensor
             if (m_staticCalibration)
             {
-                ROS_INFO("Using static calibration from paramter server.");
+                ROS_INFO("Using static calibration from paramter server with parametes Force: x:%f, y:%f, z:%f; Torque: x: %f, y:%f, z:%f;",
+		  m_calibOffset.force.x, m_calibOffset.force.y, m_calibOffset.force.z,
+		  m_calibOffset.torque.x, m_calibOffset.torque.y, m_calibOffset.torque.z
+		);
                 offset_.force.x = m_calibOffset.force.x;
                 offset_.force.y = m_calibOffset.force.y;
                 offset_.force.z = m_calibOffset.force.z;
@@ -245,7 +248,7 @@ bool ForceTorqueSensor::srvCallback_CalculateAverageMasurement(ati_force_torque:
     {
         res.success = true;
         res.message = "Measurement successfull! :)";
-        res.measurement = makeAverageMeasurement(req.N_measurements, req.T_between_meas);
+        res.measurement = makeAverageMeasurement(req.N_measurements, req.T_between_meas, req.frame_id);
     }
     else
     {
@@ -324,6 +327,7 @@ bool ForceTorqueSensor::calibrate(bool apply_after_calculation, geometry_msgs::W
 {
     apply_offset = false;
 
+    ROS_INFO("Calibrating using %d measurements and %f s pause between measurements.", calibrationNMeasurements, calibrationTBetween);
     geometry_msgs::Wrench temp_offset = makeAverageMeasurement(calibrationNMeasurements, calibrationTBetween);
 
     apply_offset = true;
@@ -339,22 +343,41 @@ bool ForceTorqueSensor::calibrate(bool apply_after_calculation, geometry_msgs::W
     return m_isCalibrated;
 }
 
-geometry_msgs::Wrench ForceTorqueSensor::makeAverageMeasurement(uint number_of_measurements, double time_between_meas)
+geometry_msgs::Wrench ForceTorqueSensor::makeAverageMeasurement(uint number_of_measurements, double time_between_meas, std::string frame_id)
 {
     geometry_msgs::Wrench measurement;
+    int num_of_errors = 0;
 
     ros::Duration duration(time_between_meas);
 
     for (int i = 0; i < number_of_measurements; i++)
     {
-        measurement.force.x += moving_mean_filtered_wrench.wrench.force.x;
-        measurement.force.y += moving_mean_filtered_wrench.wrench.force.y;
-        measurement.force.z += moving_mean_filtered_wrench.wrench.force.z;
-        measurement.torque.x += moving_mean_filtered_wrench.wrench.torque.x;
-        measurement.torque.y += moving_mean_filtered_wrench.wrench.torque.y;
-        measurement.torque.z+= moving_mean_filtered_wrench.wrench.torque.z;
+      geometry_msgs::Wrench output;
+      
+      if (frame_id.compare("") != 0) {  
+	if (not transform_wrench(frame_id, sensor_frame_, moving_mean_filtered_wrench.wrench, &output))
+	{
+	  num_of_errors++;
+	  if (num_of_errors > 200){
+	    return measurement;
+	  }
+	  i--;
+	  continue;
+	}
+      }
+      else
+      {
+	output = moving_mean_filtered_wrench.wrench;
+      }
+    
+      measurement.force.x += output.force.x;
+      measurement.force.y += output.force.y;
+      measurement.force.z += output.force.z;
+      measurement.torque.x += output.torque.x;
+      measurement.torque.y += output.torque.y;
+      measurement.torque.z+= output.torque.z;
 
-        duration.sleep();
+      duration.sleep();
     }
     measurement.force.x /= number_of_measurements;
     measurement.force.y /= number_of_measurements;
@@ -467,10 +490,35 @@ void ForceTorqueSensor::pullFTData(const ros::TimerEvent &event)
 }
 
 void ForceTorqueSensor::filterFTData(){
-
-    try
+  
+  
+    transformed_data.header.stamp = moving_mean_filtered_wrench.header.stamp;
+    transformed_data.header.frame_id = transform_frame_;
+    if (transform_wrench(transform_frame_, sensor_frame_, moving_mean_filtered_wrench.wrench, &transformed_data.wrench))
     {
-        transform_ee_base_stamped = p_tfBuffer->lookupTransform(transform_frame_, sensor_frame_, ros::Time(0));
+      //gravity compensation
+      gravity_compensated_force = gravity_compensator_.compensate(transformed_data);
+
+      //treshhold filtering
+      threshold_filtered_force = threshold_filter_.applyFilter(gravity_compensated_force);
+
+      if(is_pub_transformed_data_)
+	transformed_data_pub_.publish(transformed_data);
+      if(is_pub_gravity_compensated_)
+	gravity_compensated_pub_.publish(gravity_compensated_force);
+      if(is_pub_threshold_filtered_)
+	threshold_filtered_pub_.publish(threshold_filtered_force);
+    }
+}
+
+bool ForceTorqueSensor::transform_wrench(std::string goal_frame, std::string source_frame, geometry_msgs::Wrench wrench, geometry_msgs::Wrench *transformed)
+{
+  geometry_msgs::TransformStamped transform;
+  geometry_msgs::Vector3Stamped temp_vector_in, temp_vector_out;
+  
+  try
+    {
+        transform = p_tfBuffer->lookupTransform(goal_frame, source_frame, ros::Time(0));
 	_num_transform_errors = 0;
     }
     catch (tf2::TransformException ex)
@@ -478,33 +526,18 @@ void ForceTorqueSensor::filterFTData(){
       if (_num_transform_errors%100 == 0){
 	ROS_ERROR("%s", ex.what());
       }
-    _num_transform_errors++;
+      _num_transform_errors++;
+      return false;
     }
 
-    geometry_msgs::Vector3Stamped temp_vector_in, temp_vector_out;
+    temp_vector_in.vector = wrench.force;
+    tf2::doTransform(temp_vector_in, temp_vector_out, transform);
+    transformed->force = temp_vector_out.vector;
 
-    transformed_data.header.stamp = moving_mean_filtered_wrench.header.stamp;
-    transformed_data.header.frame_id = transform_frame_;
-
-    temp_vector_in.vector = moving_mean_filtered_wrench.wrench.force;
-    tf2::doTransform(temp_vector_in, temp_vector_out, transform_ee_base_stamped);
-    transformed_data.wrench.force = temp_vector_out.vector;
-
-    temp_vector_in.vector = moving_mean_filtered_wrench.wrench.torque;
-    tf2::doTransform(temp_vector_in, temp_vector_out, transform_ee_base_stamped);
-    transformed_data.wrench.torque = temp_vector_out.vector;
-
-    //gravity compensation
-    gravity_compensated_force = gravity_compensator_.compensate(transformed_data);
-
-    //treshhold filtering
-    threshold_filtered_force = threshold_filter_.applyFilter(gravity_compensated_force);
-
-    if(is_pub_transformed_data_)
-        transformed_data_pub_.publish(transformed_data);
-    if(is_pub_gravity_compensated_)
-        gravity_compensated_pub_.publish(gravity_compensated_force);
-    if(is_pub_threshold_filtered_)
-        threshold_filtered_pub_.publish(threshold_filtered_force);
+    temp_vector_in.vector = wrench.torque;
+    tf2::doTransform(temp_vector_in, temp_vector_out, transform);
+    transformed->torque = temp_vector_out.vector;
+    
+    return true;  
 }
 
