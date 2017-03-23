@@ -184,6 +184,15 @@ void ForceTorqueSensor::init_sensor(std::string& msg, bool& success)
         // read return init status and check it!
         if (p_Ftc->Init())
         {
+            // start timer for reading FT-data
+            ftPullTimer_.start();
+
+            //ros::Duration::sleep(5);
+
+            m_isInitialized = true;
+            success = true;
+            msg = "FTS initalised!";
+    
             // Calibrate sensor
             if (m_staticCalibration)
             {
@@ -202,23 +211,14 @@ void ForceTorqueSensor::init_sensor(std::string& msg, bool& success)
             {
                 ROS_INFO("Calibrating sensor. Plase wait...");
                 geometry_msgs::Wrench temp_offset;
-                if (calibrate(true, &temp_offset))
+                if (not calibrate(true, &temp_offset))
                 {
                     success = false;
                     msg = "Calibration failed! :/";
                 }
             }
 
-            m_isInitialized = true;
-            success = true;
-            msg = "FTS initalised!";
-
             apply_offset = true;
-
-            // start timer for reading FT-data
-            ftUpdateTimer_.start();
-            ftPullTimer_.start();
-
 
         }
         else
@@ -227,6 +227,7 @@ void ForceTorqueSensor::init_sensor(std::string& msg, bool& success)
             success = false;
             msg = "FTS could not be initilised! :/";
         }
+            ftUpdateTimer_.start();
     }
 }
 
@@ -349,11 +350,9 @@ geometry_msgs::Wrench ForceTorqueSensor::makeAverageMeasurement(uint number_of_m
     int num_of_errors = 0;
 
     ros::Duration duration(time_between_meas);
-
     for (int i = 0; i < number_of_measurements; i++)
     {
       geometry_msgs::Wrench output;
-      
       if (frame_id.compare("") != 0) {  
 	if (not transform_wrench(frame_id, sensor_frame_, moving_mean_filtered_wrench.wrench, &output))
 	{
@@ -369,7 +368,7 @@ geometry_msgs::Wrench ForceTorqueSensor::makeAverageMeasurement(uint number_of_m
       {
 	output = moving_mean_filtered_wrench.wrench;
       }
-    
+
       measurement.force.x += output.force.x;
       measurement.force.y += output.force.y;
       measurement.force.z += output.force.z;
@@ -478,7 +477,6 @@ void ForceTorqueSensor::pullFTData(const ros::TimerEvent &event)
         moving_mean_filtered_wrench.wrench.torque.x = moving_mean_filter_torque_x_.applyFilter(low_pass_filtered_data.wrench.torque.x);
         moving_mean_filtered_wrench.wrench.torque.y = moving_mean_filter_torque_y_.applyFilter(low_pass_filtered_data.wrench.torque.y);
         moving_mean_filtered_wrench.wrench.torque.z = moving_mean_filter_torque_z_.applyFilter(low_pass_filtered_data.wrench.torque.z);
-
 
         if(is_pub_sensor_data_)
             sensor_data_pub_.publish(sensor_data);

@@ -83,14 +83,16 @@ void ForceTorqueSensorNode::updateFTData(const ros::TimerEvent &event)
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "forcetorque_node");
+
+    ros::AsyncSpinner spinner(4); // Use 4 threads
+    spinner.start();
+
     ros::NodeHandle nh("/fts");
 
     ForceTorqueSensorNode ftn(nh);
 
     ROS_INFO("ForceTorque Sensor Node running.");
 
-    ros::AsyncSpinner spinner(4); // Use 4 threads
-    spinner.start();
     ros::waitForShutdown();
 
     return 0;
