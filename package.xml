@@ -2,33 +2,37 @@
   <name>ati_force_torque</name>
   <version>1.0.0</version>
   <description>This package implements driver for ATI force torque sensors up to firmware 3.x. Char and Net CAN devices are supported through cob_generic_can package. The code if based on cob_forcetorque package.</description>
-  <maintainer email="denis.stogl@kit.edu">Denis Štogl</maintainer>
 
+  <maintainer email="denis.stogl@kit.edu">Denis Štogl (KIT, IAR-IPR)</maintainer>
   <license>LGPLv3</license>
-
-  <url type="website">http://ros.org/wiki/ati_force_torque</url>
-  <url type="bugtracker">https://github.com/iirob/ati_force_torque/issues</url>
 
   <author>Denis Štogl</author>
   <author>Alexander Bubeck</author>
 
+  <url type="website">http://ros.org/wiki/ati_force_torque</url>
+  <url type="bugtracker">https://github.com/iirob/ati_force_torque/issues</url>
+
   <buildtool_depend>catkin</buildtool_depend>
 
   <depend>roscpp</depend>
+
   <build_depend>message_generation</build_depend>
   <build_depend>cmake_modules</build_depend>
 
+  <depend>cob_generic_can</depend>
+  <depend>geometry_msgs</depend>
+  <depend>iirob_filters</depend>
+  <depend>schunk_description</depend>
+  <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
   <depend>tf2</depend>
   <depend>tf2_ros</depend>
   <depend>tf2_geometry_msgs</depend>
-  <depend>std_msgs</depend>
-  <depend>std_srvs</depend>
   <depend>visualization_msgs</depend>
-  <depend>geometry_msgs</depend>
-  <depend>cob_generic_can</depend>
-  <depend>schunk_description</depend>
-  <depend>iirob_filters</depend>
 
   <exec_depend>message_runtime</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+
+  <test_depend>roslaunch</test_depend>
 
 </package>

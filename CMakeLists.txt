@@ -2,18 +2,19 @@ cmake_minimum_required(VERSION 2.8.3)
 project(ati_force_torque)
 
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
+  cmake_modules
+  cob_generic_can
+  geometry_msgs
+  iirob_filters
   message_generation
+  roscpp
+  roslaunch
   std_msgs
   std_srvs
   tf2
-  tf2_ros
   tf2_geometry_msgs
+  tf2_ros
   visualization_msgs
-  geometry_msgs
-  cob_generic_can
-  cmake_modules
-  iirob_filters
 )
 
 find_package(Eigen REQUIRED)
@@ -62,6 +63,12 @@ target_link_libraries(${PROJECT_NAME}_config ${PROJECT_NAME} ${catkin_LIBRARIES}
 add_dependencies(${PROJECT_NAME}_config ${PROJECT_NAME}_generate_messages_cpp)
 
 #############
+## Tests ##
+#############
+
+roslaunch_add_file_check(ros/launch)
+
+#############
 ## Install ##
 #############
 
@@ -79,6 +86,6 @@ install(DIRECTORY ros/include
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
 
-install(DIRECTORY ros/launch config
+install(DIRECTORY ros/launch config description
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
