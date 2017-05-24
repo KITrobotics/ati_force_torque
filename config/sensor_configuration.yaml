@@ -6,14 +6,8 @@ Node:
 
 Calibration:
     n_measurements: 500
-    T_between_meas: 10000
+    T_between_meas: 0.01
     static: true # true= use static offset Calibration, false=use calibrate Sensor to 0 in current State
-    offset_fx: -19.2 #-19.40 #-19.12 #20.05 #-19.81
-    offset_fy: -2.2 #-2.31 #-0.67 #-3.38 #-5.44
-    offset_fz: 4.2 #6.00 #-3.52 #1.34 #-6.76 #-0.21
-    offset_mx: -0.281 #-0.185 #-0.153 #-0.241 #-0.294
-    offset_my: 0.046 #0.025 #0.066 #0.001 #-0.040
-    offset_mz: 0.070 #0.118 #0.110 #0.117 #0.151
 
 ThresholdFilter:
   linear_threshold: 2.5
@@ -60,18 +54,17 @@ MovingMeanFilter:
         divider: 4
 
 GravityCompensation:
-    CoG:
-     x: 0
-     y: 0
-     z: 0.027346102 # m
-    force: 7.9459955 # f_G
-    sensor_frame: "fts_reference_link"
-    world_frame: "fts_base_link"
+    #CoG:
+     #x: 0
+     #y: 0
+     #z: 0.027346102 # m
+    #force: 7.9459955 # f_G
+    world_frame: "world"
 
 Publish:
     sensor_data: true
     low_pass: true
-    #moving_mean: false
+    moving_mean: true
     transformed_data: true
     gravity_compensated: true
     threshold_filtered: true

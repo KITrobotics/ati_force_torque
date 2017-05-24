@@ -1,21 +1,8 @@
 <?xml version="1.0"?>
 <launch>
 
-    <!-- send urdf to param server -->
-    <param name="sensor_description" command="$(find xacro)/xacro --inorder '$(find ati_force_torque)/description/urdf/sensor.urdf.xacro'" /> 
-    
-    <!-- sensor state publisher -->
-    <node ns="fts" pkg="robot_state_publisher" type="robot_state_publisher" name="sensor_state_publisher">
-        <param name="publish_frequency" type="double" value="200.0" />
-        <param name="tf_prefix" type="string" value="" />
-        <remap from="robot_description" to="sensor_description" />
-    </node>
-    
-    <rosparam command="load" ns="fts" file="$(find ati_force_torque)/config/socket_can_ati.yaml"/>
-    <rosparam command="load" ns="fts" file="$(find ati_force_torque)/config/sensor_configuration.yaml"/>
-
-    <!-- start FTS Driver Node -->
-    <node pkg="ati_force_torque" type="ati_force_torque_node" name="fts_node" ns="fts" cwd="node" respawn="false" output="screen">
-    </node>
+    <include file="$(find ati_force_torque)/ros/launch/driver.launch">
+        <arg name="is_socket" value="true" />
+    </include>
 
 </launch>

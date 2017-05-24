@@ -6,4 +6,4 @@ CAN:
 FTS:
     base_identifier: 0x20
     auto_init: true
-    fts_name: "ATI_45_Mini"
+    name: "ATI_45_Mini"

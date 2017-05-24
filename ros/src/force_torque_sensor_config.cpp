@@ -95,7 +95,7 @@ ForceTorqueConfig::ForceTorqueConfig()
   nh_.param<std::string>("CAN/path", canPath, "");
   nh_.param<int>("CAN/baudrate", canBaudrate, -1);
   nh_.param<int>("FTS/base_identifier", ftsBaseID, -1);
-  nh_.param<int>("FTS/future_baudrate", ftsFutureBaudrate, ATI_CAN_BAUD_250K);
+  nh_.param<int>("FTS/future_baudrate", ftsFutureBaudrate, 7);
   nh_.param<int>("FTS/future_base_id", ftsFutureBaseID, 0x20);
 
   if (canType != -1)

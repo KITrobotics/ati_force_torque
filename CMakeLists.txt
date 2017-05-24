@@ -17,16 +17,28 @@ find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
 )
 
-find_package(Eigen REQUIRED)
+find_package(Eigen3)
+if(NOT EIGEN3_FOUND)
+  # Fallback to cmake_modules
+  find_package(cmake_modules REQUIRED)
+  find_package(Eigen REQUIRED)
+else()
+  set(Eigen_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIR})
+  set(Eigen_LIBRARIES ${EIGEN3_LIBRARIES})
+endif()
 
 add_service_files(
     FILES
+    CalculateAverageMasurement.srv
+    CalculateSensorOffset.srv
     DiagnosticVoltages.srv
     )
 
 generate_messages(
     DEPENDENCIES
-    std_msgs)
+    geometry_msgs
+    std_msgs
+    )
 
 ###################################
 ## catkin specific configuration ##
