@@ -9,11 +9,13 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   roscpp
   roslaunch
+  rospy
   std_msgs
   std_srvs
   tf2
   tf2_geometry_msgs
   tf2_ros
+  trajectory_msgs
   visualization_msgs
 )
 
@@ -28,26 +30,26 @@ else()
 endif()
 
 add_service_files(
-    FILES
-    CalculateAverageMasurement.srv
-    CalculateSensorOffset.srv
-    DiagnosticVoltages.srv
-    )
+  FILES
+  CalculateAverageMasurement.srv
+  CalculateSensorOffset.srv
+  DiagnosticVoltages.srv
+)
 
 generate_messages(
-    DEPENDENCIES
-    geometry_msgs
-    std_msgs
-    )
+  DEPENDENCIES
+  geometry_msgs
+  std_msgs
+)
 
 ###################################
 ## catkin specific configuration ##
 ###################################
 catkin_package(
- INCLUDE_DIRS common/include ros/include
- CATKIN_DEPENDS roscpp message_runtime std_msgs std_srvs cob_generic_can geometry_msgs tf2 tf2_ros tf2_geometry_msgs iirob_filters
- DEPENDS Eigen
- LIBRARIES ${PROJECT_NAME}
+  INCLUDE_DIRS common/include ros/include
+  CATKIN_DEPENDS roscpp rospy message_runtime std_msgs std_srvs cob_generic_can geometry_msgs tf2  tf2_ros tf2_geometry_msgs trajectory_msgs iirob_filters
+  DEPENDS Eigen
+  LIBRARIES ${PROJECT_NAME}
 )
 
 ###########
@@ -64,15 +66,15 @@ include_directories(
 
 add_library(${PROJECT_NAME} common/src/ForceTorqueCtrl.cpp ros/src/force_torque_sensor.cpp ros/src/force_torque_sensor_handle.cpp)
 add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_generate_messages_cpp)
-target_link_libraries(${PROJECT_NAME} gravity_compensation low_pass_filter moving_mean_filter threshold_filter)
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
 
 add_executable(${PROJECT_NAME}_node ros/src/force_torque_sensor_node.cpp)
 add_dependencies(${PROJECT_NAME}_node ${PROJECT_NAME}_generate_messages_cpp)
-target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES} gravity_compensation low_pass_filter moving_mean_filter threshold_filter)
+target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
 
 add_executable(${PROJECT_NAME}_config ros/src/force_torque_sensor_config.cpp)
 target_link_libraries(${PROJECT_NAME}_config ${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
-add_dependencies(${PROJECT_NAME}_config ${PROJECT_NAME}_generate_messages_cpp)
+add_dependencies(${PROJECT_NAME}_config ${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES} ${PROJECT_NAME}_generate_messages_cpp)
 
 #############
 ## Tests ##
@@ -90,11 +92,7 @@ install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_node ${PROJECT_NAME}_config
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-install(DIRECTORY common/include
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-)
-
-install(DIRECTORY ros/include
+install(DIRECTORY common/include ros/include
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
 
