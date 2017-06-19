@@ -80,6 +80,11 @@ typedef unsigned char uint8_t;
 
 #include <math.h>
 #include <iostream>
+
+#include <dynamic_reconfigure/server.h>
+#include <ati_force_torque/sensorConfigurationParameters.h>
+#include <ati_force_torque/sensorConfigurationConfig.h>
+
 #define PI 3.14159265
 
 class ForceTorqueSensor
@@ -99,7 +104,8 @@ public:
   bool srvCallback_recalibrate(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
 
 protected:
-
+  ati_force_torque::sensorConfigurationParameters params_;
+//  ati_force_torque::sensorConfigurationConfig config_;
   std::string transform_frame_;
   std::string sensor_frame_;
 
@@ -152,6 +158,7 @@ private:
   ros::ServiceServer srvServer_ReCalibrate;
 
   ros::Timer ftUpdateTimer_, ftPullTimer_;
+//  ros::Timer timer_;
 
   tf2_ros::TransformListener *p_tfListener;
   tf2::Transform transform_ee_base;
@@ -179,5 +186,25 @@ private:
   MovingMeanFilter moving_mean_filter_torque_y_;
   MovingMeanFilter moving_mean_filter_torque_z_;
 
-  GravityCompensator gravity_compensator_;
+  GravityCompensator gravity_compensator_; 
+
+  bool useLowPassFilterForceX=false;  
+  bool useLowPassFilterForceY=false;
+  bool useLowPassFilterForceZ=false;
+  bool useLowPassFilterTorqueX=false;
+  bool useLowPassFilterTorqueY=false;
+  bool useLowPassFilterTorqueZ=false;
+  bool useMovinvingMeanForceX= false;
+  bool useMovinvingMeanForceY= false;
+  bool useMovinvingMeanForceZ= false;
+  bool useMovinvingMeanTorqueX= false;
+  bool useMovinvingMeanTorqueY= false;
+  bool useMovinvingMeanTorqueZ= false;
+  bool useGravityCompensator=false;
+  bool useThresholdFilter=false;
+//  dynamic_reconfigure::Server<ati_force_torque::sensorConfigurationConfig> reconfigSrv_; // Dynamic reconfiguration service
+  //boost::scoped_ptr< dynamic_reconfigure::Server<SteerCtrlConfig> > reconfigure_server_;
+  //void timerCallback(const ros::TimerEvent& event);
+//  void reconfigureRequest(ati_force_torque::sensorConfigurationConfig& config, uint32_t level);
 };
+

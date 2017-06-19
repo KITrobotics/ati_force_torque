@@ -1,0 +1,77 @@
+#!/usr/bin/env python
+from rosparam_handler.parameter_generator_catkin import *
+gen = ParameterGenerator()
+
+#Add a Node group
+my_group = gen.add_group("Node")
+my_group.add("ft_pub_freq", paramtype="double", description="publish frequency", default=200, configurable=True)
+my_group.add("ft_pull_freq", paramtype="double", description="sensor daa pull frequency", default=800, configurable=True)
+my_group.add("transform_frameNode", paramtype="std::string", description="reference coordinate system", default="fts_transform_frame", configurable=True)
+my_group.add("sensor_frameNode", paramtype="std::string", description="sensor coordinate system", default="fts_reference_link", configurable=True)
+#Add a Calibration group
+my_group = gen.add_group("Calibration")
+my_group.add("n_measurements", paramtype="double", description="number of necessary measurements for calibration", default=500, configurable=True)
+my_group.add("T_between_meas", paramtype="double", description="time between two measurements for calibration", default=0.01, configurable=True)
+my_group.add("isStatic", paramtype="bool", description="is static calibration active", default=False, configurable=True)
+
+#Add a Publish group
+my_group = gen.add_group("Publish")
+my_group.add("sensor_data", paramtype="bool", description="publsih raw sensor data", default=True, configurable=True)
+my_group.add("low_pass", paramtype="bool", description="publish low pass filtered data", default=True, configurable=True)
+my_group.add("moving_mean", paramtype="bool", description="publish moving mean filtered data", default=True, configurable=True)
+my_group.add("transformed_data", paramtype="bool", description="publish transformed data", default=True, configurable=True)
+my_group.add("gravity_compensated", paramtype="bool", description="publish gravity compensated data", default=True, configurable=True)
+my_group.add("threshold_filtered", paramtype="bool", description="publish threshold filtered data", default=True, configurable=True)
+
+#Add a Threshold Filter group
+my_group = gen.add_group("ThresholdFilter")
+my_group.add("linear_threshold", paramtype="double", description="number of measurements for initial calibration", default=2.5, configurable=True)
+my_group.add("angular_threshold", paramtype="double", description="time between two measurements", default=0.3, configurable=True)
+
+# Add a Lowpass Filter group
+my_group = gen.add_group("LowPassFilter")
+my_group.add("SamplingFrequency", paramtype="int", description="sampling frequency", default=200, configurable=True)
+my_group.add("DampingFrequency", paramtype="int", description="sampling frequency", default=15, configurable=True)
+my_group.add("DampingIntensity", paramtype="double", description="sampling frequency", default=-6.0, configurable=True)
+my_subgroup = my_group.add_group("Force_x")
+my_subgroup.add("SamplingFrequencyForce_x", paramtype="int", description="sampling frequency", default=200, configurable=True)
+my_subgroup.add("DampingFrequencyForce_x", paramtype="double", description="damping frequency", default=15.0, configurable=True)
+my_subgroup.add("DampingIntensityForce_x", paramtype="double", description="damping intensity", default=-6.0, configurable=True)
+my_subgroup = my_group.add_group("Force_y")
+my_subgroup.add("SamplingFrequencyForce_y", paramtype="int", description="sampling frequency", default=200, configurable=True)
+my_subgroup.add("DampingFrequencyForce_y", paramtype="double", description="damping frequency", default=15.0, configurable=True)
+my_subgroup.add("DampingIntensityForce_y", paramtype="double", description="damping intensity", default=-6.0, configurable=True)
+my_subgroup = my_group.add_group("Force_z")
+my_subgroup.add("SamplingFrequencyForce_z", paramtype="int", description="sampling frequency", default=200, configurable=True)
+my_subgroup.add("DampingFrequencyForce_z", paramtype="double", description="damping frequency", default=15.0, configurable=True)
+my_subgroup.add("DampingIntensityForce_z", paramtype="double", description="damping intensity", default=-6.0, configurable=True)
+my_subgroup = my_group.add_group("Torque_x")
+my_subgroup.add("SamplingFrequencyTorque_x", paramtype="int", description="sampling frequency", default=200, configurable=True)
+my_subgroup.add("DampingFrequencyTorque_x", paramtype="double", description="damping frequency", default=15.0, configurable=True)
+my_subgroup.add("DampingIntensityTorque_x", paramtype="double", description="damping intensity", default=-6.0, configurable=True)
+my_subgroup = my_group.add_group("Torque_y")
+my_subgroup.add("SamplingFrequencyTorque_y", paramtype="int", description="sampling frequency",  default=200, configurable=True)
+my_subgroup.add("DampingFrequencyTorque_y", paramtype="double", description="damping frequency", default=15.0, configurable=True)
+my_subgroup.add("DampingIntensityTorque_y", paramtype="double", description="damping intensity", default=-6.0, configurable=True)
+my_subgroup = my_group.add_group("Torque_z")
+my_subgroup.add("SamplingFrequencyTorque_z", paramtype="int", description="sampling frequency", default=200, configurable=True)
+my_subgroup.add("DampingFrequencyTorque_z", paramtype="double", description="damping frequency", default=15.0, configurable=True)
+my_subgroup.add("DampingIntensityTorque_z", paramtype="double", description="damping intensity", default=-6.0, configurable=True)
+
+# Add a MovingMean Filter group
+my_group = gen.add_group("MovingMeanFilter")
+my_group.add("divider", paramtype="int", description="mean divider", default=4, configurable=True)
+my_group.add("dividerForce_x", paramtype="int", description="mean divider", default=4, configurable=True)
+my_group.add("dividerForce_y", paramtype="int", description="mean divider", default=4, configurable=True)
+my_group.add("dividerForce_z", paramtype="int", description="mean divider", default=4, configurable=True)
+my_group.add("dividerTorque_x", paramtype="int", description="mean divider", default=4, configurable=True)
+my_group.add("dividerTorque_y", paramtype="int", description="mean divider", default=4, configurable=True)
+my_group.add("dividerTorque_z", paramtype="int", description="mean divider", default=4, configurable=True)
+
+# Add a Gravity Compensation group
+my_group = gen.add_group("GravityCompensation")
+my_group.add("sensor_frameGravityCompensation", paramtype="std::string", description="sensor coordinate system", default="fts_reference_link", configurable=True)
+my_group.add("transform_frameGravityCompensation", paramtype="std::string", description="tranformed coordinate system", default="fts_transform_link", configurable=True)
+
+#Syntax : Package, Node, Config Name(The final name will be MyDummyConfig)
+exit(gen.generate("ati_force_torque", "ForceTorqueSensor", "sensorConfiguration"))

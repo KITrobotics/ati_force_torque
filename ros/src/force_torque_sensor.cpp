@@ -54,8 +54,10 @@
  ****************************************************************/
 #include <ati_force_torque/force_torque_sensor.h>
 
-ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh)
+ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh),  params_{ros::NodeHandle("~")}//,reconfigSrv_{ros::NodeHandle("~")}
 {
+    params_.fromParamServer();
+
     bool isAutoInit = false;
     double nodePullFreq = 0;
     m_isInitialized = false;
@@ -67,6 +69,7 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh)
     srvServer_DetermineCoordianteSystem_ = nh_.advertiseService("DetermineCoordinateSystem", &ForceTorqueSensor::srvCallback_DetermineCoordinateSystem, this);
     srvServer_Temp_ = nh_.advertiseService("GetTemperature", &ForceTorqueSensor::srvReadDiagnosticVoltages, this);
     srvServer_ReCalibrate = nh_.advertiseService("Recalibrate", &ForceTorqueSensor::srvCallback_recalibrate, this);
+//    reconfigSrv_.setCallback(boost::bind(&ForceTorqueSensor::reconfigureRequest, this, _1, _2));
 
     // Read data from parameter server
     nh_.param<int>("CAN/type", canType, -1);
@@ -136,27 +139,69 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh)
     ftPullTimer_ = nh.createTimer(ros::Rate(nodePullFreq), &ForceTorqueSensor::pullFTData, this, false, false);
 
     //Lowpass Filter
-    lp_filter_force_x_.init(ros::NodeHandle(nh_, "LowPassFilter/Force_x"));
-    lp_filter_force_y_.init(ros::NodeHandle(nh_, "LowPassFilter/Force_y"));
-    lp_filter_force_z_.init(ros::NodeHandle(nh_, "LowPassFilter/Force_z"));
-    lp_filter_torque_x_.init(ros::NodeHandle(nh_, "LowPassFilter/Torque_x"));
-    lp_filter_torque_y_.init(ros::NodeHandle(nh_, "LowPassFilter/Torque_y"));
-    lp_filter_torque_z_.init(ros::NodeHandle(nh_, "LowPassFilter/Torque_z"));
+    if(nh_.hasParam("LowPassFilter/Force_x")) {
+    	lp_filter_force_x_.init(ros::NodeHandle(nh_, "LowPassFilter/Force_x"));
+        useLowPassFilterForceX=true;
+    }
+    if(nh_.hasParam("LowPassFilter/Force_y")) {
+    	lp_filter_force_y_.init(ros::NodeHandle(nh_, "LowPassFilter/Force_y"));
+        useLowPassFilterForceY=true;
+    }
+    if(nh_.hasParam("LowPassFilter/Force_z")) {
+    	lp_filter_force_z_.init(ros::NodeHandle(nh_, "LowPassFilter/Force_z"));
+        useLowPassFilterForceZ=true;
+    }
+    if(nh_.hasParam("LowPassFilter/Torque_x")) {
+    	lp_filter_torque_x_.init(ros::NodeHandle(nh_, "LowPassFilter/Torque_x"));
+        useLowPassFilterTorqueX=true;
+    }
+    if(nh_.hasParam("LowPassFilter/Torque_y")) {
+    	lp_filter_torque_y_.init(ros::NodeHandle(nh_, "LowPassFilter/Torque_y"));
+        useLowPassFilterTorqueY=true;
+    }
+    if(nh_.hasParam("LowPassFilter/Torque_z")) {
+    	lp_filter_torque_z_.init(ros::NodeHandle(nh_, "LowPassFilter/Torque_z"));
+        useLowPassFilterTorqueZ=true;
+    }
 
     //Median Filter
-    moving_mean_filter_force_x_.init(ros::NodeHandle(nh_, "MovingMeanFilter/Force_x"));
-    moving_mean_filter_force_y_.init(ros::NodeHandle(nh_, "MovingMeanFilter/Force_y"));
-    moving_mean_filter_force_z_.init(ros::NodeHandle(nh_, "MovingMeanFilter/Force_z"));
-    moving_mean_filter_torque_x_.init(ros::NodeHandle(nh_, "MovingMeanFilter/Torque_x"));
-    moving_mean_filter_torque_y_.init(ros::NodeHandle(nh_, "MovingMeanFilter/Torque_y"));
-    moving_mean_filter_torque_z_.init(ros::NodeHandle(nh_, "MovingMeanFilter/Torque_z"));
+    if(ros::param::has("MovingMeanFilter/Force_x")) {
+        useMovinvingMeanForceX=true;
+    	moving_mean_filter_force_x_.init(ros::NodeHandle(nh_, "MovingMeanFilter/Force_x"));
+    }
+    if(ros::param::has("MovingMeanFilter/Force_y")) {
+    	moving_mean_filter_force_y_.init(ros::NodeHandle(nh_, "MovingMeanFilter/Force_y"));
+        useMovinvingMeanForceY=true;
+    }
+    if(ros::param::has("MovingMeanFilter/Force_z")) {
+    	moving_mean_filter_force_z_.init(ros::NodeHandle(nh_, "MovingMeanFilter/Force_z"));
+        useMovinvingMeanForceZ=true;
+    }
+    if(nh_.hasParam("MovingMeanFilter/Torque_x")) {
+    	moving_mean_filter_torque_x_.init(ros::NodeHandle(nh_, "MovingMeanFilter/Torque_x"));
+        useMovinvingMeanTorqueX=true;
+    }
+    if(nh_.hasParam("MovingMeanFilter/Torque_y")) {
+    	moving_mean_filter_torque_y_.init(ros::NodeHandle(nh_, "MovingMeanFilter/Torque_y"));
+        useMovinvingMeanTorqueY=true;
+    }
+    if(nh_.hasParam("MovingMeanFilter/Torque_z")) {
+    	moving_mean_filter_torque_z_.init(ros::NodeHandle(nh_, "MovingMeanFilter/Torque_z"));
+        useMovinvingMeanTorqueZ=true;
+    }
 
     //Gravity Compenstation
-    gravity_compensator_.init(ros::NodeHandle(nh_, "GravityCompensation"));
-
+    if(nh_.hasParam("GravityCompensation")) {
+        gravity_compensator_.init(ros::NodeHandle(nh_, "GravityCompensation"));
+        useThresholdFilter = true;
+    }
+    
     //Threshold Filter
-    threshold_filter_.init(ros::NodeHandle(nh_, "ThresholdFilter"));
-
+    if(nh_.hasParam("ThresholdFilter")) {
+        threshold_filter_.init(ros::NodeHandle(nh_, "ThresholdFilter"));
+        useThresholdFilter = true;
+    }
+   
     if (canType != -1)
     {
         p_Ftc = new ForceTorqueCtrl(canType, canPath, canBaudrate, ftsBaseID);
@@ -173,6 +218,8 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh)
         init_sensor(msg, success);
         ROS_INFO("Autoinit: %s", msg.c_str());
     }
+
+    std::cout<<"params: "<<params_.ft_pub_freq<<" "<<params_.transform_frameNode<<" "<<params_.isStatic<<" "<<std::endl; //config_.groups.name
 }
 
 
@@ -462,21 +509,21 @@ void ForceTorqueSensor::pullFTData(const ros::TimerEvent &event)
 
         //lowpass
         low_pass_filtered_data.header = sensor_data.header;
-        low_pass_filtered_data.wrench.force.x = lp_filter_force_x_.applyFilter(sensor_data.wrench.force.x);
-        low_pass_filtered_data.wrench.force.y = lp_filter_force_y_.applyFilter(sensor_data.wrench.force.y);
-        low_pass_filtered_data.wrench.force.z = lp_filter_force_z_.applyFilter(sensor_data.wrench.force.z);
-        low_pass_filtered_data.wrench.torque.x = lp_filter_torque_x_.applyFilter(sensor_data.wrench.torque.x);
-        low_pass_filtered_data.wrench.torque.y = lp_filter_torque_y_.applyFilter(sensor_data.wrench.torque.y);
-        low_pass_filtered_data.wrench.torque.z = lp_filter_torque_z_.applyFilter(sensor_data.wrench.torque.z);
+	if(useLowPassFilterForceX) low_pass_filtered_data.wrench.force.x = lp_filter_force_x_.applyFilter(sensor_data.wrench.force.x);
+	if(useLowPassFilterForceY) low_pass_filtered_data.wrench.force.y = lp_filter_force_y_.applyFilter(sensor_data.wrench.force.y);
+	if(useLowPassFilterForceZ) low_pass_filtered_data.wrench.force.z = lp_filter_force_z_.applyFilter(sensor_data.wrench.force.z);
+	if(useLowPassFilterTorqueX) low_pass_filtered_data.wrench.torque.x = lp_filter_torque_x_.applyFilter(sensor_data.wrench.torque.x);
+	if(useLowPassFilterTorqueY) low_pass_filtered_data.wrench.torque.y = lp_filter_torque_y_.applyFilter(sensor_data.wrench.torque.y);
+	if(useLowPassFilterTorqueZ) low_pass_filtered_data.wrench.torque.z = lp_filter_torque_z_.applyFilter(sensor_data.wrench.torque.z);
 
         //moving_mean
-        moving_mean_filtered_wrench.header = low_pass_filtered_data.header;
-        moving_mean_filtered_wrench.wrench.force.x = moving_mean_filter_force_x_.applyFilter(low_pass_filtered_data.wrench.force.x);
-        moving_mean_filtered_wrench.wrench.force.y = moving_mean_filter_force_y_.applyFilter(low_pass_filtered_data.wrench.force.y);
-        moving_mean_filtered_wrench.wrench.force.z = moving_mean_filter_force_z_.applyFilter(low_pass_filtered_data.wrench.force.z);
-        moving_mean_filtered_wrench.wrench.torque.x = moving_mean_filter_torque_x_.applyFilter(low_pass_filtered_data.wrench.torque.x);
-        moving_mean_filtered_wrench.wrench.torque.y = moving_mean_filter_torque_y_.applyFilter(low_pass_filtered_data.wrench.torque.y);
-        moving_mean_filtered_wrench.wrench.torque.z = moving_mean_filter_torque_z_.applyFilter(low_pass_filtered_data.wrench.torque.z);
+	moving_mean_filtered_wrench.header = low_pass_filtered_data.header;
+	if(useMovinvingMeanForceX) moving_mean_filtered_wrench.wrench.force.x = moving_mean_filter_force_x_.applyFilter(low_pass_filtered_data.wrench.force.x);
+	if(useMovinvingMeanForceY) moving_mean_filtered_wrench.wrench.force.y = moving_mean_filter_force_y_.applyFilter(low_pass_filtered_data.wrench.force.y);
+	if(useMovinvingMeanForceZ) moving_mean_filtered_wrench.wrench.force.z = moving_mean_filter_force_z_.applyFilter(low_pass_filtered_data.wrench.force.z);
+	if(useMovinvingMeanTorqueX) moving_mean_filtered_wrench.wrench.torque.x = moving_mean_filter_torque_x_.applyFilter(low_pass_filtered_data.wrench.torque.x);
+	if(useMovinvingMeanTorqueY) moving_mean_filtered_wrench.wrench.torque.y = moving_mean_filter_torque_y_.applyFilter(low_pass_filtered_data.wrench.torque.y);
+	if(useMovinvingMeanTorqueZ) moving_mean_filtered_wrench.wrench.torque.z = moving_mean_filter_torque_z_.applyFilter(low_pass_filtered_data.wrench.torque.z);
 
         if(is_pub_sensor_data_)
             sensor_data_pub_.publish(sensor_data);
@@ -495,10 +542,10 @@ void ForceTorqueSensor::filterFTData(){
     if (transform_wrench(transform_frame_, sensor_frame_, moving_mean_filtered_wrench.wrench, &transformed_data.wrench))
     {
       //gravity compensation
-      gravity_compensated_force = gravity_compensator_.compensate(transformed_data);
+      if(useGravityCompensator) gravity_compensated_force = gravity_compensator_.compensate(transformed_data);
 
       //treshhold filtering
-      threshold_filtered_force = threshold_filter_.applyFilter(gravity_compensated_force);
+      if(useThresholdFilter) threshold_filtered_force = threshold_filter_.applyFilter(gravity_compensated_force);
 
       if(is_pub_transformed_data_)
 	transformed_data_pub_.publish(transformed_data);
@@ -538,4 +585,19 @@ bool ForceTorqueSensor::transform_wrench(std::string goal_frame, std::string sou
     
     return true;  
 }
+/*
+ * Use const ConstPtr for your callbacks.
+ * The 'const' assures that you can not edit incoming messages.
+ * The Ptr type guarantees zero copy transportation within nodelets.
+ */
+/*void ForceTorqueSensor::timerCallback(const ros::TimerEvent& event) {
+    ROS_INFO("timer");
+}*/
 
+/**
+  * This callback is called whenever a change was made in the dynamic_reconfigure window
+*/
+/*void ForceTorqueSensor::reconfigureRequest(ati_force_torque::sensorConfigurationConfig& config, uint32_t level) {
+    params_.fromConfig(config);
+    ROS_WARN_STREAM("Parameter update:\n" << params_);
+}*/

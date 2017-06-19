@@ -28,6 +28,8 @@
   <depend>cob_generic_can</depend>
   <depend>schunk_description</depend>
   <depend>iirob_filters</depend>
+  <depend>rosparam_handler</depend>
+  <depend>dynamic_reconfigure</depend>
 
   <exec_depend>message_runtime</exec_depend>
 
