@@ -74,6 +74,7 @@ typedef unsigned char uint8_t;
 
 
 #include <iirob_filters/gravity_compensation.h>
+#include <iirob_filters/GravityCompensationParameters.h>
 #include <iirob_filters/low_pass_filter.h>
 #include <iirob_filters/moving_mean_filter.h>
 #include <iirob_filters/threshold_filter.h>
@@ -82,8 +83,12 @@ typedef unsigned char uint8_t;
 #include <iostream>
 
 #include <dynamic_reconfigure/server.h>
-#include <ati_force_torque/sensorConfigurationParameters.h>
-#include <ati_force_torque/sensorConfigurationConfig.h>
+#include <ati_force_torque/CoordinateSystemCalibrationParameters.h>
+#include <ati_force_torque/CanConfigurationParameters.h>
+#include <ati_force_torque/FTSConfigurationParameters.h>
+#include <ati_force_torque/PublishConfigurationParameters.h>
+#include <ati_force_torque/NodeConfigurationParameters.h>
+#include <ati_force_torque/CalibrationParameters.h>
 
 #define PI 3.14159265
 
@@ -104,8 +109,14 @@ public:
   bool srvCallback_recalibrate(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
 
 protected:
-  ati_force_torque::sensorConfigurationParameters params_;
-//  ati_force_torque::sensorConfigurationConfig config_;
+  ati_force_torque::CoordinateSystemCalibrationParameters CS_params_;
+  ati_force_torque::CanConfigurationParameters can_params_;
+  ati_force_torque::FTSConfigurationParameters FTS_params_;
+  ati_force_torque::PublishConfigurationParameters pub_params_;
+  ati_force_torque::NodeConfigurationParameters node_params_;
+  ati_force_torque::CalibrationParameters calibration_params_;
+  iirob_filters::GravityCompensationParameters gravity_params_;
+
   std::string transform_frame_;
   std::string sensor_frame_;
 
@@ -133,7 +144,12 @@ private:
   geometry_msgs::TransformStamped transform_ee_base_stamped;
   tf2_ros::Buffer *p_tfBuffer;
   ros::Publisher gravity_compensated_pub_, threshold_filtered_pub_, transformed_data_pub_, sensor_data_pub_, low_pass_pub_, moving_mean_pub_;
-  bool is_pub_gravity_compensated_, is_pub_threshold_filtered_, is_pub_transformed_data_, is_pub_sensor_data_, is_pub_low_pass_, is_pub_moving_mean_;
+  bool is_pub_gravity_compensated_=false;
+  bool is_pub_threshold_filtered_=false;
+  bool is_pub_transformed_data_ =false;
+  bool is_pub_sensor_data_=false;
+  bool is_pub_low_pass_=false;
+  bool is_pub_moving_mean_=false;
   
   uint _num_transform_errors;
 
@@ -202,9 +218,8 @@ private:
   bool useMovinvingMeanTorqueZ= false;
   bool useGravityCompensator=false;
   bool useThresholdFilter=false;
-//  dynamic_reconfigure::Server<ati_force_torque::sensorConfigurationConfig> reconfigSrv_; // Dynamic reconfiguration service
-  //boost::scoped_ptr< dynamic_reconfigure::Server<SteerCtrlConfig> > reconfigure_server_;
+  //dynamic_reconfigure::Server<ati_force_torque::sensorConfigurationConfig> reconfigSrv_; // Dynamic reconfiguration service
   //void timerCallback(const ros::TimerEvent& event);
-//  void reconfigureRequest(ati_force_torque::sensorConfigurationConfig& config, uint32_t level);
+  //void reconfigureRequest(ati_force_torque::sensorConfigurationConfig& config, uint32_t level);
 };
 

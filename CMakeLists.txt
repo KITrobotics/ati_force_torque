@@ -39,7 +39,12 @@ else()
 endif()
 
 generate_ros_parameter_files(
-    cfg/sensorConfiguration.params
+    cfg/CoordinateSystemCalibration.params
+    cfg/CanConfiguration.params
+    cfg/FTSConfiguration.params
+    cfg/NodeConfiguration.params
+    cfg/PublishConfiguration.params
+    cfg/Calibration.params
 )
 
 
@@ -81,7 +86,7 @@ include_directories(
 add_library(${PROJECT_NAME} common/src/ForceTorqueCtrl.cpp ros/src/force_torque_sensor.cpp ros/src/force_torque_sensor_handle.cpp)
 add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg) # For dynamic_reconfigure
 add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_generate_messages_cpp)
-#add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_genparam) # For rosparam_handler
+add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_genparam) # For rosparam_handler
 target_link_libraries(${PROJECT_NAME} gravity_compensation low_pass_filter moving_mean_filter threshold_filter)
 
 add_executable(${PROJECT_NAME}_node ros/src/force_torque_sensor_node.cpp)

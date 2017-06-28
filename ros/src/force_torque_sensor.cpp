@@ -54,36 +54,50 @@
  ****************************************************************/
 #include <ati_force_torque/force_torque_sensor.h>
 
-ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh),  params_{ros::NodeHandle("~")}//,reconfigSrv_{ros::NodeHandle("~")}
+ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh),  CS_params_{nh}, can_params_{nh}, FTS_params_{nh} , pub_params_{nh} , node_params_{nh} , calibration_params_{nh} , gravity_params_{nh} 
 {
-    params_.fromParamServer();
+    can_params_.setNamespace(nh_.getNamespace()+"/CAN");
+    CS_params_.setNamespace(nh_.getNamespace());
+    FTS_params_.setNamespace(nh_.getNamespace()+"/FTS");
+    pub_params_.setNamespace(nh_.getNamespace()+"/Publish");
+    node_params_.setNamespace(nh_.getNamespace()+"/Node");
+    calibration_params_.setNamespace(nh_.getNamespace()+"/Calibration");
+    gravity_params_.setNamespace(nh_.getNamespace()+"/GravityCompensation");
+    
+    CS_params_.fromParamServer();
+    can_params_.fromParamServer();
+    FTS_params_.fromParamServer();
+    pub_params_.fromParamServer();
+    node_params_.fromParamServer();
+    calibration_params_.fromParamServer();
+    gravity_params_.fromParamServer();
 
+    
     bool isAutoInit = false;
     double nodePullFreq = 0;
     m_isInitialized = false;
     m_isCalibrated = false;
-
     srvServer_Init_ = nh_.advertiseService("Init", &ForceTorqueSensor::srvCallback_Init, this);
     srvServer_CalculateAverageMasurement_ = nh_.advertiseService("CalculateAverageMasurement", &ForceTorqueSensor::srvCallback_CalculateAverageMasurement, this);
     srvServer_CalculateOffset_ = nh_.advertiseService("CalculateOffsets", &ForceTorqueSensor::srvCallback_CalculateOffset, this);
     srvServer_DetermineCoordianteSystem_ = nh_.advertiseService("DetermineCoordinateSystem", &ForceTorqueSensor::srvCallback_DetermineCoordinateSystem, this);
     srvServer_Temp_ = nh_.advertiseService("GetTemperature", &ForceTorqueSensor::srvReadDiagnosticVoltages, this);
     srvServer_ReCalibrate = nh_.advertiseService("Recalibrate", &ForceTorqueSensor::srvCallback_recalibrate, this);
-//    reconfigSrv_.setCallback(boost::bind(&ForceTorqueSensor::reconfigureRequest, this, _1, _2));
+//  reconfigSrv_.setCallback(boost::bind(&ForceTorqueSensor::reconfigureRequest, this, _1, _2));
 
     // Read data from parameter server
-    nh_.param<int>("CAN/type", canType, -1);
-
-    nh_.param<std::string>("CAN/path", canPath, "");
-    nh_.param<int>("CAN/baudrate", canBaudrate, -1);
-    nh_.param<int>("FTS/base_identifier", ftsBaseID, -1);
-    nh_.param<bool>("FTS/auto_init", isAutoInit, false);
-    nh_.param<double>("Node/ft_pub_freq", nodePubFreq, 100);
-    nh_.param<double>("Node/ft_pull_freq", nodePullFreq, 100);
-    nh_.param<std::string>("Node/sensor_frame", sensor_frame_, "fts_reference_link");
+    canType = can_params_.type;
+    canPath = can_params_.path;
+    canBaudrate = can_params_.baudrate;
+    ftsBaseID=FTS_params_.base_identifier;
+    isAutoInit=FTS_params_.auto_init;
+    nodePubFreq=node_params_.ft_pub_freq;
+    nodePullFreq=node_params_.ft_pull_freq;
+    sensor_frame_=node_params_.sensor_frame;
 
     int calibNMeas;
-    nh_.param<int>("Calibration/n_measurements", calibNMeas, 20);
+    calibNMeas=calibration_params_.n_measurements;
+
     if (calibNMeas <= 0)
     {
         ROS_WARN("Parameter 'Calibration/n_measurements' is %d (<=0) using default: 20", calibNMeas);
@@ -92,48 +106,47 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh),  params_{ro
     else {
         calibrationNMeasurements = (uint)calibNMeas;
     }
-    nh_.param<double>("Calibration/T_between_meas", calibrationTBetween, 0.01);
-    nh_.param<bool>("Calibration/static", m_staticCalibration, 0);
-    nh_.param<double>("Calibration/Offset/force/x", m_calibOffset.force.x, 0);
-    nh_.param<double>("Calibration/Offset/force/y", m_calibOffset.force.y, 0);
-    nh_.param<double>("Calibration/Offset/force/z", m_calibOffset.force.z, 0);
-    nh_.param<double>("Calibration/Offset/torque/x", m_calibOffset.torque.x, 0);
-    nh_.param<double>("Calibration/Offset/torque/y", m_calibOffset.torque.y, 0);
-    nh_.param<double>("Calibration/Offset/torque/z", m_calibOffset.torque.z, 0);
-    nh_.param<int>("CoordinateSystemCal/n_measurements", coordinateSystemNMeasurements, 20);
-    nh_.param<int>("CoordinateSystemCal/T_between_meas", coordinateSystemTBetween, 10000);
-    nh_.param<int>("CoordinateSystemCal/push_direction", coordinateSystemPushDirection, 0);
+    calibrationTBetween=calibration_params_.T_between_meas;
+    m_staticCalibration=calibration_params_.isStatic;
+    m_calibOffset.force.x = calibration_params_.Offset_Force_x;
+    m_calibOffset.force.y = calibration_params_.Offset_Force_y;
+    m_calibOffset.force.z = calibration_params_.Offset_Force_z;
+    m_calibOffset.torque.x = calibration_params_.Offset_Torque_x;
+    m_calibOffset.torque.y = calibration_params_.Offset_Torque_y;
+    m_calibOffset.torque.z = calibration_params_.Offset_Torque_z;
+
+    coordinateSystemNMeasurements = CS_params_.n_measurements;
+    coordinateSystemTBetween = CS_params_.T_between_meas;
+    coordinateSystemPushDirection = CS_params_.push_direction;
 
     p_tfBuffer = new tf2_ros::Buffer();
     p_tfListener = new tf2_ros::TransformListener(*p_tfBuffer, true);
 
-    //Wrench Publisher
-    nh_.param<bool>("Publish/gravity_compensated", is_pub_gravity_compensated_, false);
+    //Wrench Publisher  
+    is_pub_gravity_compensated_ = pub_params_.gravity_compensated;
     if(is_pub_gravity_compensated_){
         gravity_compensated_pub_ = nh_.advertise<geometry_msgs::WrenchStamped>("gravity_compensated", 1);
     }
-    nh_.param<bool>("Publish/low_pass", is_pub_low_pass_, false);
+    is_pub_low_pass_ = pub_params_.low_pass;
     if(is_pub_low_pass_){
-        low_pass_pub_ = nh_.advertise<geometry_msgs::WrenchStamped>("low_pass", 1);
+        low_pass_pub_ = nh_.advertise<geometry_msgs::WrenchStamped>("low_pass", 1);     
     }
-    nh_.param<bool>("Publish/moving_mean", is_pub_moving_mean_, false);
+    is_pub_moving_mean_=pub_params_.moving_mean;
     if(is_pub_moving_mean_){
         moving_mean_pub_ = nh_.advertise<geometry_msgs::WrenchStamped>("moving_mean", 1);
     }
-    nh_.param<bool>("Publish/sensor_data", is_pub_sensor_data_, false);
+    is_pub_sensor_data_=pub_params_.sensor_data;
     if(is_pub_sensor_data_){
         sensor_data_pub_ = nh_.advertise<geometry_msgs::WrenchStamped>("sensor_data", 1);
     }
-    nh_.param<bool>("Publish/threshold_filtered", is_pub_threshold_filtered_, false);
+    is_pub_threshold_filtered_ =pub_params_.threshold_filtered;
     if(is_pub_threshold_filtered_){
         threshold_filtered_pub_ = nh_.advertise<geometry_msgs::WrenchStamped>("threshold_filtered", 1);
     }
-    nh_.param<bool>("Publish/transformed_data", is_pub_transformed_data_, false);
+    is_pub_transformed_data_  = pub_params_.transformed_data;
     if(is_pub_transformed_data_){
         transformed_data_pub_ = nh_.advertise<geometry_msgs::WrenchStamped>("transformed_data", 1);
     }
-
-
 
     ftUpdateTimer_ = nh.createTimer(ros::Rate(nodePubFreq), &ForceTorqueSensor::updateFTData, this, false, false);
     ftPullTimer_ = nh.createTimer(ros::Rate(nodePullFreq), &ForceTorqueSensor::pullFTData, this, false, false);
@@ -165,15 +178,15 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh),  params_{ro
     }
 
     //Median Filter
-    if(ros::param::has("MovingMeanFilter/Force_x")) {
+    if(nh_.hasParam("MovingMeanFilter/Force_x")) {
         useMovinvingMeanForceX=true;
     	moving_mean_filter_force_x_.init(ros::NodeHandle(nh_, "MovingMeanFilter/Force_x"));
     }
-    if(ros::param::has("MovingMeanFilter/Force_y")) {
+    if(nh_.hasParam("MovingMeanFilter/Force_y")) {
     	moving_mean_filter_force_y_.init(ros::NodeHandle(nh_, "MovingMeanFilter/Force_y"));
         useMovinvingMeanForceY=true;
     }
-    if(ros::param::has("MovingMeanFilter/Force_z")) {
+    if(nh_.hasParam("MovingMeanFilter/Force_z")) {
     	moving_mean_filter_force_z_.init(ros::NodeHandle(nh_, "MovingMeanFilter/Force_z"));
         useMovinvingMeanForceZ=true;
     }
@@ -193,7 +206,7 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh),  params_{ro
     //Gravity Compenstation
     if(nh_.hasParam("GravityCompensation")) {
         gravity_compensator_.init(ros::NodeHandle(nh_, "GravityCompensation"));
-        useThresholdFilter = true;
+        useGravityCompensator = true;
     }
     
     //Threshold Filter
@@ -201,7 +214,7 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh),  params_{ro
         threshold_filter_.init(ros::NodeHandle(nh_, "ThresholdFilter"));
         useThresholdFilter = true;
     }
-   
+
     if (canType != -1)
     {
         p_Ftc = new ForceTorqueCtrl(canType, canPath, canBaudrate, ftsBaseID);
@@ -218,8 +231,6 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh),  params_{ro
         init_sensor(msg, success);
         ROS_INFO("Autoinit: %s", msg.c_str());
     }
-
-    std::cout<<"params: "<<params_.ft_pub_freq<<" "<<params_.transform_frameNode<<" "<<params_.isStatic<<" "<<std::endl; //config_.groups.name
 }
 
 
@@ -340,7 +351,7 @@ bool ForceTorqueSensor::srvCallback_recalibrate(std_srvs::Trigger::Request& req,
         res.message = "Failed to recalibrate because Node is not initiliazed.";
         return true;
     }
-    if (!(nh_.hasParam("force") && nh_.hasParam("CoG/x") && nh_.hasParam("CoG/y") && nh_.hasParam("CoG/z")))
+    if (!(nh_.hasParam("force") && nh_.hasParam("CoG_x") && nh_.hasParam("CoG_y") && nh_.hasParam("CoG_z")))
     {
         ROS_ERROR("Cannot use dynamic recalibration without all values for Gravity Compensation, set parameters or use "
                   "'Calibrate' service instead.");
@@ -351,10 +362,10 @@ bool ForceTorqueSensor::srvCallback_recalibrate(std_srvs::Trigger::Request& req,
     geometry_msgs::Vector3Stamped gravity, gravity_transformed;
     geometry_msgs::Vector3 cog;
     double force_value;
-    nh_.getParam("CoG/x", cog.x);
-    nh_.getParam("CoG/y", cog.y);
-    nh_.getParam("CoG/z", cog.z);
-    nh_.getParam("force", force_value);
+    cog.x = gravity_params_.CoG_x;
+    cog.y = gravity_params_.CoG_y;
+    cog.z = gravity_params_.CoG_z;
+    force_value = gravity_params_.force;
     gravity.vector.z = -force_value;
     tf2::doTransform(gravity, gravity_transformed,
                      p_tfBuffer->lookupTransform(sensor_frame_, transform_frame_, ros::Time(0)));
@@ -379,7 +390,6 @@ bool ForceTorqueSensor::calibrate(bool apply_after_calculation, geometry_msgs::W
     geometry_msgs::Wrench temp_offset = makeAverageMeasurement(calibrationNMeasurements, calibrationTBetween);
 
     apply_offset = true;
-
     if (apply_after_calculation) {
         offset_ = temp_offset;
     }
@@ -431,7 +441,6 @@ geometry_msgs::Wrench ForceTorqueSensor::makeAverageMeasurement(uint number_of_m
     measurement.torque.x /= number_of_measurements;
     measurement.torque.y /= number_of_measurements;
     measurement.torque.z /= number_of_measurements;
-
     return measurement;
 }
 
@@ -510,20 +519,32 @@ void ForceTorqueSensor::pullFTData(const ros::TimerEvent &event)
         //lowpass
         low_pass_filtered_data.header = sensor_data.header;
 	if(useLowPassFilterForceX) low_pass_filtered_data.wrench.force.x = lp_filter_force_x_.applyFilter(sensor_data.wrench.force.x);
+	else low_pass_filtered_data.wrench.force.x = sensor_data.wrench.force.x;
 	if(useLowPassFilterForceY) low_pass_filtered_data.wrench.force.y = lp_filter_force_y_.applyFilter(sensor_data.wrench.force.y);
+	else low_pass_filtered_data.wrench.force.y = sensor_data.wrench.force.y;
 	if(useLowPassFilterForceZ) low_pass_filtered_data.wrench.force.z = lp_filter_force_z_.applyFilter(sensor_data.wrench.force.z);
+	else low_pass_filtered_data.wrench.force.z = sensor_data.wrench.force.z;
 	if(useLowPassFilterTorqueX) low_pass_filtered_data.wrench.torque.x = lp_filter_torque_x_.applyFilter(sensor_data.wrench.torque.x);
+	else low_pass_filtered_data.wrench.torque.x = sensor_data.wrench.torque.x;
 	if(useLowPassFilterTorqueY) low_pass_filtered_data.wrench.torque.y = lp_filter_torque_y_.applyFilter(sensor_data.wrench.torque.y);
+	else low_pass_filtered_data.wrench.torque.y = sensor_data.wrench.torque.y;
 	if(useLowPassFilterTorqueZ) low_pass_filtered_data.wrench.torque.z = lp_filter_torque_z_.applyFilter(sensor_data.wrench.torque.z);
-
+	else low_pass_filtered_data.wrench.torque.z = sensor_data.wrench.torque.z;
+	
         //moving_mean
 	moving_mean_filtered_wrench.header = low_pass_filtered_data.header;
 	if(useMovinvingMeanForceX) moving_mean_filtered_wrench.wrench.force.x = moving_mean_filter_force_x_.applyFilter(low_pass_filtered_data.wrench.force.x);
+	else moving_mean_filtered_wrench.wrench.force.x = sensor_data.wrench.force.x;
 	if(useMovinvingMeanForceY) moving_mean_filtered_wrench.wrench.force.y = moving_mean_filter_force_y_.applyFilter(low_pass_filtered_data.wrench.force.y);
+	else moving_mean_filtered_wrench.wrench.force.y = sensor_data.wrench.force.y;
 	if(useMovinvingMeanForceZ) moving_mean_filtered_wrench.wrench.force.z = moving_mean_filter_force_z_.applyFilter(low_pass_filtered_data.wrench.force.z);
+	else moving_mean_filtered_wrench.wrench.force.z = sensor_data.wrench.force.z;
 	if(useMovinvingMeanTorqueX) moving_mean_filtered_wrench.wrench.torque.x = moving_mean_filter_torque_x_.applyFilter(low_pass_filtered_data.wrench.torque.x);
+	else moving_mean_filtered_wrench.wrench.torque.x = sensor_data.wrench.torque.x;
 	if(useMovinvingMeanTorqueY) moving_mean_filtered_wrench.wrench.torque.y = moving_mean_filter_torque_y_.applyFilter(low_pass_filtered_data.wrench.torque.y);
+	else moving_mean_filtered_wrench.wrench.torque.y = sensor_data.wrench.torque.y;
 	if(useMovinvingMeanTorqueZ) moving_mean_filtered_wrench.wrench.torque.z = moving_mean_filter_torque_z_.applyFilter(low_pass_filtered_data.wrench.torque.z);
+	else moving_mean_filtered_wrench.wrench.torque.z = sensor_data.wrench.torque.z;
 
         if(is_pub_sensor_data_)
             sensor_data_pub_.publish(sensor_data);
@@ -543,17 +564,20 @@ void ForceTorqueSensor::filterFTData(){
     {
       //gravity compensation
       if(useGravityCompensator) gravity_compensated_force = gravity_compensator_.compensate(transformed_data);
+      else gravity_compensated_force = transformed_data;
 
       //treshhold filtering
       if(useThresholdFilter) threshold_filtered_force = threshold_filter_.applyFilter(gravity_compensated_force);
+      else threshold_filtered_force = gravity_compensated_force;
 
       if(is_pub_transformed_data_)
 	transformed_data_pub_.publish(transformed_data);
-      if(is_pub_gravity_compensated_)
+      if(is_pub_gravity_compensated_ && useGravityCompensator)
 	gravity_compensated_pub_.publish(gravity_compensated_force);
-      if(is_pub_threshold_filtered_)
+      if(is_pub_threshold_filtered_ && useThresholdFilter)
 	threshold_filtered_pub_.publish(threshold_filtered_force);
     }
+    else threshold_filtered_force = moving_mean_filtered_wrench;
 }
 
 bool ForceTorqueSensor::transform_wrench(std::string goal_frame, std::string source_frame, geometry_msgs::Wrench wrench, geometry_msgs::Wrench *transformed)
@@ -585,19 +609,3 @@ bool ForceTorqueSensor::transform_wrench(std::string goal_frame, std::string sou
     
     return true;  
 }
-/*
- * Use const ConstPtr for your callbacks.
- * The 'const' assures that you can not edit incoming messages.
- * The Ptr type guarantees zero copy transportation within nodelets.
- */
-/*void ForceTorqueSensor::timerCallback(const ros::TimerEvent& event) {
-    ROS_INFO("timer");
-}*/
-
-/**
-  * This callback is called whenever a change was made in the dynamic_reconfigure window
-*/
-/*void ForceTorqueSensor::reconfigureRequest(ati_force_torque::sensorConfigurationConfig& config, uint32_t level) {
-    params_.fromConfig(config);
-    ROS_WARN_STREAM("Parameter update:\n" << params_);
-}*/

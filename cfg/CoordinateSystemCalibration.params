@@ -1,0 +1,10 @@
+#!/usr/bin/env python
+from rosparam_handler.parameter_generator_catkin import *
+gen = ParameterGenerator()
+
+gen.add("n_measurements", paramtype="int", description="number of necessary measurements for calibration", default=20, configurable=False)
+gen.add("T_between_meas", paramtype="int", description="time between two measurements for calibration", default=10000, configurable=False)
+gen.add("push_direction", paramtype="int", description="push direction", default=0, configurable=False)
+
+#Syntax : Package, Node, Config Name(The final name will be MyDummyConfig)
+exit(gen.generate("ati_force_torque", "ForceTorqueSensor", "CoordinateSystemCalibration"))

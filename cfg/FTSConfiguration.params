@@ -1,0 +1,10 @@
+#!/usr/bin/env python
+from rosparam_handler.parameter_generator_catkin import *
+gen = ParameterGenerator()
+
+gen.add("base_identifier", paramtype="int", description="identifier", default=0x20, configurable=False)
+gen.add("auto_init", paramtype="bool", description="auto init", default=True, configurable=False)
+gen.add("fts_name", paramtype="std::string", description="name of sensor", default="ATI_45_Mini", configurable=False)
+
+#Syntax : Package, Node, Config Name(The final name will be MyDummyConfig)
+exit(gen.generate("ati_force_torque", "ForceTorqueSensor", "FTSConfiguration"))
