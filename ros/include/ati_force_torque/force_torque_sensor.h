@@ -87,8 +87,10 @@ typedef unsigned char uint8_t;
 #include <ati_force_torque/CanConfigurationParameters.h>
 #include <ati_force_torque/FTSConfigurationParameters.h>
 #include <ati_force_torque/PublishConfigurationParameters.h>
+#include <ati_force_torque/PublishConfigurationConfig.h>
 #include <ati_force_torque/NodeConfigurationParameters.h>
 #include <ati_force_torque/CalibrationParameters.h>
+#include <ati_force_torque/CalibrationConfig.h>
 
 #define PI 3.14159265
 
@@ -218,8 +220,11 @@ private:
   bool useMovinvingMeanTorqueZ= false;
   bool useGravityCompensator=false;
   bool useThresholdFilter=false;
-  //dynamic_reconfigure::Server<ati_force_torque::sensorConfigurationConfig> reconfigSrv_; // Dynamic reconfiguration service
-  //void timerCallback(const ros::TimerEvent& event);
-  //void reconfigureRequest(ati_force_torque::sensorConfigurationConfig& config, uint32_t level);
+  
+  dynamic_reconfigure::Server<ati_force_torque::CalibrationConfig> reconfigCalibrationSrv_; // Dynamic reconfiguration service
+  dynamic_reconfigure::Server<ati_force_torque::PublishConfigurationConfig> reconfigPublishSrv_; // Dynamic reconfiguration service
+
+  void reconfigureCalibrationRequest(ati_force_torque::CalibrationConfig& config, uint32_t level);
+  void reconfigurePublishRequest(ati_force_torque::PublishConfigurationConfig& config, uint32_t level);
 };
 

@@ -83,7 +83,8 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh),  CS_params_
     srvServer_DetermineCoordianteSystem_ = nh_.advertiseService("DetermineCoordinateSystem", &ForceTorqueSensor::srvCallback_DetermineCoordinateSystem, this);
     srvServer_Temp_ = nh_.advertiseService("GetTemperature", &ForceTorqueSensor::srvReadDiagnosticVoltages, this);
     srvServer_ReCalibrate = nh_.advertiseService("Recalibrate", &ForceTorqueSensor::srvCallback_recalibrate, this);
-//  reconfigSrv_.setCallback(boost::bind(&ForceTorqueSensor::reconfigureRequest, this, _1, _2));
+    reconfigCalibrationSrv_.setCallback(boost::bind(&ForceTorqueSensor::reconfigureCalibrationRequest, this, _1, _2));
+    reconfigPublishSrv_.setCallback(boost::bind(&ForceTorqueSensor::reconfigurePublishRequest, this, _1, _2));
 
     // Read data from parameter server
     canType = can_params_.type;
@@ -608,4 +609,12 @@ bool ForceTorqueSensor::transform_wrench(std::string goal_frame, std::string sou
     transformed->torque = temp_vector_out.vector;
     
     return true;  
+}
+void ForceTorqueSensor::reconfigureCalibrationRequest(ati_force_torque::CalibrationConfig& config, uint32_t level){
+
+    calibration_params_.fromConfig(config); 
+}
+void ForceTorqueSensor::reconfigurePublishRequest(ati_force_torque::PublishConfigurationConfig& config, uint32_t level){
+
+    pub_params_.fromConfig(config);
 }
