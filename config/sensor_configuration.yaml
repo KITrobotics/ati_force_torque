@@ -2,12 +2,18 @@ Node:
     ft_pub_freq: 200
     ft_pull_freq: 800
     sensor_frame: "fts_reference_link"
-    transform_frame: "fts_base_link"
+    transform_frame: "fts_transform_frame"
 
 Calibration:
     n_measurements: 500
     T_between_meas: 0.01
-    static: true # true= use static offset Calibration, false=use calibrate Sensor to 0 in current State
+    isStatic: false # true= use static offset Calibration, false=use calibrate Sensor to 0 in current State
+    Offset_Force_x: 29.3789054311
+    Offset_Force_y: -4.02509469552
+    Offset_Force_z: -7.12669364182
+    Offset_Torque_x: -0.30390995786
+    Offset_Torque_y: -0.747661107339
+    Offset_Torque_z: 1.11224200823
 
 ThresholdFilter:
   linear_threshold: 2.5
@@ -59,7 +65,8 @@ GravityCompensation:
      #y: 0
      #z: 0.027346102 # m
     #force: 7.9459955 # f_G
-    world_frame: "world"
+    sensor_frame: "fts_reference_link"
+    world_frame: "fts_transform_frame"
 
 Publish:
     sensor_data: true
