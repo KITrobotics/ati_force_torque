@@ -58,13 +58,19 @@ typedef unsigned char uint8_t;
 #include <iostream>
 #include <ros/ros.h>
 #include <geometry_msgs/Wrench.h>
+#include <geometry_msgs/Twist.h>
 #include <geometry_msgs/WrenchStamped.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Vector3Stamped.h>
+#include <cob_forcetorque/ForceTorqueCtrl.h>
 
 #include <tf2/LinearMath/Transform.h>
 #include <tf2_ros/transform_listener.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <ati_force_torque/PublishConfigurationConfig.h>
+#include <ati_force_torque/PublishConfigurationParameters.h>
+#include <ati_force_torque/NodeConfigurationParameters.h>
+#include <ati_force_torque/NodeConfigurationConfig.h>
 
 #include <math.h>
 #include <iostream>
@@ -72,7 +78,7 @@ typedef unsigned char uint8_t;
 
 #define PI 3.14159265
 
-class ForceTorqueSensorSim
+class ForceTorqueSensorSim 
 {
 public:
   ForceTorqueSensorSim(ros::NodeHandle &nh);
@@ -83,19 +89,25 @@ protected:
   std::string transform_frame_;
   std::string sensor_frame_;
 
-  void pullFTData(const geometry_msgs::WrenchStamped::ConstPtr& joystick_input);
- 
+  void pullFTData(const geometry_msgs::Twist::ConstPtr& msg);
   // Arrays for dumping FT-Data
-  geometry_msgs::WrenchStamped threshold_filtered_force, transformed_data, joystick_data;
-  
+  geometry_msgs::WrenchStamped threshold_filtered_force, transformed_data, joystick_data;;
+  //geometry_msgs::Twist 
 
 private:
+  virtual void updateFTData(const ros::TimerEvent &event)  = 0;
   bool transform_wrench(std::string goal_frame, std::string source_frame, geometry_msgs::Wrench wrench, geometry_msgs::Wrench *transformed);
-
+  ati_force_torque::PublishConfigurationParameters pub_params_;
+  ati_force_torque::NodeConfigurationParameters node_params_;
   ros::Subscriber force_input_subscriber;
   uint _num_transform_errors;
   tf2_ros::Buffer *p_tfBuffer;
   tf2_ros::TransformListener *p_tfListener;
   ros::NodeHandle nh_;
+  ros::Publisher  transformed_data_pub_,sensor_data_pub_;
+  ros::Timer ftUpdateTimer_;
+  bool is_pub_transformed_data_ =false;
+  bool is_pub_sensor_data_=false;
+  double nodeUpdateFreq;
 };
 

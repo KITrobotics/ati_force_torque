@@ -52,30 +52,56 @@
  *
  ****************************************************************/
 #include <ati_force_torque/force_torque_sensor_sim.h>
-ForceTorqueSensorSim::ForceTorqueSensorSim(ros::NodeHandle& nh) : nh_(nh)
+ForceTorqueSensorSim::ForceTorqueSensorSim(ros::NodeHandle& nh) : nh_(nh), pub_params_{nh}, node_params_{nh}
 {
     std::cout<<"ForceTorqueSensorSim"<<std::endl;
 
+    pub_params_.setNamespace(nh_.getNamespace()+"/Publish");
+    node_params_.setNamespace(nh_.getNamespace()+"/Node");
+    pub_params_.fromParamServer();
+    node_params_.fromParamServer();
+     
+    nodeUpdateFreq=node_params_.ft_pub_freq;
+     //Wrench Publisher  
+    is_pub_sensor_data_=pub_params_.sensor_data;
+    if(is_pub_sensor_data_){
+        sensor_data_pub_ = nh_.advertise<geometry_msgs::WrenchStamped>("sensor_data", 1);
+    }
+    is_pub_transformed_data_  = pub_params_.transformed_data;
+    if(is_pub_transformed_data_){
+        transformed_data_pub_ = nh_.advertise<geometry_msgs::WrenchStamped>("transformed_data", 1);
+    }
+    ftUpdateTimer_ = nh.createTimer(ros::Rate(nodeUpdateFreq), &ForceTorqueSensorSim::updateFTData, this, false, false);
+    
     p_tfBuffer = new tf2_ros::Buffer();
     p_tfListener = new tf2_ros::TransformListener(*p_tfBuffer, true);
-
-    
+    init_sensor();
+    ftUpdateTimer_.start();
 }
 void ForceTorqueSensorSim::init_sensor() {
-    force_input_subscriber = nh_.subscribe("command", 1, &ForceTorqueSensorSim::pullFTData, this);
+    force_input_subscriber = nh_.subscribe("twist_controller/command", 1, &ForceTorqueSensorSim::pullFTData, this);
+    std::cout<<"namespace"<<nh_.getNamespace()<<std::endl;
 
 }
-void ForceTorqueSensorSim::pullFTData(const geometry_msgs::WrenchStamped::ConstPtr& msg)
+void ForceTorqueSensorSim::pullFTData(const geometry_msgs::Twist::ConstPtr &msg)
 {
     int status = 0;
     std::string transform_frame_ = "";
-    joystick_data = *msg;
-    transformed_data.header.stamp = joystick_data.header.stamp;
+    joystick_data.wrench.force.x = msg->linear.x;
+    joystick_data.wrench.force.y = msg->linear.y;
+    joystick_data.wrench.force.z = 0;
+    joystick_data.wrench.torque.z = msg->angular.z;
+    joystick_data.wrench.torque.x = 0;
+    joystick_data.wrench.torque.y = 0;
+    transformed_data.header.stamp = ros::Time::now();
     transformed_data.header.frame_id = transform_frame_;
     transform_wrench(transform_frame_, sensor_frame_, joystick_data.wrench, &transformed_data.wrench);
     threshold_filtered_force = transformed_data;
+      if(is_pub_sensor_data_)
+	sensor_data_pub_.publish(joystick_data);
+     if(is_pub_transformed_data_)
+	transformed_data_pub_.publish(threshold_filtered_force);
 }
-
 bool ForceTorqueSensorSim::transform_wrench(std::string goal_frame, std::string source_frame, geometry_msgs::Wrench wrench, geometry_msgs::Wrench *transformed)
 {
   geometry_msgs::TransformStamped transform;

@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!--  FTS transmission   -->
+  <xacro:macro name="fts_transmission" params="parent">
+
+    <transmission name="${parent}_fts_trans">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="${parent}_reference_joint" >
+        <hardwareInterface>ForceTorqueSensorInterface</hardwareInterface>
+      </joint>
+        <actuator name="${parent}_actuator"> 
+            <hardwareInterface>ForceTorqueSensorInterface</hardwareInterface>
+      </actuator>
+    </transmission>
+  </xacro:macro>
+
+</robot>
