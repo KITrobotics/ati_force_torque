@@ -14,22 +14,17 @@
         </joint>
 
         <link name="${name}_base_link">
-            <inertial>
-                <mass value="0.01" />
-                <origin xyz="0 0 0" />
-                <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
-            </inertial>
+            <xacro:default_inertial/>
             <visual>
 <!--<<<<<<< HEAD
-                <origin xyz="0 0 0" rpy="0 0 ${-pi*3/4}" />
-                =======-->
+      <origin xyz="0 0 0" rpy="0 0 ${-pi*3/4}" />
+=======
+-->
                 <origin xyz="0 0 -0.4" rpy="0 0 0" />
                 <geometry>
                 <mesh filename="package://ati_force_torque/description/meshes/ftm115.stl" scale="0.001 0.001 0.001" />
                 </geometry>
-                <material name="DarkGrey">
-                  <color rgba="0.4 0.4 0.4 1.0"/>
-                </material>
+                <material name="Schunk/DarkGrey" />
             </visual>
             <collision>
                 <origin xyz="0 0 0" rpy="0 0 ${-pi*3/4}" />
@@ -42,7 +37,8 @@
 <!--<<<<<<< HEAD
         <joint name="${name}_reference_joint" type="fixed">
             <origin xyz="0 0 ${0.0749-0.01715}" rpy="0 0 ${-pi/4}" /> 
-        =======-->
+=======
+-->
         <joint name="${name}_reference_joint" type="continuous">
             <origin xyz="0 0 0" rpy="2.991 -0.918 -3.067" /> 
             <parent link="${name}_base_link"/>
@@ -50,25 +46,20 @@
         </joint>
 
         <link name="${name}_reference_link">
+            <xacro:default_inertial/>
         </link>
 <!--
-<<<<<<< HEAD
+HEAD
         <joint name="${name}_tool_joint" type="fixed">
             <origin xyz="0 0 0.0749" rpy="0 0 ${-pi/12}" />
-=======
-        <joint name="${name}_tool_joint" type="fixed">
-            <origin xyz="0 0 0.0749" rpy="0 0 ${-pi/12}" />
->>>>>>> raw_with_fts
             <parent link="${name}_base_link"/>
             <child link="${name}_tool_link" />
         </joint>
 
-<<<<<<< HEAD
-        <link name="${name}_tool_link"/>
-=======
         <link name="${name}_tool_link">
             <xacro:default_inertial/>
-        </link>-->
+        </link>
+-->
         <xacro:fts_gazebo_ref_link parent="${name}"  />
         <xacro:fts_gazebo_base_link parent="${name}"  />
         <xacro:fts_transmission parent="${name}"  />
