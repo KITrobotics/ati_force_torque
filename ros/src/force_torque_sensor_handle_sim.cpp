@@ -9,9 +9,9 @@ ForceTorqueSensorHandleSim::ForceTorqueSensorHandleSim(ros::NodeHandle& nh, std:
 
 void ForceTorqueSensorHandleSim::updateFTData(const ros::TimerEvent& event)
 {
-    interface_force_[0] = threshold_filtered_force.wrench.force.x;
-    interface_force_[1] = threshold_filtered_force.wrench.force.y;
-    interface_force_[2] = threshold_filtered_force.wrench.force.z;
+    interface_force_[0] = threshold_filtered_force.wrench.force.x*40;
+    interface_force_[1] = threshold_filtered_force.wrench.force.y*55;
+    interface_force_[2] = threshold_filtered_force.wrench.force.z*10;
 
     interface_torque_[0] = threshold_filtered_force.wrench.torque.x;
     interface_torque_[1] = threshold_filtered_force.wrench.torque.y;
