@@ -6,9 +6,8 @@
             
     <xacro:macro name="ati_ftm115" params="parent name *origin">
 
-        <joint name="${name}_base_joint" type="continuous">
+        <joint name="${name}_base_joint" type="fixed">
             <xacro:insert_block name="origin" />
-            <origin xyz="-0.348 0 0.96" rpy="0 0 0" />
             <parent link="${parent}"/>
             <child link="${name}_base_link" />
         </joint>
@@ -16,7 +15,7 @@
         <link name="${name}_base_link">
             <xacro:default_inertial/>
             <visual>
-                <origin xyz="0 0 -0.4" rpy="0 0 0" />
+                <origin xyz="0 0 0" rpy="0 0 0" />
                 <geometry>
                 <mesh filename="package://ati_force_torque/description/meshes/ftm115.stl" scale="0.001 0.001 0.001" />
                 </geometry>
@@ -31,7 +30,7 @@
         </link>
 
         <joint name="${name}_reference_joint" type="continuous">
-            <origin xyz="0 0 0" rpy="2.991 -0.918 -3.067" /> 
+            <origin xyz="0 0 0" rpy="0.0 0.0 -2.216 " /> 
             <parent link="${name}_base_link"/>
             <child link="${name}_reference_link" />
         </joint>
@@ -40,15 +39,6 @@
             <xacro:default_inertial/>
         </link>
 
-        <!--<joint name="${name}_tool_joint" type="fixed">
-            <origin xyz="0 0 0.0749" rpy="0 0 ${-M_PI/12}" />
-            <parent link="${name}_base_link"/>
-            <child link="${name}_tool_link" />
-        </joint>
-
-        <link name="${name}_tool_link">
-            <xacro:default_inertial/>
-        </link>-->
         <xacro:fts_gazebo_ref_link parent="${name}"  />
         <xacro:fts_gazebo_base_link parent="${name}"  />
         <xacro:fts_transmission parent="${name}"  />
