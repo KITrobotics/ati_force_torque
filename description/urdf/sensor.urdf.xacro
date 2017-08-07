@@ -2,10 +2,6 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro"
        name="ati_ftm115" >
 
-  <!-- common stuff -->
-  <xacro:include filename="$(find schunk_description)/urdf/common.xacro" />
-  <xacro:include filename="$(find schunk_description)/urdf/materials.urdf.xacro" />
-
   <!-- ati ftm115 -->
   <xacro:include filename="$(find ati_force_torque)/description/urdf/ftm115.urdf.xacro" />
 

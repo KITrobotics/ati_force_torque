@@ -2,18 +2,21 @@ cmake_minimum_required(VERSION 2.8.3)
 project(ati_force_torque)
 
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
+  cmake_modules
+  cob_generic_can
+  geometry_msgs
+  iirob_filters
   message_generation
+  roscpp
+  roslaunch
+  rospy
   std_msgs
   std_srvs
   tf2
-  tf2_ros
   tf2_geometry_msgs
+  tf2_ros
+  trajectory_msgs
   visualization_msgs
-  geometry_msgs
-  cob_generic_can
-  cmake_modules
-  iirob_filters
   rosparam_handler
   dynamic_reconfigure 
   schunk_description
@@ -50,24 +53,24 @@ generate_ros_parameter_files(
 
 
 add_service_files(
-    FILES
-    CalculateAverageMasurement.srv
-    CalculateSensorOffset.srv
-    DiagnosticVoltages.srv
-    )
+  FILES
+  CalculateAverageMasurement.srv
+  CalculateSensorOffset.srv
+  DiagnosticVoltages.srv
+)
 
 generate_messages(
-    DEPENDENCIES
-    geometry_msgs
-    std_msgs
-    )
+  DEPENDENCIES
+  geometry_msgs
+  std_msgs
+)
 
 ###################################
 ## catkin specific configuration ##
 ###################################
 catkin_package(
  INCLUDE_DIRS common/include ros/include
- CATKIN_DEPENDS roscpp message_runtime std_msgs std_srvs cob_generic_can geometry_msgs tf2 tf2_ros tf2_geometry_msgs iirob_filters schunk_description
+ CATKIN_DEPENDS roscpp message_runtime std_msgs std_srvs cob_generic_can geometry_msgs tf2 tf2_ros tf2_geometry_msgs iirob_filters schunk_description trajectory_msgs rospy
  DEPENDS Eigen
  LIBRARIES ${PROJECT_NAME}
 )
@@ -88,19 +91,21 @@ add_library(${PROJECT_NAME} common/src/ForceTorqueCtrl.cpp ros/src/force_torque_
 add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg) # For dynamic_reconfigure
 add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_generate_messages_cpp)
 add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_genparam) # For rosparam_handler
-target_link_libraries(${PROJECT_NAME} gravity_compensation low_pass_filter moving_mean_filter threshold_filter)
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES} gravity_compensation low_pass_filter moving_mean_filter threshold_filter)
 
 add_executable(${PROJECT_NAME}_node ros/src/force_torque_sensor_node.cpp)
 add_dependencies(${PROJECT_NAME}_node ${PROJECT_NAME}_generate_messages_cpp)
-#add_dependencies(${PROJECT_NAME}_node ${PROJECT_NAME}_gencfg) # For dynamic_reconfigure
-#add_dependencies(${PROJECT_NAME}_node ${PROJECT_NAME}_genparam) # For rosparam_handler
-target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES} gravity_compensation low_pass_filter moving_mean_filter threshold_filter)
+target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
 
 add_executable(${PROJECT_NAME}_config ros/src/force_torque_sensor_config.cpp)
 target_link_libraries(${PROJECT_NAME}_config ${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
-add_dependencies(${PROJECT_NAME}_config ${PROJECT_NAME}_generate_messages_cpp)
-#add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg) # For dynamic_reconfigure
-#add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_genparam) # For rosparam_handler
+add_dependencies(${PROJECT_NAME}_config ${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES} ${PROJECT_NAME}_generate_messages_cpp)
+
+#############
+## Tests ##
+#############
+
+roslaunch_add_file_check(ros/launch)
 
 #############
 ## Install ##
@@ -112,14 +117,10 @@ install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_node ${PROJECT_NAME}_config
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-install(DIRECTORY common/include
+install(DIRECTORY common/include ros/include
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
 
-install(DIRECTORY ros/include
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-)
-
-install(DIRECTORY ros/launch config
+install(DIRECTORY ros/launch config description
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
