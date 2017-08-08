@@ -91,7 +91,7 @@ add_library(${PROJECT_NAME} common/src/ForceTorqueCtrl.cpp ros/src/force_torque_
 add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg) # For dynamic_reconfigure
 add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_generate_messages_cpp)
 add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_genparam) # For rosparam_handler
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES} gravity_compensation low_pass_filter moving_mean_filter threshold_filter)
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES} iirob_filters_gravity_compensation iirob_filters_low_pass_filter iirob_filters_moving_mean_filter iirob_filters_threshold_filter)
 
 add_executable(${PROJECT_NAME}_node ros/src/force_torque_sensor_node.cpp)
 add_dependencies(${PROJECT_NAME}_node ${PROJECT_NAME}_generate_messages_cpp)
