@@ -1,4 +1,8 @@
 - git:
     uri: 'https://github.com/iirob/iirob_filters.git'
     local-name: iirob_filters
-    version: indigo-devel
+    version: kinetic-devel
+- git:
+    uri: 'https://github.com/iirob/rosparam_handler.git'
+    local-name: rosparam_handler
+    version: ns_get_set

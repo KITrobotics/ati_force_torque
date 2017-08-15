@@ -4,11 +4,13 @@ project(ati_force_torque)
 find_package(catkin REQUIRED COMPONENTS
   cmake_modules
   cob_generic_can
+  dynamic_reconfigure 
   geometry_msgs
   iirob_filters
   message_generation
   roscpp
   roslaunch
+  rosparam_handler
   rospy
   std_msgs
   std_srvs
@@ -17,8 +19,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_ros
   trajectory_msgs
   visualization_msgs
-  rosparam_handler
-  dynamic_reconfigure 
+
   schunk_description
 )
 
@@ -33,13 +34,9 @@ else()
 endif()
 
 include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++14" Cpp14CompilerFlag)
-if (Cpp14CompilerFlag)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS "17")
-	#no additional flag is required
-else()
-	message(FATAL_ERROR "Compiler does not have c++14 support. Use at least g++4.9 or Visual Studio 2013 and newer.")
+CHECK_CXX_COMPILER_FLAG("-std=c++11" Cpp11CompilerFlag)
+if (Cpp11CompilerFlag)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
 
 generate_ros_parameter_files(
@@ -50,7 +47,6 @@ generate_ros_parameter_files(
     cfg/PublishConfiguration.params
     cfg/Calibration.params
 )
-
 
 add_service_files(
   FILES
@@ -70,7 +66,7 @@ generate_messages(
 ###################################
 catkin_package(
  INCLUDE_DIRS common/include ros/include
- CATKIN_DEPENDS roscpp message_runtime std_msgs std_srvs cob_generic_can geometry_msgs tf2 tf2_ros tf2_geometry_msgs iirob_filters schunk_description trajectory_msgs rospy
+ CATKIN_DEPENDS roscpp message_runtime std_msgs std_srvs cob_generic_can geometry_msgs iirob_filters rospy tf2 tf2_ros tf2_geometry_msgs trajectory_msgs schunk_description
  DEPENDS Eigen
  LIBRARIES ${PROJECT_NAME}
 )
@@ -88,9 +84,11 @@ include_directories(
 )
 
 add_library(${PROJECT_NAME} common/src/ForceTorqueCtrl.cpp ros/src/force_torque_sensor.cpp ros/src/force_torque_sensor_sim.cpp ros/src/force_torque_sensor_handle.cpp ros/src/force_torque_sensor_handle_sim.cpp)
-add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg) # For dynamic_reconfigure
-add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_generate_messages_cpp)
-add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_genparam) # For rosparam_handler
+add_dependencies(${PROJECT_NAME}
+  ${PROJECT_NAME}_gencfg  # For dynamic_reconfigure
+  ${PROJECT_NAME}_generate_messages_cpp
+  ${PROJECT_NAME}_genparam # For rosparam_handler
+  )
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES} iirob_filters_gravity_compensation iirob_filters_low_pass_filter iirob_filters_moving_mean_filter iirob_filters_threshold_filter)
 
 add_executable(${PROJECT_NAME}_node ros/src/force_torque_sensor_node.cpp)
