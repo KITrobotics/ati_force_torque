@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro"
+       name="ati_mini58" >
+
+  <!-- ati_mini58 -->
+  <xacro:include filename="$(find ati_force_torque)/description/urdf/macros/mini58.urdf.xacro" />
+
+  <!-- Used for fixing sensor to Gazebo -->
+  <link name="base_link"/>
+
+  <!-- sensor -->
+  <xacro:ati_mini58 name="fts" parent="base_link">
+      <origin xyz="0 0 0" rpy="0 0 0" />
+  </xacro:ati_mini58>
+
+</robot>
