@@ -5,7 +5,7 @@
 - git:
     uri: 'https://github.com/iirob/rosparam_handler.git'
     local-name: rosparam_handler
-    version: ns_get_set
+    version: ns_set_get
 - git:
     uri: 'https://github.com/ipa320/cob_driver.git'
     local-name: cob_driver
