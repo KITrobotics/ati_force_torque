@@ -13,18 +13,6 @@
  *
  * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  *
- * Copyright (c) 2010
- *
- * Fraunhofer Institute for Manufacturing Engineering
- * and Automation (IPA)
- *
- * Author: Alexander Bubeck, email:alexander.bubeck@ipa.fhg.de
- * Supervised by: Alexander Bubeck, email:alexander.bubeck@ipa.fhg.de
- *
- * Date of creation: June 2010
- *
- * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
@@ -67,14 +55,11 @@ typedef unsigned char uint8_t;
 #include <tf2/LinearMath/Transform.h>
 #include <tf2_ros/transform_listener.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-#include <ati_force_torque/PublishConfigurationConfig.h>
 #include <ati_force_torque/PublishConfigurationParameters.h>
 #include <ati_force_torque/NodeConfigurationParameters.h>
-#include <ati_force_torque/NodeConfigurationConfig.h>
 
 #include <math.h>
 #include <iostream>
-
 
 #define PI 3.14159265
 

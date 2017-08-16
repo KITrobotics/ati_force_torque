@@ -66,7 +66,7 @@ generate_messages(
 ###################################
 catkin_package(
  INCLUDE_DIRS common/include ros/include
- CATKIN_DEPENDS roscpp message_runtime std_msgs std_srvs cob_generic_can geometry_msgs iirob_filters rospy tf2 tf2_ros tf2_geometry_msgs trajectory_msgs schunk_description
+ CATKIN_DEPENDS cob_generic_can geometry_msgs iirob_filters message_runtime roscpp std_msgs std_srvs rospy tf2 tf2_ros tf2_geometry_msgs trajectory_msgs schunk_description
  DEPENDS Eigen
  LIBRARIES ${PROJECT_NAME}
 )
@@ -76,7 +76,6 @@ catkin_package(
 ###########
 
 include_directories(
-  include
   common/include
   ros/include
   ${catkin_INCLUDE_DIRS}
@@ -89,7 +88,7 @@ add_dependencies(${PROJECT_NAME}
   ${PROJECT_NAME}_generate_messages_cpp
   ${PROJECT_NAME}_genparam # For rosparam_handler
   )
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES} iirob_filters_gravity_compensation iirob_filters_low_pass_filter iirob_filters_moving_mean_filter iirob_filters_threshold_filter)
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
 
 add_executable(${PROJECT_NAME}_node ros/src/force_torque_sensor_node.cpp)
 add_dependencies(${PROJECT_NAME}_node ${PROJECT_NAME}_generate_messages_cpp)
@@ -100,15 +99,8 @@ target_link_libraries(${PROJECT_NAME}_config ${PROJECT_NAME} ${catkin_LIBRARIES}
 add_dependencies(${PROJECT_NAME}_config ${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES} ${PROJECT_NAME}_generate_messages_cpp)
 
 #############
-## Tests ##
-#############
-
-roslaunch_add_file_check(ros/launch)
-
-#############
 ## Install ##
 #############
-
 install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_node ${PROJECT_NAME}_config
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
@@ -117,8 +109,16 @@ install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_node ${PROJECT_NAME}_config
 
 install(DIRECTORY common/include ros/include
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
 )
 
 install(DIRECTORY ros/launch config description
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
+
+#############
+## Tests ##
+#############
+
+roslaunch_add_file_check(ros/launch)

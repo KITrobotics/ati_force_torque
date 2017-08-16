@@ -8,19 +8,7 @@
  * Maintainers: Denis Štogl, email: denis.stogl@kit.edu
  *                     Andreea Tulbure
  *
- * Date of update: 2014-2016
- *
- * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- *
- * Copyright (c) 2010
- *
- * Fraunhofer Institute for Manufacturing Engineering
- * and Automation (IPA)
- *
- * Author: Alexander Bubeck, email:alexander.bubeck@ipa.fhg.de
- * Supervised by: Alexander Bubeck, email:alexander.bubeck@ipa.fhg.de
- *
- * Date of creation: June 2010
+ * Date of update: 2014-2017
  *
  * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  *
@@ -51,7 +39,9 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  ****************************************************************/
+
 #include <ati_force_torque/force_torque_sensor_sim.h>
+
 ForceTorqueSensorSim::ForceTorqueSensorSim(ros::NodeHandle& nh) : nh_(nh), pub_params_{nh}, node_params_{nh}
 {
     std::cout<<"ForceTorqueSensorSim"<<std::endl;
