@@ -51,7 +51,6 @@ ForceTorqueSensorSim::ForceTorqueSensorSim(ros::NodeHandle& nh) : nh_(nh), pub_p
     pub_params_.fromParamServer();
     node_params_.fromParamServer();
      
-    nodeUpdateFreq=node_params_.ft_pub_freq;
      //Wrench Publisher  
     is_pub_sensor_data_=pub_params_.sensor_data;
     if(is_pub_sensor_data_){
@@ -61,7 +60,7 @@ ForceTorqueSensorSim::ForceTorqueSensorSim(ros::NodeHandle& nh) : nh_(nh), pub_p
     if(is_pub_transformed_data_){
         transformed_data_pub_ = nh_.advertise<geometry_msgs::WrenchStamped>("transformed_data", 1);
     }
-    ftUpdateTimer_ = nh.createTimer(ros::Rate(nodeUpdateFreq), &ForceTorqueSensorSim::updateFTData, this, false, false);
+    ftUpdateTimer_ = nh.createTimer(ros::Rate(node_params_.ft_pull_freq), &ForceTorqueSensorSim::updateFTData, this, false, false);
     
     p_tfBuffer = new tf2_ros::Buffer();
     p_tfListener = new tf2_ros::TransformListener(*p_tfBuffer, true);
@@ -70,8 +69,6 @@ ForceTorqueSensorSim::ForceTorqueSensorSim(ros::NodeHandle& nh) : nh_(nh), pub_p
 }
 void ForceTorqueSensorSim::init_sensor() {
     force_input_subscriber = nh_.subscribe("twist_controller/command", 1, &ForceTorqueSensorSim::pullFTData, this);
-    std::cout<<"namespace"<<nh_.getNamespace()<<std::endl;
-
 }
 void ForceTorqueSensorSim::pullFTData(const geometry_msgs::Twist::ConstPtr &msg)
 {

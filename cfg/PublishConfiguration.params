@@ -9,5 +9,4 @@ gen.add("transformed_data", paramtype="bool", description="publish transformed d
 gen.add("gravity_compensated", paramtype="bool", description="publish gravity compensated data", default=True, configurable=True)
 gen.add("threshold_filtered", paramtype="bool", description="publish threshold filtered data", default=True, configurable=True)
 
-#Syntax : Package, Node, Config Name(The final name will be MyDummyConfig)
 exit(gen.generate("ati_force_torque", "ForceTorqueSensor", "PublishConfiguration"))

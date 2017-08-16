@@ -6,6 +6,8 @@ gen.add("ft_pub_freq", paramtype="double", description="publish frequency", defa
 gen.add("ft_pull_freq", paramtype="double", description="sensor daa pull frequency", default=800, configurable=False)
 gen.add("transform_frame", paramtype="std::string", description="reference coordinate system", default="fts_transform_frame", configurable=False)
 gen.add("sensor_frame", paramtype="std::string", description="sensor coordinate system", default="fts_reference_link", configurable=False)
+gen.add("sim_forceX_param", paramtype="int", description="factor for simulation for x axis simulated force", default="0", configurable=True)
+gen.add("sim_forceY_param", paramtype="int", description="factor for simulation for y axis simulated force", default="0", configurable=True)
+gen.add("sim_torqueZ_param", paramtype="int", description="factor for simulation for z axis simulated torque", default="0", configurable=True)
 
-#Syntax : Package, Node, Config Name(The final name will be MyDummyConfig)
 exit(gen.generate("ati_force_torque", "ForceTorqueSensor", "NodeConfiguration"))

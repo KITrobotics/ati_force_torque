@@ -19,8 +19,6 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_ros
   trajectory_msgs
   visualization_msgs
-
-  schunk_description
 )
 
 find_package(Eigen3)

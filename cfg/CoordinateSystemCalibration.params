@@ -6,5 +6,4 @@ gen.add("n_measurements", paramtype="int", description="number of necessary meas
 gen.add("T_between_meas", paramtype="int", description="time between two measurements for calibration", default=10000, configurable=True)
 gen.add("push_direction", paramtype="int", description="push direction", default=0, configurable=False)
 
-#Syntax : Package, Node, Config Name(The final name will be MyDummyConfig)
 exit(gen.generate("ati_force_torque", "ForceTorqueSensor", "CoordinateSystemCalibration"))

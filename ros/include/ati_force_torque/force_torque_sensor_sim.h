@@ -5,11 +5,9 @@
  * Intelligent Process Control and Robotics (IPR),
  * Karlsruhe Institute of Technology
  *
- * Maintainers: Denis Štogl, email: denis.stogl@kit.edu
- *                     Florian Heller
- *                     Vanessa Streuer
+ * Maintainers: Andreea Tulbure, email: andreea.tulbure@student.kit.edu
  *
- * Date of update: 2014-2016
+ * Date of update: 2016-2017
  *
  * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  *
@@ -73,17 +71,18 @@ protected:
 
   std::string transform_frame_;
   std::string sensor_frame_;
-
+  ati_force_torque::NodeConfigurationParameters node_params_;
+  
   void pullFTData(const geometry_msgs::Twist::ConstPtr& msg);
   // Arrays for dumping FT-Data
   geometry_msgs::WrenchStamped threshold_filtered_force, transformed_data, joystick_data;;
-  //geometry_msgs::Twist 
+
 
 private:
   virtual void updateFTData(const ros::TimerEvent &event)  = 0;
   bool transform_wrench(std::string goal_frame, std::string source_frame, geometry_msgs::Wrench wrench, geometry_msgs::Wrench *transformed);
   ati_force_torque::PublishConfigurationParameters pub_params_;
-  ati_force_torque::NodeConfigurationParameters node_params_;
+  
   ros::Subscriber force_input_subscriber;
   uint _num_transform_errors;
   tf2_ros::Buffer *p_tfBuffer;
@@ -93,6 +92,6 @@ private:
   ros::Timer ftUpdateTimer_;
   bool is_pub_transformed_data_ =false;
   bool is_pub_sensor_data_=false;
-  double nodeUpdateFreq;
+
 };
 

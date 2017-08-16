@@ -6,5 +6,4 @@ gen.add("type", paramtype="int", description="socket_can", default=-1, configura
 gen.add("path", paramtype="std::string", description="socket_can", default=" ", configurable=False)
 gen.add("baudrate", paramtype="int", description="baudrate", default=-1, configurable=False)
 
-#Syntax : Package, Node, Config Name(The final name will be MyDummyConfig)
 exit(gen.generate("ati_force_torque", "ForceTorqueSensor", "CanConfiguration"))

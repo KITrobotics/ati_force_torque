@@ -146,12 +146,12 @@ private:
   geometry_msgs::TransformStamped transform_ee_base_stamped;
   tf2_ros::Buffer *p_tfBuffer;
   ros::Publisher gravity_compensated_pub_, threshold_filtered_pub_, transformed_data_pub_, sensor_data_pub_, low_pass_pub_, moving_mean_pub_;
-  bool is_pub_gravity_compensated_=false;
-  bool is_pub_threshold_filtered_=false;
-  bool is_pub_transformed_data_ =false;
-  bool is_pub_sensor_data_=false;
-  bool is_pub_low_pass_=false;
-  bool is_pub_moving_mean_=false;
+  bool is_pub_gravity_compensated_ = false;
+  bool is_pub_threshold_filtered_ = false;
+  bool is_pub_transformed_data_ = false;
+  bool is_pub_sensor_data_ = false;
+  bool is_pub_low_pass_ = false;
+  bool is_pub_moving_mean_ = false;
   
   uint _num_transform_errors;
 
@@ -176,7 +176,6 @@ private:
   ros::ServiceServer srvServer_ReCalibrate;
 
   ros::Timer ftUpdateTimer_, ftPullTimer_;
-//  ros::Timer timer_;
 
   tf2_ros::TransformListener *p_tfListener;
   tf2::Transform transform_ee_base;
