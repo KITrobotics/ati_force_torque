@@ -1,9 +1,6 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-    <xacro:include filename="$(find ati_force_torque)/description/urdf/ftm115.transmission.xacro" />
-    <xacro:include filename="$(find ati_force_torque)/description/urdf/ftm115.gazebo.xacro" />
 
-            
     <xacro:macro name="ati_ftm115" params="parent name *origin">
 
         <joint name="${name}_base_joint" type="fixed">
@@ -13,14 +10,18 @@
         </joint>
 
         <link name="${name}_base_link">
-            <xacro:default_inertial/>
+            <inertial>
+                <mass value="0.01" />
+                <origin xyz="0 0 0" />
+                <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
+            </inertial>
             <visual>
-                <origin xyz="0 0 0" rpy="0 0 0" />
+                <origin xyz="0 0 0" rpy="0 0 ${-pi*3/4}" />
                 <geometry>
                 <mesh filename="package://ati_force_torque/description/meshes/ftm115.stl" scale="0.001 0.001 0.001" />
                 </geometry>
                 <material name="DarkGrey">
-                    <color rgba="0.4 0.4 0.4 1.0"/>
+                  <color rgba="0.4 0.4 0.4 1.0"/>
                 </material>
             </visual>
             <collision>
@@ -31,19 +32,22 @@
             </collision>
         </link>
 
-        <joint name="${name}_reference_joint" type="continuous">
-            <origin xyz="0 0 0" rpy="0.0 0.0 -2.216 " /> 
+        <joint name="${name}_reference_joint" type="fixed">
+            <origin xyz="0 0 ${0.0749-0.01715}" rpy="0 0 ${-pi/4}" /> 
             <parent link="${name}_base_link"/>
             <child link="${name}_reference_link" />
         </joint>
 
         <link name="${name}_reference_link">
-            <xacro:default_inertial/>
         </link>
 
-        <xacro:fts_gazebo_ref_link parent="${name}"  />
-        <xacro:fts_gazebo_base_link parent="${name}"  />
-        <xacro:fts_transmission parent="${name}"  />
+        <joint name="${name}_tool_joint" type="fixed">
+            <origin xyz="0 0 0.0749" rpy="0 0 ${-pi/12}" />
+            <parent link="${name}_base_link"/>
+            <child link="${name}_tool_link" />
+        </joint>
+
+        <link name="${name}_tool_link"/>
 
   </xacro:macro>
 
