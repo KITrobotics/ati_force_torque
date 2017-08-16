@@ -19,7 +19,9 @@
                 <geometry>
                 <mesh filename="package://ati_force_torque/description/meshes/ftm115.stl" scale="0.001 0.001 0.001" />
                 </geometry>
-                <material name="Schunk/DarkGrey" />
+                <material name="DarkGrey">
+                    <color rgba="0.4 0.4 0.4 1.0"/>
+                </material>
             </visual>
             <collision>
                 <origin xyz="0 0 0" rpy="0 0 ${-pi*3/4}" />
