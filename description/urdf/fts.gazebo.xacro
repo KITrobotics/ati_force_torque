@@ -14,9 +14,9 @@
       <self_collide>false</self_collide>
     </gazebo>
   </xacro:macro>
-  
-   <xacro:macro name="fts_gazebo_ref_joint" params="parent ">
-    <gazebo reference="${parent}_reference_joint">
+
+    <xacro:macro name="fts_gazebo_tool_link" params="parent ">
+    <gazebo reference="${parent}_tool_link">
       <gravity>true</gravity>
       <self_collide>false</self_collide>
     </gazebo>
