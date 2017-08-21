@@ -64,7 +64,7 @@ generate_messages(
 ###################################
 catkin_package(
  INCLUDE_DIRS common/include ros/include
- CATKIN_DEPENDS cob_generic_can geometry_msgs iirob_filters message_runtime roscpp std_msgs std_srvs rospy tf2 tf2_ros tf2_geometry_msgs trajectory_msgs schunk_description
+ CATKIN_DEPENDS cob_generic_can geometry_msgs iirob_filters message_runtime roscpp std_msgs std_srvs rospy tf2 tf2_ros tf2_geometry_msgs trajectory_msgs
  DEPENDS Eigen
  LIBRARIES ${PROJECT_NAME}
 )

@@ -1,0 +1,14 @@
+Node:
+    sim: true
+    ft_pub_freq: 200
+    ft_pull_freq: 800
+    sensor_frame: ""
+    transform_frame: ""
+
+Publish:
+    sensor_data: true
+    low_pass: true
+    moving_mean: true
+    transformed_data: true
+    gravity_compensated: true
+    threshold_filtered: true

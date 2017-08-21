@@ -2,6 +2,7 @@
 from rosparam_handler.parameter_generator_catkin import *
 gen = ParameterGenerator()
 
+gen.add("sim", paramtype="bool", description="if simulation or not", default=False, configurable=False)
 gen.add("ft_pub_freq", paramtype="double", description="publish frequency", default=200, configurable=False)
 gen.add("ft_pull_freq", paramtype="double", description="sensor daa pull frequency", default=800, configurable=False)
 gen.add("transform_frame", paramtype="std::string", description="reference coordinate system", default="fts_transform_frame", configurable=False)
