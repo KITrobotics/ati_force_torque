@@ -54,16 +54,16 @@
  ****************************************************************/
 #include <ati_force_torque/force_torque_sensor.h>
 
-ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh),  CS_params_{nh}, can_params_{nh}, FTS_params_{nh} , pub_params_{nh} , node_params_{nh} , calibration_params_{nh} , gravity_params_{nh} 
+ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh),  CS_params_{nh}, can_params_{nh.getNamespace()+"/CAN"}, FTS_params_{nh.getNamespace()+"/FTS"} , pub_params_{nh.getNamespace()+"/Publish"} , node_params_{nh.getNamespace()+"/Node"} , calibration_params_{nh.getNamespace()+"/Calibration"} , gravity_params_{nh.getNamespace()+"/GravityCompensation"} 
 {
-    can_params_.setNamespace(nh_.getNamespace()+"/CAN");
+    /*can_params_.setNamespace(nh_.getNamespace()+"/CAN");
     CS_params_.setNamespace(nh_.getNamespace());
     FTS_params_.setNamespace(nh_.getNamespace()+"/FTS");
     pub_params_.setNamespace(nh_.getNamespace()+"/Publish");
     node_params_.setNamespace(nh_.getNamespace()+"/Node");
     calibration_params_.setNamespace(nh_.getNamespace()+"/Calibration");
-    gravity_params_.setNamespace(nh_.getNamespace()+"/GravityCompensation");
-    
+    gravity_params_.setNamespace(nh_.getNamespace()+"/GravityCompensation");*/
+    std::cout<<"ns: "<<calibration_params_.getNamespace()<<" "<<pub_params_.getNamespace()<<" "<<node_params_.getNamespace()<<" "<<FTS_params_.getNamespace()<<" "<<gravity_params_.getNamespace()<<std::endl;
     CS_params_.fromParamServer();
     can_params_.fromParamServer();
     FTS_params_.fromParamServer();
@@ -109,12 +109,8 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh),  CS_params_
     }
     calibrationTBetween=calibration_params_.T_between_meas;
     m_staticCalibration=calibration_params_.isStatic;
-    m_calibOffset.force.x = calibration_params_.Offset_Force_x;
-    m_calibOffset.force.y = calibration_params_.Offset_Force_y;
-    m_calibOffset.force.z = calibration_params_.Offset_Force_z;
-    m_calibOffset.torque.x = calibration_params_.Offset_Torque_x;
-    m_calibOffset.torque.y = calibration_params_.Offset_Torque_y;
-    m_calibOffset.torque.z = calibration_params_.Offset_Torque_z;
+    m_calibOffset.force.x = calibration_params_.force[0];
+    std::cout<<"force x:"<< m_calibOffset.force.x<<std::endl;
 
     coordinateSystemNMeasurements = CS_params_.n_measurements;
     coordinateSystemTBetween = CS_params_.T_between_meas;

@@ -52,33 +52,26 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  ****************************************************************/
-#include <ati_force_torque/force_torque_sensor.h>
+#include <ati_force_torque/force_torque_sensor_handle.h>
+#include <ati_force_torque/force_torque_sensor_handle_sim.h>
+#include <ati_force_torque/NodeConfigurationParameters.h>
 
-class ForceTorqueSensorNode : public ForceTorqueSensor
+class ForceTorqueSensorNode 
 {
 public:
-    ForceTorqueSensorNode(ros::NodeHandle &nh);
-
-    void updateFTData(const ros::TimerEvent &event);
-
-
+    ForceTorqueSensorNode(ros::NodeHandle &nh):node_params_{nh}
+{
+    node_params_.setNamespace(nh.getNamespace()+"/Node");
+    node_params_.fromParamServer();
+    bool sim = node_params_.sim;
+    if(sim) new ForceTorqueSensorHandleSim(nh,node_params_.sensor_frame,node_params_.transform_frame);
+    else{
+        new ForceTorqueSensorHandle(nh,node_params_.sensor_frame,node_params_.transform_frame);;
+    }
+}
 private:
-    ros::Timer ftUpdateTimer_;
-
-    tf2_ros::TransformListener *p_tfListener;
-    tf2::Transform transform_ee_base;
+    ati_force_torque::NodeConfigurationParameters node_params_;
 };
-
-ForceTorqueSensorNode::ForceTorqueSensorNode(ros::NodeHandle &nh) : ForceTorqueSensor(nh)
-{
-    nh_.param<std::string>("Node/sensor_frame", sensor_frame_, "fts_reference_link");
-    nh_.param<std::string>("Node/transform_frame", transform_frame_, "fts_base_link");
-}
-
-void ForceTorqueSensorNode::updateFTData(const ros::TimerEvent &event)
-{
-    filterFTData();
-}
 
 int main(int argc, char **argv)
 {
