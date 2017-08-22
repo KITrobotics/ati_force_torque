@@ -2,8 +2,8 @@ Node:
     sim: false
     ft_pub_freq: 200
     ft_pull_freq: 800
-    sensor_frame: ""
-    transform_frame: ""
+    sensor_frame: "fts_reference_link"
+    transform_frame: "fts_base_link"
 
 Calibration:
     Offset:

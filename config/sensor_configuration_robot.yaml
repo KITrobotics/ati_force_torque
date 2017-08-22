@@ -3,12 +3,13 @@ Node:
     ft_pub_freq: 200
     ft_pull_freq: 800
     sensor_frame: "fts_reference_link"
-    transform_frame: "fts_base_link"
+    transform_frame: "fts_transform_frame"
 
 Calibration:
-    n_measurements: 500
-    T_between_meas: 0.01
-    isStatic: false # true= use static offset Calibration, false=use calibrate Sensor to 0 in current State
+    Offset:
+        n_measurements: 500
+        T_between_meas: 0.01
+        isStatic: false # true= use static offset Calibration, false=use calibrate Sensor to 0 in current State
 
 ThresholdFilter:
   linear_threshold: 2.5

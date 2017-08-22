@@ -54,16 +54,9 @@
  ****************************************************************/
 #include <ati_force_torque/force_torque_sensor.h>
 
-ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh),  CS_params_{nh}, can_params_{nh.getNamespace()+"/CAN"}, FTS_params_{nh.getNamespace()+"/FTS"} , pub_params_{nh.getNamespace()+"/Publish"} , node_params_{nh.getNamespace()+"/Node"} , calibration_params_{nh.getNamespace()+"/Calibration"} , gravity_params_{nh.getNamespace()+"/GravityCompensation"} 
+ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh),  CS_params_{nh}, can_params_{nh.getNamespace()+"/CAN"}, FTS_params_{nh.getNamespace()+"/FTS"} , pub_params_{nh.getNamespace()+"/Publish"} , node_params_{nh.getNamespace()+"/Node"} , calibration_params_{nh.getNamespace()+"/Calibration/Offset"} , gravity_params_{nh.getNamespace()+"/GravityCompensation"} 
 {
-    /*can_params_.setNamespace(nh_.getNamespace()+"/CAN");
-    CS_params_.setNamespace(nh_.getNamespace());
-    FTS_params_.setNamespace(nh_.getNamespace()+"/FTS");
-    pub_params_.setNamespace(nh_.getNamespace()+"/Publish");
-    node_params_.setNamespace(nh_.getNamespace()+"/Node");
-    calibration_params_.setNamespace(nh_.getNamespace()+"/Calibration");
-    gravity_params_.setNamespace(nh_.getNamespace()+"/GravityCompensation");*/
-    std::cout<<"ns: "<<calibration_params_.getNamespace()<<" "<<pub_params_.getNamespace()<<" "<<node_params_.getNamespace()<<" "<<FTS_params_.getNamespace()<<" "<<gravity_params_.getNamespace()<<std::endl;
+
     CS_params_.fromParamServer();
     can_params_.fromParamServer();
     FTS_params_.fromParamServer();
