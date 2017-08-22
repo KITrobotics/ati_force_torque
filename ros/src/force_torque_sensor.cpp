@@ -103,7 +103,11 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh),  CS_params_
     calibrationTBetween=calibration_params_.T_between_meas;
     m_staticCalibration=calibration_params_.isStatic;
     m_calibOffset.force.x = calibration_params_.force[0];
-    std::cout<<"force x:"<< m_calibOffset.force.x<<std::endl;
+    m_calibOffset.force.y = calibration_params_.force[1];
+    m_calibOffset.force.z = calibration_params_.force[2];
+    m_calibOffset.torque.x = calibration_params_.torque[0];
+    m_calibOffset.torque.x = calibration_params_.torque[1];
+    m_calibOffset.torque.x = calibration_params_.torque[2];
 
     coordinateSystemNMeasurements = CS_params_.n_measurements;
     coordinateSystemTBetween = CS_params_.T_between_meas;
