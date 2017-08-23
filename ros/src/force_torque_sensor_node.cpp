@@ -59,9 +59,8 @@
 class ForceTorqueSensorNode 
 {
 public:
-    ForceTorqueSensorNode(ros::NodeHandle &nh):node_params_{nh}
+    ForceTorqueSensorNode(ros::NodeHandle &nh):node_params_{nh.getNamespace()+"/Node"}
 {
-    node_params_.setNamespace(nh.getNamespace()+"/Node");
     node_params_.fromParamServer();
     bool sim = node_params_.sim;
     if(sim) new ForceTorqueSensorHandleSim(nh,node_params_.sensor_frame,node_params_.transform_frame);

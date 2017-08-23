@@ -3,10 +3,6 @@
     local-name: iirob_filters
     version: kinetic-devel
 - git:
-    uri: 'https://github.com/iirob/rosparam_handler.git'
-    local-name: rosparam_handler
-    version: ns_set_get
-- git:
     uri: 'https://github.com/ipa320/cob_driver.git'
     local-name: cob_driver
     version: indigo_dev
