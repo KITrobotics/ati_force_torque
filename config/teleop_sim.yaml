@@ -1,33 +1,9 @@
-#raw3-5
-##########
-# common params
-sim: true
-run_factor: 10.0
-apply_ramp: false
-joy_num_buttons: 12
-joy_num_axes: 6
-joy_num_modes: 1
+axis_linear: { x: 1, y: 0, z: 4 }  # Left thumb stick 
+scale_linear: { x: 12.0, y: 12.0, z: 12.0 } 
 
-# axes
-axis_vx: 1
-axis_vy: 0
-axis_vz: 5
-axis_roll: 4
-axis_pitch: 3
-axis_yaw: 2
+axis_angular: { roll: 4, pitch: 3, yaw: 2 }  # Right thumb stick 
+scale_angular: { roll: 12.0, pitch: 12.0, yaw: 12.0 } 
 
-# buttons
-deadman_button: 5
-safety_button: 4
-init_button: 9
+enable_button: 5
 
-#mode1: Base
-run_button: 7
 
-components: {
-  base: {
-    twist_topic_name: '/base/twist_mux/command_teleop_joy',
-    twist_max_velocity: [1.0, 1.0, 1.0, 1.0,1.0, 1.0],
-    twist_max_acc: [0.5, 0.5, 0.5, 0.7, 0.7, 0.7]
-  }
-}
