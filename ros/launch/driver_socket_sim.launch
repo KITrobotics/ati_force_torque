@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<launch>
+<arg name="robot_env" default="$(optenv ROBOT_ENV ipa-apartment)"/>
+<arg name="pkg_env_config" default="$(find cob_default_env_config)"/>
+<arg name="world_name" default="worlds/empty.world"/>
+<arg name="initial_config" default=""/>
+<arg name="debug" default="false" />
+<arg name="headless" default="false" />
+<arg name="paused" default="false"/>
+<arg name="use_sim_time" default="true"/>
+<arg name="gui" default="true"/>
+
+	
+    <!-- startup simulated world -->
+	<include file="$(find gazebo_ros)/launch/empty_world.launch">
+		<arg name="world_name" value="$(arg world_name)"/>
+		<arg name="debug" value="$(arg debug)" />
+		<arg name="headless" value="$(arg headless)"/>
+		<arg name="paused" value="$(arg paused)" />
+		<arg name="use_sim_time" value="$(arg use_sim_time)" />
+		<arg name="gui" value="$(arg gui)" />
+	</include>
+    
+    <!-- startup simulated sensor-->
+    <include file="$(find ati_force_torque)/ros/launch/driver.launch">
+        <arg name="is_socket" value="true" />
+        <arg name="sim" value="true" />
+    </include>
+	
+    <include file="$(find ati_force_torque)/ros/launch/teleop_sim.launch"/>
+    
+    <param name="sensor_description" command="$(find xacro)/xacro.py --inorder '$(find ati_force_torque)/description/urdf/sensor_mini58.urdf.xacro'" />
+    
+    <node name="spawn_gazebo_model" pkg="gazebo_ros" type="spawn_model" args="-param sensor_description -urdf -model sensor_mini58" respawn="false" output="screen" />
+
+</launch> 

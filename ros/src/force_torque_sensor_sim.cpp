@@ -45,8 +45,6 @@
 ForceTorqueSensorSim::ForceTorqueSensorSim(ros::NodeHandle& nh) : nh_(nh), pub_params_{nh.getNamespace()+"/Publish"}, node_params_{nh.getNamespace()+"/Node"}
 {
     std::cout<<"ForceTorqueSensorSim"<<std::endl;
-    //std::cout<<"pub ns: "<<pub_params_.getNamespace();
-    //node_params_.setNamespace(nh_.getNamespace()+"/Node");
     pub_params_.fromParamServer();
     node_params_.fromParamServer();
     transform_frame_ = node_params_.transform_frame;
@@ -67,17 +65,17 @@ ForceTorqueSensorSim::ForceTorqueSensorSim(ros::NodeHandle& nh) : nh_(nh), pub_p
     ftUpdateTimer_.start();
 }
 void ForceTorqueSensorSim::init_sensor() {
-    force_input_subscriber = nh_.subscribe("twist_mux/command_teleop_joy", 1, &ForceTorqueSensorSim::subscribeData, this);
+    force_input_subscriber = nh_.subscribe("/base/twist_mux/command_teleop_joy", 1, &ForceTorqueSensorSim::subscribeData, this);
     ftPullTimer_.start();
 }
 
 void ForceTorqueSensorSim::subscribeData(const geometry_msgs::Twist::ConstPtr& msg){
     joystick_data.wrench.force.x = msg->linear.x;
     joystick_data.wrench.force.y = msg->linear.y;
-    joystick_data.wrench.force.z = 0;
+    joystick_data.wrench.force.z = msg->linear.z;
     joystick_data.wrench.torque.z = msg->angular.z;
-    joystick_data.wrench.torque.x = 0;
-    joystick_data.wrench.torque.y = 0;
+    joystick_data.wrench.torque.x = msg->angular.x;;
+    joystick_data.wrench.torque.y = msg->angular.y;
 }
 
 void ForceTorqueSensorSim::pullFTData(const ros::TimerEvent &event)
