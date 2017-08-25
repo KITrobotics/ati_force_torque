@@ -65,7 +65,7 @@ ForceTorqueSensorSim::ForceTorqueSensorSim(ros::NodeHandle& nh) : nh_(nh), pub_p
     ftUpdateTimer_.start();
 }
 void ForceTorqueSensorSim::init_sensor() {
-    force_input_subscriber = nh_.subscribe("/cmd_vel", 1, &ForceTorqueSensorSim::subscribeData, this);
+    force_input_subscriber = nh_.subscribe("/cmd_force", 1, &ForceTorqueSensorSim::subscribeData, this);
     ftPullTimer_.start();
 }
 

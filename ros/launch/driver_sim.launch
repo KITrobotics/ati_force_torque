@@ -9,7 +9,7 @@
 <arg name="paused" default="false"/>
 <arg name="use_sim_time" default="true"/>
 <arg name="gui" default="true"/>
-
+<remap from="/cmd_vel" to="/cmd_force"/>
 	
     <!-- startup simulated world -->
 	<include file="$(find gazebo_ros)/launch/empty_world.launch">
