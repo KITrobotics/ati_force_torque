@@ -54,7 +54,7 @@
  ****************************************************************/
 #include <ati_force_torque/force_torque_sensor.h>
 
-ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh),  calibration_params_{nh.getNamespace()+"/Calibration/Offset"},CS_params_{nh.getNamespace()}, can_params_{nh.getNamespace()+"/CAN"}, FTS_params_{nh.getNamespace()+"/FTS"}, pub_params_{nh.getNamespace()+"/Publish"}, node_params_{nh.getNamespace()+"/Node"}, gravity_params_{nh.getNamespace()+"/GravityCompensation"} 
+ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration_params_{nh.getNamespace()+"/Calibration/Offset"}, CS_params_{nh.getNamespace()}, can_params_{nh.getNamespace()+"/CAN"}, FTS_params_{nh.getNamespace()+"/FTS"}, pub_params_{nh.getNamespace()+"/Publish"}, node_params_{nh.getNamespace()+"/Node"}, gravity_params_{nh.getNamespace()+"/GravityCompensation"} 
 {
     calibration_params_.fromParamServer();
     CS_params_.fromParamServer();
@@ -77,13 +77,19 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh),  calibratio
     }
     calibrationTBetween=calibration_params_.T_between_meas;
     m_staticCalibration=calibration_params_.isStatic;
-    m_calibOffset.force.x = calibration_params_.force[0];
-    m_calibOffset.force.y = calibration_params_.force[1];
-    m_calibOffset.force.z = calibration_params_.force[2];
-    m_calibOffset.torque.x = calibration_params_.torque[0];
-    m_calibOffset.torque.x = calibration_params_.torque[1];
-    m_calibOffset.torque.x = calibration_params_.torque[2];
-  
+
+    std::map<std::string,double> forceVal,torqueVal;
+    forceVal= calibration_params_.force;
+    torqueVal= calibration_params_.torque;
+
+
+    m_calibOffset.force.x = forceVal["x"];
+    m_calibOffset.force.y = forceVal["y"];
+    m_calibOffset.force.z = forceVal["z"];
+    m_calibOffset.torque.x = torqueVal["x"];
+    m_calibOffset.torque.x = torqueVal["y"];
+    m_calibOffset.torque.x = torqueVal["z"];
+
     bool isAutoInit = false;
     double nodePullFreq = 0;
     m_isInitialized = false;
