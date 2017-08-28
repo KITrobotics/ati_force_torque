@@ -3,7 +3,7 @@ from rosparam_handler.parameter_generator_catkin import *
 gen = ParameterGenerator()
 
 gen.add("n_measurements", paramtype="int", description="number of necessary measurements for calibration", default=100, configurable=True)
-gen.add("T_between_meas", paramtype="double", description="time between two measurements for calibration", default=0.01, configurable=True)
+gen.add("T_between_meas", paramtype="double", description="time between two measurements for calibration", default=0.1, configurable=True)
 gen.add("isStatic", paramtype="bool", description="is static calibration active", default=False, configurable=True)
 gen.add("force", paramtype="std::vector<double>", description="calibration_offset_vector_force")
 gen.add("torque", paramtype="std::vector<double>", description="calibration_offset_vector_torque")

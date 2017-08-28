@@ -54,18 +54,36 @@
  ****************************************************************/
 #include <ati_force_torque/force_torque_sensor.h>
 
-ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh),  CS_params_{nh}, can_params_{nh.getNamespace()+"/CAN"}, FTS_params_{nh.getNamespace()+"/FTS"} , pub_params_{nh.getNamespace()+"/Publish"} , node_params_{nh.getNamespace()+"/Node"} , calibration_params_{nh.getNamespace()+"/Calibration/Offset"} , gravity_params_{nh.getNamespace()+"/GravityCompensation"} 
+ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh),  calibration_params_{nh.getNamespace()+"/Calibration/Offset"},CS_params_{nh.getNamespace()}, can_params_{nh.getNamespace()+"/CAN"}, FTS_params_{nh.getNamespace()+"/FTS"}, pub_params_{nh.getNamespace()+"/Publish"}, node_params_{nh.getNamespace()+"/Node"}, gravity_params_{nh.getNamespace()+"/GravityCompensation"} 
 {
-
+    calibration_params_.fromParamServer();
     CS_params_.fromParamServer();
     can_params_.fromParamServer();
     FTS_params_.fromParamServer();
     pub_params_.fromParamServer();
     node_params_.fromParamServer();
-    calibration_params_.fromParamServer();
     gravity_params_.fromParamServer();
 
-    
+    int calibNMeas;
+    calibNMeas=calibration_params_.n_measurements;
+ 
+    if (calibNMeas <= 0)
+    {
+        ROS_WARN("Parameter 'Calibration/n_measurements' is %d (<=0) using default: 20", calibNMeas);
+        calibrationNMeasurements = 20;
+    }
+    else {
+        calibrationNMeasurements = (uint)calibNMeas;
+    }
+    calibrationTBetween=calibration_params_.T_between_meas;
+    m_staticCalibration=calibration_params_.isStatic;
+    m_calibOffset.force.x = calibration_params_.force[0];
+    m_calibOffset.force.y = calibration_params_.force[1];
+    m_calibOffset.force.z = calibration_params_.force[2];
+    m_calibOffset.torque.x = calibration_params_.torque[0];
+    m_calibOffset.torque.x = calibration_params_.torque[1];
+    m_calibOffset.torque.x = calibration_params_.torque[2];
+  
     bool isAutoInit = false;
     double nodePullFreq = 0;
     m_isInitialized = false;
@@ -88,26 +106,6 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh),  CS_params_
     nodePubFreq=node_params_.ft_pub_freq;
     nodePullFreq=node_params_.ft_pull_freq;
     sensor_frame_=node_params_.sensor_frame;
-
-    int calibNMeas;
-    calibNMeas=calibration_params_.n_measurements;
-
-    if (calibNMeas <= 0)
-    {
-        ROS_WARN("Parameter 'Calibration/n_measurements' is %d (<=0) using default: 20", calibNMeas);
-        calibrationNMeasurements = 20;
-    }
-    else {
-        calibrationNMeasurements = (uint)calibNMeas;
-    }
-    calibrationTBetween=calibration_params_.T_between_meas;
-    m_staticCalibration=calibration_params_.isStatic;
-    m_calibOffset.force.x = calibration_params_.force[0];
-    m_calibOffset.force.y = calibration_params_.force[1];
-    m_calibOffset.force.z = calibration_params_.force[2];
-    m_calibOffset.torque.x = calibration_params_.torque[0];
-    m_calibOffset.torque.x = calibration_params_.torque[1];
-    m_calibOffset.torque.x = calibration_params_.torque[2];
 
     coordinateSystemNMeasurements = CS_params_.n_measurements;
     coordinateSystemTBetween = CS_params_.T_between_meas;
