@@ -5,23 +5,9 @@
  * Intelligent Process Control and Robotics (IPR),
  * Karlsruhe Institute of Technology
  *
- * Maintainers: Denis Štogl, email: denis.stogl@kit.edu
- *                     Florian Heller
- *                     Vanessa Streuer
+ * Maintainers: Andreea Tulbure, email: andreea.tulbure@student.kit.edu
  *
- * Date of update: 2014-2016
- *
- * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- *
- * Copyright (c) 2010
- *
- * Fraunhofer Institute for Manufacturing Engineering
- * and Automation (IPA)
- *
- * Author: Alexander Bubeck, email:alexander.bubeck@ipa.fhg.de
- * Supervised by: Alexander Bubeck, email:alexander.bubeck@ipa.fhg.de
- *
- * Date of creation: June 2010
+ * Date of update: 2016-2017
  *
  * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  *
@@ -52,41 +38,61 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  ****************************************************************/
-#include <ati_force_torque/force_torque_sensor_handle.h>
-#include <ati_force_torque/force_torque_sensor_handle_sim.h>
+#include <stdint.h>
+typedef unsigned char uint8_t;
+#include <inttypes.h>
+#include <iostream>
+#include <ros/ros.h>
+#include <geometry_msgs/Wrench.h>
+#include <geometry_msgs/Twist.h>
+#include <geometry_msgs/WrenchStamped.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/Vector3Stamped.h>
+#include <cob_forcetorque/ForceTorqueCtrl.h>
+
+#include <tf2/LinearMath/Transform.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+
+#include <ati_force_torque/PublishConfigurationParameters.h>
 #include <ati_force_torque/NodeConfigurationParameters.h>
 
-class ForceTorqueSensorNode 
+#include <math.h>
+#include <iostream>
+
+#define PI 3.14159265
+
+class ForceTorqueSensorSim
 {
 public:
-    ForceTorqueSensorNode(ros::NodeHandle &nh):node_params_{nh.getNamespace()+"/Node"}
-{
-    node_params_.fromParamServer();
-    bool sim = node_params_.sim;
-    if(sim) new ForceTorqueSensorHandleSim(nh,node_params_.sensor_frame,node_params_.transform_frame);
-    else{
-        new ForceTorqueSensorHandle(nh,node_params_.sensor_frame,node_params_.transform_frame);;
-    }
-}
+  ForceTorqueSensorSim(ros::NodeHandle &nh);
+  void init_sensor();
+
+protected:
+
+  std::string transform_frame_;
+  std::string sensor_frame_;
+  ati_force_torque::NodeConfigurationParameters node_params_;
+  ati_force_torque::PublishConfigurationParameters pub_params_;
+  void pullFTData(const ros::TimerEvent &event);
+  void filterFTData();
+  void subscribeData(const geometry_msgs::Twist::ConstPtr& msg);
+  // Arrays for dumping FT-Data
+  geometry_msgs::WrenchStamped threshold_filtered_force, transformed_data, joystick_data;
+  virtual void updateFTData(const ros::TimerEvent &event)  = 0;
+
+
 private:
-    ati_force_torque::NodeConfigurationParameters node_params_;
+  bool transform_wrench(std::string goal_frame, std::string source_frame, geometry_msgs::Wrench wrench, geometry_msgs::Wrench *transformed);
+    ros::Subscriber force_input_subscriber;
+  uint _num_transform_errors;
+  tf2_ros::Buffer *p_tfBuffer;
+  tf2_ros::TransformListener *p_tfListener;
+  ros::NodeHandle nh_;
+  ros::Publisher  transformed_data_pub_,sensor_data_pub_;
+  ros::Timer ftUpdateTimer_, ftPullTimer_;
+  bool is_pub_transformed_data_ =false;
+  bool is_pub_sensor_data_=false;
+
 };
-
-int main(int argc, char **argv)
-{
-    ros::init(argc, argv, "forcetorque_node");
-
-    ros::AsyncSpinner spinner(4); // Use 4 threads
-    spinner.start();
-
-    ros::NodeHandle nh("/fts");
-
-    ForceTorqueSensorNode ftn(nh);
-
-    ROS_INFO("ForceTorque Sensor Node running.");
-
-    ros::waitForShutdown();
-
-    return 0;
-}
 

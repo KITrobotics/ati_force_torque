@@ -62,7 +62,7 @@ def calculate_sensor_offsets():
     rospy.set_param('/temp/Offset/force/z', measurement.force.z)
     rospy.set_param('/temp/Offset/torque/x', measurement.torque.x)
     rospy.set_param('/temp/Offset/torque/y', measurement.torque.y)
-    rospy.set_param('/temp/Offset/torque/z', measurement.torque.z)
+    rospy.set_param('/temp/Offset/torque/z', measurement.torque.z)    
 
     if store_to_file:
       call('rosparam dump -v `rospack find ati_force_torque`/config/sensor_offset.yaml /temp/Offset', shell=True)

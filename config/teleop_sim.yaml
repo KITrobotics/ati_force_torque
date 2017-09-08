@@ -1,0 +1,9 @@
+axis_linear: { x: 1, y: 0, z: 4 }  # Left thumb stick 
+scale_linear: { x: 12.0, y: 12.0, z: 12.0 } 
+
+axis_angular: { roll: 4, pitch: 3, yaw: 2 }  # Right thumb stick 
+scale_angular: { roll: 12.0, pitch: 12.0, yaw: 12.0 } 
+
+enable_button: 5
+
+

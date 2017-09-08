@@ -1,0 +1,9 @@
+#!/usr/bin/env python
+from rosparam_handler.parameter_generator_catkin import *
+gen = ParameterGenerator()
+
+gen.add("n_measurements", paramtype="int", description="number of necessary measurements for calibration", default=0, configurable=True)
+gen.add("T_between_meas", paramtype="int", description="time between two measurements for calibration", default=0, configurable=True)
+gen.add("push_direction", paramtype="int", description="push direction", default=0, configurable=False)
+
+exit(gen.generate("ati_force_torque", "ForceTorqueSensor", "CoordinateSystemCalibration"))

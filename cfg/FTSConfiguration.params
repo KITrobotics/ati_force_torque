@@ -1,0 +1,9 @@
+#!/usr/bin/env python
+from rosparam_handler.parameter_generator_catkin import *
+gen = ParameterGenerator()
+
+gen.add("base_identifier", paramtype="int", description="identifier", default=0x00, configurable=False)
+gen.add("auto_init", paramtype="bool", description="auto init", default=True, configurable=False)
+gen.add("fts_name", paramtype="std::string", description="name of sensor", default="", configurable=False)
+
+exit(gen.generate("ati_force_torque", "ForceTorqueSensor", "FTSConfiguration"))

@@ -1,9 +1,10 @@
 <?xml version="1.0"?>
 <launch>
     <arg name="is_socket" default="true"/>
-
+    <arg name="sim" default="false"/>
+    
     <!-- send urdf to param server -->
-    <param name="sensor_description" command="$(find xacro)/xacro --inorder '$(find ati_force_torque)/description/urdf/sensor.urdf.xacro'" /> 
+    <param name="sensor_description" command="$(find xacro)/xacro --inorder '$(find ati_force_torque)/description/urdf/sensor.urdf.xacro'" unless = "$(arg sim)"/> 
     
     <!-- sensor state publisher -->
     <node ns="fts" pkg="robot_state_publisher" type="robot_state_publisher" name="sensor_state_publisher">
@@ -14,6 +15,7 @@
     
     <include ns="fts" file="$(find ati_force_torque)/ros/launch/sensor_parameters.launch">
       <arg name="is_socket" value="$(arg is_socket)"/>
+      <arg name="sim" value="$(arg sim)"/>
     </include>
 
     <!-- start FTS Driver Node -->
