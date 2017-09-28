@@ -8,5 +8,6 @@ gen.add("moving_mean", paramtype="bool", description="publish moving mean filter
 gen.add("transformed_data", paramtype="bool", description="publish transformed data", default=True, configurable=True)
 gen.add("gravity_compensated", paramtype="bool", description="publish gravity compensated data", default=True, configurable=True)
 gen.add("threshold_filtered", paramtype="bool", description="publish threshold filtered data", default=True, configurable=True)
+gen.add("iirob_led", paramtype="bool", description="publish data for iirob_led", default=True, configurable=True)
 
 exit(gen.generate("ati_force_torque", "ForceTorqueSensor", "PublishConfiguration"))

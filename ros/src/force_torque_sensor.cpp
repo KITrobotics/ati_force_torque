@@ -54,7 +54,7 @@
  ****************************************************************/
 #include <ati_force_torque/force_torque_sensor.h>
 
-ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration_params_{nh.getNamespace()+"/Calibration/Offset"}, CS_params_{nh.getNamespace()}, can_params_{nh.getNamespace()+"/CAN"}, FTS_params_{nh.getNamespace()+"/FTS"}, pub_params_{nh.getNamespace()+"/Publish"}, node_params_{nh.getNamespace()+"/Node"}, gravity_params_{nh.getNamespace()+"/GravityCompensation"} 
+ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration_params_{nh.getNamespace()+"/Calibration/Offset"}, CS_params_{nh.getNamespace()}, can_params_{nh.getNamespace()+"/CAN"}, FTS_params_{nh.getNamespace()+"/FTS"}, pub_params_{nh.getNamespace()+"/Publish"}, node_params_{nh.getNamespace()+"/Node"}, gravity_params_{nh.getNamespace()+"/GravityCompensation"}, led_params_{nh.getNamespace()+"/Led"} 
 {
     calibration_params_.fromParamServer();
     CS_params_.fromParamServer();
@@ -82,7 +82,6 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration
     forceVal= calibration_params_.force;
     torqueVal= calibration_params_.torque;
 
-
     m_calibOffset.force.x = forceVal["x"];
     m_calibOffset.force.y = forceVal["y"];
     m_calibOffset.force.z = forceVal["z"];
@@ -102,7 +101,7 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration
     srvServer_ReCalibrate = nh_.advertiseService("Recalibrate", &ForceTorqueSensor::srvCallback_recalibrate, this);
     reconfigCalibrationSrv_.setCallback(boost::bind(&ForceTorqueSensor::reconfigureCalibrationRequest, this, _1, _2));
     reconfigPublishSrv_.setCallback(boost::bind(&ForceTorqueSensor::reconfigurePublishRequest, this, _1, _2));
-
+    
     // Read data from parameter server
     canType = can_params_.type;
     canPath = can_params_.path;
@@ -123,27 +122,31 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration
     //Wrench Publisher  
     is_pub_gravity_compensated_ = pub_params_.gravity_compensated;
     if(is_pub_gravity_compensated_){
-        gravity_compensated_pub_ = nh_.advertise<geometry_msgs::WrenchStamped>("gravity_compensated", 1);
+        gravity_compensated_pub_ = new realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped>(nh_, "gravity_compensated", 1);
     }
     is_pub_low_pass_ = pub_params_.low_pass;
     if(is_pub_low_pass_){
-        low_pass_pub_ = nh_.advertise<geometry_msgs::WrenchStamped>("low_pass", 1);     
+        low_pass_pub_ = new realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped>(nh_, "low_pass", 1);
     }
     is_pub_moving_mean_=pub_params_.moving_mean;
     if(is_pub_moving_mean_){
-        moving_mean_pub_ = nh_.advertise<geometry_msgs::WrenchStamped>("moving_mean", 1);
+        low_pass_pub_ = new realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped>(nh_, "moving_mean", 1);
     }
     is_pub_sensor_data_=pub_params_.sensor_data;
     if(is_pub_sensor_data_){
-        sensor_data_pub_ = nh_.advertise<geometry_msgs::WrenchStamped>("sensor_data", 1);
+        sensor_data_pub_ = new realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped>(nh_, "sensor_data", 1);        
     }
     is_pub_threshold_filtered_ =pub_params_.threshold_filtered;
     if(is_pub_threshold_filtered_){
-        threshold_filtered_pub_ = nh_.advertise<geometry_msgs::WrenchStamped>("threshold_filtered", 1);
+        threshold_filtered_pub_ = new realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped>(nh_, "threshold_filtered", 1);
     }
     is_pub_transformed_data_  = pub_params_.transformed_data;
     if(is_pub_transformed_data_){
-        transformed_data_pub_ = nh_.advertise<geometry_msgs::WrenchStamped>("transformed_data", 1);
+        transformed_data_pub_ = new realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped>(nh_, "transformed_data", 1);        
+    }
+    is_pub_iirob_led_ = pub_params_.iirob_led;
+     if(is_pub_iirob_led_){
+        iirob_led_pub = new realtime_tools::RealtimePublisher<iirob_led::DirectionWithForce>(nh_, "direction_with_force_led", 1);
     }
 
     ftUpdateTimer_ = nh.createTimer(ros::Rate(nodePubFreq), &ForceTorqueSensor::updateFTData, this, false, false);
@@ -212,6 +215,12 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration
         threshold_filter_.init(ros::NodeHandle(nh_, "ThresholdFilter"));
         useThresholdFilter = true;
     }
+    
+    // topic needed for iirob_led
+    if(nh_.hasParam("iirob_led")) {
+        useiirobLED = true;
+    }
+    
 
     if (canType != -1)
     {
@@ -229,9 +238,15 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration
         init_sensor(msg, success);
         ROS_INFO("Autoinit: %s", msg.c_str());
     }
+
+    //LEDs config
+    std::string port = led_params_.port;
+    int ledNum = led_params_.ledNum;
+    double maxForce = led_params_.maxForce;
+    std::string link = led_params_.link;
+    rectangleStrip = new IIROB_LED_Rectangle(nh_, port, ledNum, maxForce, link);
+    led_sub_= nh.subscribe("direction_with_force_led", 1, &IIROB_LED_Rectangle::forceCallback, rectangleStrip);
 }
-
-
 
 void ForceTorqueSensor::init_sensor(std::string& msg, bool& success)
 {
@@ -545,11 +560,23 @@ void ForceTorqueSensor::pullFTData(const ros::TimerEvent &event)
 	else moving_mean_filtered_wrench.wrench.torque.z = sensor_data.wrench.torque.z;
 
         if(is_pub_sensor_data_)
-            sensor_data_pub_.publish(sensor_data);
+            if (sensor_data_pub_->trylock()){
+                sensor_data_pub_->msg_ = sensor_data;
+                sensor_data_pub_->unlockAndPublish();
+            }
+            //publish(sensor_data);        
         if(is_pub_low_pass_)
-            low_pass_pub_.publish(low_pass_filtered_data);
-	if(is_pub_moving_mean_)
-            moving_mean_pub_.publish(moving_mean_filtered_wrench);
+             if (low_pass_pub_->trylock()){
+                low_pass_pub_->msg_ = low_pass_filtered_data;
+                low_pass_pub_->unlockAndPublish();
+            }
+            //low_pass_pub_.publish(low_pass_filtered_data);
+        if(is_pub_moving_mean_)
+            if (moving_mean_pub_->trylock()){
+                moving_mean_pub_->msg_ = moving_mean_filtered_wrench;
+                moving_mean_pub_->unlockAndPublish();
+            }
+            //moving_mean_pub_.publish(moving_mean_filtered_wrench);
     }
 }
 
@@ -569,13 +596,42 @@ void ForceTorqueSensor::filterFTData(){
       else threshold_filtered_force = gravity_compensated_force;
 
       if(is_pub_transformed_data_)
-	transformed_data_pub_.publish(transformed_data);
+         if (transformed_data_pub_->trylock()){
+              transformed_data_pub_->msg_ = transformed_data;
+              transformed_data_pub_->unlockAndPublish();
+        }
+        //transformed_data_pub_.publish(transformed_data);
       if(is_pub_gravity_compensated_ && useGravityCompensator)
-	gravity_compensated_pub_.publish(gravity_compensated_force);
+         if (gravity_compensated_pub_->trylock()){
+              gravity_compensated_pub_->msg_ = gravity_compensated_force;
+              gravity_compensated_pub_->unlockAndPublish();
+        }
+        //gravity_compensated_pub_.publish(gravity_compensated_force);
       if(is_pub_threshold_filtered_ && useThresholdFilter)
-	threshold_filtered_pub_.publish(threshold_filtered_force);
+         if (threshold_filtered_pub_->trylock()){
+             threshold_filtered_pub_->msg_ = threshold_filtered_force;
+             threshold_filtered_pub_->unlockAndPublish();
+        }
+        //threshold_filtered_pub_.publish(threshold_filtered_force);
+        else threshold_filtered_force = moving_mean_filtered_wrench;
     }
-    else threshold_filtered_force = moving_mean_filtered_wrench;
+    if(is_pub_iirob_led_ && useiirobLED)
+    {
+        iirob_led::DirectionWithForce LEDForceMsg;
+        LEDForceMsg.force.wrench.force = threshold_filtered_force.wrench.force;
+        LEDForceMsg.force.wrench.torque = threshold_filtered_force.wrench.torque;
+        std::cout<<"force msgs led:" << LEDForceMsg.force.wrench.force<<std::endl;
+        std_msgs::ColorRGBA LEDColorMsg;
+        LEDColorMsg.r = 255;
+        LEDColorMsg.g = 0;
+        LEDColorMsg.b = 0;
+        LEDColorMsg.a = 1;
+        LEDForceMsg.color = LEDColorMsg;
+        if(iirob_led_pub->trylock()){
+          iirob_led_pub->msg_=  LEDForceMsg; 
+          iirob_led_pub->unlockAndPublish();
+        }
+    }
 }
 
 bool ForceTorqueSensor::transform_wrench(std::string goal_frame, std::string source_frame, geometry_msgs::Wrench wrench, geometry_msgs::Wrench *transformed)

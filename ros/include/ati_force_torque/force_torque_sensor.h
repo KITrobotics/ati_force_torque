@@ -91,6 +91,11 @@ typedef unsigned char uint8_t;
 #include <ati_force_torque/NodeConfigurationParameters.h>
 #include <ati_force_torque/CalibrationParameters.h>
 #include <ati_force_torque/CalibrationConfig.h>
+#include <ati_force_torque/LedParameters.h>
+
+#include <realtime_tools/realtime_publisher.h>
+#include <iirob_led/iirob_led_rectangle.h>
+#include <iirob_led/DirectionWithForce.h>
 
 #define PI 3.14159265
 
@@ -117,6 +122,7 @@ protected:
   ati_force_torque::PublishConfigurationParameters pub_params_;
   ati_force_torque::NodeConfigurationParameters node_params_;
   ati_force_torque::CalibrationParameters calibration_params_;
+  ati_force_torque::LedParameters led_params_;
   iirob_filters::GravityCompensationParameters gravity_params_;
 
   std::string transform_frame_;
@@ -145,13 +151,19 @@ private:
   geometry_msgs::Wrench offset_;
   geometry_msgs::TransformStamped transform_ee_base_stamped;
   tf2_ros::Buffer *p_tfBuffer;
-  ros::Publisher gravity_compensated_pub_, threshold_filtered_pub_, transformed_data_pub_, sensor_data_pub_, low_pass_pub_, moving_mean_pub_;
+  realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped>  *gravity_compensated_pub_, *threshold_filtered_pub_, *transformed_data_pub_, *sensor_data_pub_, *low_pass_pub_, *moving_mean_pub_;
+  realtime_tools::RealtimePublisher<iirob_led::DirectionWithForce> * iirob_led_pub;
+  ros::Subscriber led_sub_;
+  
+  IIROB_LED_Rectangle *rectangleStrip;
+  
   bool is_pub_gravity_compensated_ = false;
   bool is_pub_threshold_filtered_ = false;
   bool is_pub_transformed_data_ = false;
   bool is_pub_sensor_data_ = false;
   bool is_pub_low_pass_ = false;
   bool is_pub_moving_mean_ = false;
+  bool is_pub_iirob_led_ = false;
   
   uint _num_transform_errors;
 
@@ -219,6 +231,7 @@ private:
   bool useMovinvingMeanTorqueZ= false;
   bool useGravityCompensator=false;
   bool useThresholdFilter=false;
+  bool useiirobLED=false;
   
   dynamic_reconfigure::Server<ati_force_torque::CalibrationConfig> reconfigCalibrationSrv_; // Dynamic reconfiguration service
   dynamic_reconfigure::Server<ati_force_torque::PublishConfigurationConfig> reconfigPublishSrv_; // Dynamic reconfiguration service

@@ -1,0 +1,11 @@
+#!/usr/bin/env python
+from rosparam_handler.parameter_generator_catkin import *
+gen = ParameterGenerator()
+
+gen.add("port", paramtype="std::string", description="port number for leds", default="/dev/ttyUSB0", configurable=True)
+gen.add("ledNum", paramtype="int", description="number of leds to be used", default=0, configurable=True)
+gen.add("link", paramtype="std::string", description="link for transformation", default="", configurable=True)
+gen.add("maxForce", paramtype="double", description="maximum force", default=50.0)
+
+exit(gen.generate("ati_force_torque", "ForceTorqueSensor", "Led"))
+
