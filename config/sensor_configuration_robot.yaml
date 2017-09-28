@@ -73,9 +73,3 @@ Publish:
     threshold_filtered: true
     iirob_led: true
 
-Led:
-    port: "/dev/ttyUSB0"
-    ledNum: 384
-    link: "led_rectangle_link"
-    maxForce: 50
-

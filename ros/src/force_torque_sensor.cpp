@@ -54,7 +54,7 @@
  ****************************************************************/
 #include <ati_force_torque/force_torque_sensor.h>
 
-ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration_params_{nh.getNamespace()+"/Calibration/Offset"}, CS_params_{nh.getNamespace()}, can_params_{nh.getNamespace()+"/CAN"}, FTS_params_{nh.getNamespace()+"/FTS"}, pub_params_{nh.getNamespace()+"/Publish"}, node_params_{nh.getNamespace()+"/Node"}, gravity_params_{nh.getNamespace()+"/GravityCompensation"}, led_params_{nh.getNamespace()+"/Led"} 
+ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration_params_{nh.getNamespace()+"/Calibration/Offset"}, CS_params_{nh.getNamespace()}, can_params_{nh.getNamespace()+"/CAN"}, FTS_params_{nh.getNamespace()+"/FTS"}, pub_params_{nh.getNamespace()+"/Publish"}, node_params_{nh.getNamespace()+"/Node"}, gravity_params_{nh.getNamespace()+"/GravityCompensation"}
 {
     calibration_params_.fromParamServer();
     CS_params_.fromParamServer();
@@ -63,7 +63,7 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration
     pub_params_.fromParamServer();
     node_params_.fromParamServer();
     gravity_params_.fromParamServer();
-
+    
     int calibNMeas;
     calibNMeas=calibration_params_.n_measurements;
  
@@ -146,7 +146,7 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration
     }
     is_pub_iirob_led_ = pub_params_.iirob_led;
      if(is_pub_iirob_led_){
-        iirob_led_pub = new realtime_tools::RealtimePublisher<iirob_led::DirectionWithForce>(nh_, "direction_with_force_led", 1);
+        iirob_led_pub = new realtime_tools::RealtimePublisher<iirob_led::DirectionWithForce>(nh_, "/fts/force_values_transformed", 1);
     }
 
     ftUpdateTimer_ = nh.createTimer(ros::Rate(nodePubFreq), &ForceTorqueSensor::updateFTData, this, false, false);
@@ -215,12 +215,6 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration
         threshold_filter_.init(ros::NodeHandle(nh_, "ThresholdFilter"));
         useThresholdFilter = true;
     }
-    
-    // topic needed for iirob_led
-    if(nh_.hasParam("iirob_led")) {
-        useiirobLED = true;
-    }
-    
 
     if (canType != -1)
     {
@@ -238,14 +232,6 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration
         init_sensor(msg, success);
         ROS_INFO("Autoinit: %s", msg.c_str());
     }
-
-    //LEDs config
-    std::string port = led_params_.port;
-    int ledNum = led_params_.ledNum;
-    double maxForce = led_params_.maxForce;
-    std::string link = led_params_.link;
-    rectangleStrip = new IIROB_LED_Rectangle(nh_, port, ledNum, maxForce, link);
-    led_sub_= nh.subscribe("direction_with_force_led", 1, &IIROB_LED_Rectangle::forceCallback, rectangleStrip);
 }
 
 void ForceTorqueSensor::init_sensor(std::string& msg, bool& success)
@@ -615,7 +601,7 @@ void ForceTorqueSensor::filterFTData(){
         //threshold_filtered_pub_.publish(threshold_filtered_force);
         else threshold_filtered_force = moving_mean_filtered_wrench;
     }
-    if(is_pub_iirob_led_ && useiirobLED)
+    if(is_pub_iirob_led_)
     {
         iirob_led::DirectionWithForce LEDForceMsg;
         LEDForceMsg.force.wrench.force = threshold_filtered_force.wrench.force;

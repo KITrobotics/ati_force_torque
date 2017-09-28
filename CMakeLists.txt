@@ -47,7 +47,6 @@ generate_ros_parameter_files(
     cfg/NodeConfiguration.params
     cfg/PublishConfiguration.params
     cfg/Calibration.params
-    cfg/Led.params
 )
 
 add_service_files(

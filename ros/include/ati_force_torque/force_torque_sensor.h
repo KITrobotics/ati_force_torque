@@ -91,10 +91,8 @@ typedef unsigned char uint8_t;
 #include <ati_force_torque/NodeConfigurationParameters.h>
 #include <ati_force_torque/CalibrationParameters.h>
 #include <ati_force_torque/CalibrationConfig.h>
-#include <ati_force_torque/LedParameters.h>
 
 #include <realtime_tools/realtime_publisher.h>
-#include <iirob_led/iirob_led_rectangle.h>
 #include <iirob_led/DirectionWithForce.h>
 
 #define PI 3.14159265
@@ -122,7 +120,6 @@ protected:
   ati_force_torque::PublishConfigurationParameters pub_params_;
   ati_force_torque::NodeConfigurationParameters node_params_;
   ati_force_torque::CalibrationParameters calibration_params_;
-  ati_force_torque::LedParameters led_params_;
   iirob_filters::GravityCompensationParameters gravity_params_;
 
   std::string transform_frame_;
@@ -154,8 +151,6 @@ private:
   realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped>  *gravity_compensated_pub_, *threshold_filtered_pub_, *transformed_data_pub_, *sensor_data_pub_, *low_pass_pub_, *moving_mean_pub_;
   realtime_tools::RealtimePublisher<iirob_led::DirectionWithForce> * iirob_led_pub;
   ros::Subscriber led_sub_;
-  
-  IIROB_LED_Rectangle *rectangleStrip;
   
   bool is_pub_gravity_compensated_ = false;
   bool is_pub_threshold_filtered_ = false;
