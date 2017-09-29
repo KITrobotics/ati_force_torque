@@ -284,7 +284,7 @@ void ForceTorqueSensor::init_sensor(std::string& msg, bool& success)
             success = false;
             msg = "FTS could not be initilised! :/";
         }
-            ftUpdateTimer_.start();
+        ftUpdateTimer_.start();
     }
 }
 
@@ -384,14 +384,14 @@ bool ForceTorqueSensor::srvCallback_recalibrate(std_srvs::Trigger::Request& req,
 bool ForceTorqueSensor::calibrate(bool apply_after_calculation, geometry_msgs::Wrench *new_offset)
 {
     apply_offset = false;
-
     ROS_INFO("Calibrating using %d measurements and %f s pause between measurements.", calibrationNMeasurements, calibrationTBetween);
     geometry_msgs::Wrench temp_offset = makeAverageMeasurement(calibrationNMeasurements, calibrationTBetween);
 
     apply_offset = true;
     if (apply_after_calculation) {
         offset_ = temp_offset;
-    }
+    } 
+
     ROS_INFO("Calibration Data: Fx: %f; Fy: %f; Fz: %f; Mx: %f; My: %f; Mz: %f", temp_offset.force.x, temp_offset.force.y, temp_offset.force.z, temp_offset.torque.x, temp_offset.torque.y, temp_offset.torque.z);
 
     m_isCalibrated = true;
@@ -404,7 +404,6 @@ geometry_msgs::Wrench ForceTorqueSensor::makeAverageMeasurement(uint number_of_m
 {
     geometry_msgs::Wrench measurement;
     int num_of_errors = 0;
-
     ros::Duration duration(time_between_meas);
     for (int i = 0; i < number_of_measurements; i++)
     {
@@ -422,16 +421,14 @@ geometry_msgs::Wrench ForceTorqueSensor::makeAverageMeasurement(uint number_of_m
       }
       else
       {
-	output = moving_mean_filtered_wrench.wrench;
+      	output = moving_mean_filtered_wrench.wrench;
       }
-
       measurement.force.x += output.force.x;
       measurement.force.y += output.force.y;
       measurement.force.z += output.force.z;
       measurement.torque.x += output.torque.x;
       measurement.torque.y += output.torque.y;
       measurement.torque.z+= output.torque.z;
-
       duration.sleep();
     }
     measurement.force.x /= number_of_measurements;
@@ -501,11 +498,11 @@ void ForceTorqueSensor::pullFTData(const ros::TimerEvent &event)
 
     bool bRet = p_Ftc->ReadSGData(status, sensor_data.wrench.force.x, sensor_data.wrench.force.y, sensor_data.wrench.force.z,
                                                         sensor_data.wrench.torque.x, sensor_data.wrench.torque.y, sensor_data.wrench.torque.z);
+
     if (bRet != false)
     {
         sensor_data.header.stamp = ros::Time::now();
         sensor_data.header.frame_id = sensor_frame_;
-
         if (apply_offset) {
             sensor_data.wrench.force.x  -= offset_.force.x;
             sensor_data.wrench.force.y  -= offset_.force.y;
@@ -544,25 +541,24 @@ void ForceTorqueSensor::pullFTData(const ros::TimerEvent &event)
 	else moving_mean_filtered_wrench.wrench.torque.y = sensor_data.wrench.torque.y;
 	if(useMovinvingMeanTorqueZ) moving_mean_filtered_wrench.wrench.torque.z = moving_mean_filter_torque_z_.applyFilter(low_pass_filtered_data.wrench.torque.z);
 	else moving_mean_filtered_wrench.wrench.torque.z = sensor_data.wrench.torque.z;
-
+        
         if(is_pub_sensor_data_)
             if (sensor_data_pub_->trylock()){
                 sensor_data_pub_->msg_ = sensor_data;
                 sensor_data_pub_->unlockAndPublish();
-            }
-            //publish(sensor_data);        
+            }        
+
         if(is_pub_low_pass_)
              if (low_pass_pub_->trylock()){
                 low_pass_pub_->msg_ = low_pass_filtered_data;
                 low_pass_pub_->unlockAndPublish();
             }
-            //low_pass_pub_.publish(low_pass_filtered_data);
-        if(is_pub_moving_mean_)
-            if (moving_mean_pub_->trylock()){
+/*        if(is_pub_moving_mean_) 
+             if (moving_mean_pub_->trylock()){
+                std::cout<<"locked"<<std::endl;
                 moving_mean_pub_->msg_ = moving_mean_filtered_wrench;
                 moving_mean_pub_->unlockAndPublish();
-            }
-            //moving_mean_pub_.publish(moving_mean_filtered_wrench);
+            }*/ 
     }
 }
 
@@ -585,28 +581,25 @@ void ForceTorqueSensor::filterFTData(){
          if (transformed_data_pub_->trylock()){
               transformed_data_pub_->msg_ = transformed_data;
               transformed_data_pub_->unlockAndPublish();
-        }
-        //transformed_data_pub_.publish(transformed_data);
+         }
       if(is_pub_gravity_compensated_ && useGravityCompensator)
          if (gravity_compensated_pub_->trylock()){
               gravity_compensated_pub_->msg_ = gravity_compensated_force;
               gravity_compensated_pub_->unlockAndPublish();
-        }
-        //gravity_compensated_pub_.publish(gravity_compensated_force);
+         }
+    
       if(is_pub_threshold_filtered_ && useThresholdFilter)
          if (threshold_filtered_pub_->trylock()){
              threshold_filtered_pub_->msg_ = threshold_filtered_force;
              threshold_filtered_pub_->unlockAndPublish();
         }
-        //threshold_filtered_pub_.publish(threshold_filtered_force);
         else threshold_filtered_force = moving_mean_filtered_wrench;
     }
+    
     if(is_pub_iirob_led_)
     {
         iirob_led::DirectionWithForce LEDForceMsg;
-        LEDForceMsg.force.wrench.force = threshold_filtered_force.wrench.force;
-        LEDForceMsg.force.wrench.torque = threshold_filtered_force.wrench.torque;
-        std::cout<<"force msgs led:" << LEDForceMsg.force.wrench.force<<std::endl;
+        LEDForceMsg.force.wrench = threshold_filtered_force.wrench;
         std_msgs::ColorRGBA LEDColorMsg;
         LEDColorMsg.r = 255;
         LEDColorMsg.g = 0;
