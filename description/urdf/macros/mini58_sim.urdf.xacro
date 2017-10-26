@@ -1,5 +1,8 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">  
+
+    <xacro:include filename="$(find ati_force_torque)/description/urdf/fts.transmission.xacro" />
+
     <xacro:macro name="ati_mini58" params="parent name *origin">
 
 <!--         Shift for -30 -90 -->
@@ -47,11 +50,10 @@
             <child link="${name}_tool_link" />
         </joint>
     
-       <joint name="${name}_reference_joint" type="revolute">
+       <joint name="${name}_reference_joint" type="fixed">
             <origin xyz="0 0 0" rpy="0 0 0" />
             <parent link="${name}_tool_link"/>
             <child link="${name}_reference_link" />
-            <limit effort="0.0" lower="0.0" upper="0.0" velocity="0.0"/>
         </joint> 
 
         <xacro:fts_transmission parent="${name}"  />
