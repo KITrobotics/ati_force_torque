@@ -30,9 +30,7 @@
     <include file="$(find teleop_twist_joy)/launch/teleop.launch">
         <arg name="config_filepath" value="$(find ati_force_torque)/config/teleop_sim.yaml"/>
     </include>
-        
-    <param name="sensor_description" command="$(find xacro)/xacro.py --inorder '$(find ati_force_torque)/description/urdf/sensor_mini58.urdf.xacro'" />
-    
+   
     <node name="spawn_gazebo_model" pkg="gazebo_ros" type="spawn_model" args="-param sensor_description -urdf -model sensor_mini58" respawn="false" output="screen" />
 
 </launch> 

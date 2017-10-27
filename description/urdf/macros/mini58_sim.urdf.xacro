@@ -50,10 +50,11 @@
             <child link="${name}_tool_link" />
         </joint>
     
-       <joint name="${name}_reference_joint" type="fixed">
+       <joint name="${name}_reference_joint" type="revolute">
             <origin xyz="0 0 0" rpy="0 0 0" />
             <parent link="${name}_tool_link"/>
             <child link="${name}_reference_link" />
+	    <limit effort="0.0" lower="0.0" upper="0.0" velocity="0.0"/>
         </joint> 
 
         <xacro:fts_transmission parent="${name}"  />
