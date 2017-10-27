@@ -195,22 +195,22 @@ private:
   bool m_staticCalibration;
   geometry_msgs::Wrench m_calibOffset;
 
-  ThresholdFilter threshold_filter_;
+  iirob_filters::ThresholdFilter threshold_filter_;
 
-  LowPassFilter lp_filter_force_x_;
-  LowPassFilter lp_filter_force_y_;
-  LowPassFilter lp_filter_force_z_;
-  LowPassFilter lp_filter_torque_x_;
-  LowPassFilter lp_filter_torque_y_;
-  LowPassFilter lp_filter_torque_z_;
-  MovingMeanFilter moving_mean_filter_force_x_;
-  MovingMeanFilter moving_mean_filter_force_y_;
-  MovingMeanFilter moving_mean_filter_force_z_;
-  MovingMeanFilter moving_mean_filter_torque_x_;
-  MovingMeanFilter moving_mean_filter_torque_y_;
-  MovingMeanFilter moving_mean_filter_torque_z_;
+  iirob_filters::LowPassFilter lp_filter_force_x_;
+  iirob_filters::LowPassFilter lp_filter_force_y_;
+  iirob_filters::LowPassFilter lp_filter_force_z_;
+  iirob_filters::LowPassFilter lp_filter_torque_x_;
+  iirob_filters::LowPassFilter lp_filter_torque_y_;
+  iirob_filters::LowPassFilter lp_filter_torque_z_;
+  iirob_filters::MovingMeanFilter moving_mean_filter_force_x_;
+  iirob_filters::MovingMeanFilter moving_mean_filter_force_y_;
+  iirob_filters::MovingMeanFilter moving_mean_filter_force_z_;
+  iirob_filters::MovingMeanFilter moving_mean_filter_torque_x_;
+  iirob_filters::MovingMeanFilter moving_mean_filter_torque_y_;
+  iirob_filters::MovingMeanFilter moving_mean_filter_torque_z_;
 
-  GravityCompensator gravity_compensator_; 
+  iirob_filters::GravityCompensator gravity_compensator_; 
 
   bool useLowPassFilterForceX=false;  
   bool useLowPassFilterForceY=false;
