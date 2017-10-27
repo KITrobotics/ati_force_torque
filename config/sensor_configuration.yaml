@@ -61,7 +61,7 @@ GravityCompensation:
      #y: 0
      #z: 0.027346102 # m
     #force: 7.9459955 # f_G
-    world_frame: "world"
+    world_frame: "base_link"
 
 Publish:
     sensor_data: true
