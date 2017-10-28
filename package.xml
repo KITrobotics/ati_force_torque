@@ -19,13 +19,19 @@
 
   <build_depend>message_generation</build_depend>
   <build_depend>cmake_modules</build_depend>
-
+ 
   <depend>cob_generic_can</depend>
+  <depend>dynamic_reconfigure</depend>
+  <depend>gazebo_ros</depend>
   <depend>geometry_msgs</depend>
   <depend>hardware_interface</depend>
   <depend>iirob_filters</depend>
+  <depend>rosparam_handler</depend>
+  <depend>roslaunch</depend>
+  <depend>rostopic</depend>
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
+  <depend>teleop_twist_joy</depend>
   <depend>tf2</depend>
   <depend>tf2_ros</depend>
   <depend>tf2_geometry_msgs</depend>

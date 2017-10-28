@@ -63,7 +63,7 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration
     pub_params_.fromParamServer();
     node_params_.fromParamServer();
     gravity_params_.fromParamServer();
-    
+
     int calibNMeas;
     calibNMeas=calibration_params_.n_measurements;
  
@@ -101,7 +101,7 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration
     srvServer_ReCalibrate = nh_.advertiseService("Recalibrate", &ForceTorqueSensor::srvCallback_recalibrate, this);
     reconfigCalibrationSrv_.setCallback(boost::bind(&ForceTorqueSensor::reconfigureCalibrationRequest, this, _1, _2));
     reconfigPublishSrv_.setCallback(boost::bind(&ForceTorqueSensor::reconfigurePublishRequest, this, _1, _2));
-    
+
     // Read data from parameter server
     canType = can_params_.type;
     canPath = can_params_.path;
@@ -541,7 +541,7 @@ void ForceTorqueSensor::pullFTData(const ros::TimerEvent &event)
 	else moving_mean_filtered_wrench.wrench.torque.y = sensor_data.wrench.torque.y;
 	if(useMovinvingMeanTorqueZ) moving_mean_filtered_wrench.wrench.torque.z = moving_mean_filter_torque_z_.applyFilter(low_pass_filtered_data.wrench.torque.z);
 	else moving_mean_filtered_wrench.wrench.torque.z = sensor_data.wrench.torque.z;
-        
+
         if(is_pub_sensor_data_)
             if (sensor_data_pub_->trylock()){
                 sensor_data_pub_->msg_ = sensor_data;
@@ -611,6 +611,7 @@ void ForceTorqueSensor::filterFTData(){
           iirob_led_pub->unlockAndPublish();
         }
     }
+    else threshold_filtered_force = moving_mean_filtered_wrench;
 }
 
 bool ForceTorqueSensor::transform_wrench(std::string goal_frame, std::string source_frame, geometry_msgs::Wrench wrench, geometry_msgs::Wrench *transformed)
@@ -643,10 +644,8 @@ bool ForceTorqueSensor::transform_wrench(std::string goal_frame, std::string sou
     return true;  
 }
 void ForceTorqueSensor::reconfigureCalibrationRequest(ati_force_torque::CalibrationConfig& config, uint32_t level){
-
     calibration_params_.fromConfig(config); 
 }
 void ForceTorqueSensor::reconfigurePublishRequest(ati_force_torque::PublishConfigurationConfig& config, uint32_t level){
-
     pub_params_.fromConfig(config);
 }

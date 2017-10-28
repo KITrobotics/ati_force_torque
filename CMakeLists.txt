@@ -5,6 +5,7 @@ find_package(catkin REQUIRED COMPONENTS
   cmake_modules
   cob_generic_can
   dynamic_reconfigure 
+  gazebo_ros
   geometry_msgs
   iirob_filters
   message_generation
@@ -14,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   std_srvs
+  teleop_twist_joy
   tf2
   tf2_geometry_msgs
   tf2_ros
@@ -38,7 +40,6 @@ CHECK_CXX_COMPILER_FLAG("-std=c++11" Cpp11CompilerFlag)
 if (Cpp11CompilerFlag)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
-
 
 generate_ros_parameter_files(
     cfg/CoordinateSystemCalibration.params
@@ -118,8 +119,6 @@ install(DIRECTORY ros/launch config description
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
-
-  
 #############
 ## Tests ##
 #############
