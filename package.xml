@@ -39,9 +39,6 @@
   <depend>visualization_msgs</depend>
   <depend>realtime_tools</depend>
   <depend>iirob_led</depend>
-  
-  <build_depend>rosparam_handler</build_depend>
-  <build_depend>dynamic_reconfigure</build_depend>
 
   <exec_depend>message_runtime</exec_depend>
   <exec_depend>robot_state_publisher</exec_depend>
