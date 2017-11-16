@@ -144,10 +144,6 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration
     if(is_pub_transformed_data_){
         transformed_data_pub_ = new realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped>(nh_, "transformed_data", 1);        
     }
-    is_pub_iirob_led_ = pub_params_.iirob_led;
-     if(is_pub_iirob_led_){
-        iirob_led_pub = new realtime_tools::RealtimePublisher<iirob_led::DirectionWithForce>(nh_, "/fts/force_values_transformed", 1);
-    }
 
     ftUpdateTimer_ = nh.createTimer(ros::Rate(nodePubFreq), &ForceTorqueSensor::updateFTData, this, false, false);
     ftPullTimer_ = nh.createTimer(ros::Rate(nodePullFreq), &ForceTorqueSensor::pullFTData, this, false, false);
@@ -553,17 +549,16 @@ void ForceTorqueSensor::pullFTData(const ros::TimerEvent &event)
                 low_pass_pub_->msg_ = low_pass_filtered_data;
                 low_pass_pub_->unlockAndPublish();
             }
-/*        if(is_pub_moving_mean_) 
+        if(is_pub_moving_mean_)
              if (moving_mean_pub_->trylock()){
                 std::cout<<"locked"<<std::endl;
                 moving_mean_pub_->msg_ = moving_mean_filtered_wrench;
                 moving_mean_pub_->unlockAndPublish();
-            }*/ 
+            }
     }
 }
 
 void ForceTorqueSensor::filterFTData(){
-  
   
     transformed_data.header.stamp = moving_mean_filtered_wrench.header.stamp;
     transformed_data.header.frame_id = transform_frame_;
@@ -593,25 +588,7 @@ void ForceTorqueSensor::filterFTData(){
              threshold_filtered_pub_->msg_ = threshold_filtered_force;
              threshold_filtered_pub_->unlockAndPublish();
         }
-        else threshold_filtered_force = moving_mean_filtered_wrench;
     }
-    
-    if(is_pub_iirob_led_)
-    {
-        iirob_led::DirectionWithForce LEDForceMsg;
-        LEDForceMsg.force.wrench = threshold_filtered_force.wrench;
-        std_msgs::ColorRGBA LEDColorMsg;
-        LEDColorMsg.r = 255;
-        LEDColorMsg.g = 0;
-        LEDColorMsg.b = 0;
-        LEDColorMsg.a = 1;
-        LEDForceMsg.color = LEDColorMsg;
-        if(iirob_led_pub->trylock()){
-          iirob_led_pub->msg_=  LEDForceMsg; 
-          iirob_led_pub->unlockAndPublish();
-        }
-    }
-    else threshold_filtered_force = moving_mean_filtered_wrench;
 }
 
 bool ForceTorqueSensor::transform_wrench(std::string goal_frame, std::string source_frame, geometry_msgs::Wrench wrench, geometry_msgs::Wrench *transformed)
