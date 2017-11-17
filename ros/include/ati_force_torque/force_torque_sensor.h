@@ -76,7 +76,7 @@ typedef unsigned char uint8_t;
 #include <iirob_filters/gravity_compensation.h>
 #include <iirob_filters/GravityCompensationParameters.h>
 #include <iirob_filters/low_pass_filter.h>
-#include <iirob_filters/moving_mean_filter.h>
+//#include <iirob_filters/moving_mean_filter.h>
 #include <iirob_filters/threshold_filter.h>
 
 #include <math.h>
@@ -92,6 +92,7 @@ typedef unsigned char uint8_t;
 #include <ati_force_torque/CalibrationParameters.h>
 #include <ati_force_torque/CalibrationConfig.h>
 
+#include <filters/filter_chain.h>
 #include <realtime_tools/realtime_publisher.h>
 #include <iirob_led/DirectionWithForce.h>
 
@@ -194,39 +195,16 @@ private:
   // Variables for Static offset
   bool m_staticCalibration;
   geometry_msgs::Wrench m_calibOffset;
-
-  iirob_filters::ThresholdFilter threshold_filter_;
-
-  iirob_filters::LowPassFilter lp_filter_force_x_;
-  iirob_filters::LowPassFilter lp_filter_force_y_;
-  iirob_filters::LowPassFilter lp_filter_force_z_;
-  iirob_filters::LowPassFilter lp_filter_torque_x_;
-  iirob_filters::LowPassFilter lp_filter_torque_y_;
-  iirob_filters::LowPassFilter lp_filter_torque_z_;
-  iirob_filters::MovingMeanFilter moving_mean_filter_force_x_;
-  iirob_filters::MovingMeanFilter moving_mean_filter_force_y_;
-  iirob_filters::MovingMeanFilter moving_mean_filter_force_z_;
-  iirob_filters::MovingMeanFilter moving_mean_filter_torque_x_;
-  iirob_filters::MovingMeanFilter moving_mean_filter_torque_y_;
-  iirob_filters::MovingMeanFilter moving_mean_filter_torque_z_;
-
-  iirob_filters::GravityCompensator gravity_compensator_; 
-
-  bool useLowPassFilterForceX=false;  
-  bool useLowPassFilterForceY=false;
-  bool useLowPassFilterForceZ=false;
-  bool useLowPassFilterTorqueX=false;
-  bool useLowPassFilterTorqueY=false;
-  bool useLowPassFilterTorqueZ=false;
-  bool useMovinvingMeanForceX= false;
-  bool useMovinvingMeanForceY= false;
-  bool useMovinvingMeanForceZ= false;
-  bool useMovinvingMeanTorqueX= false;
-  bool useMovinvingMeanTorqueY= false;
-  bool useMovinvingMeanTorqueZ= false;
+  
+  filters::MultiChannelFilterChain<double> chain_moving_mean_ ; 
+  filters::MultiChannelFilterChain<double> chain_low_pass_; 
+  filters::MultiChannelFilterChain<double> threshold_filters_;
+  filters::MultiChannelFilterChain<double> gravity_compensator_;
+  
   bool useGravityCompensator=false;
   bool useThresholdFilter=false;
-
+  bool useMovingMean = false;
+  bool useLowPassFilter = false;
   
   dynamic_reconfigure::Server<ati_force_torque::CalibrationConfig> reconfigCalibrationSrv_; // Dynamic reconfiguration service
   dynamic_reconfigure::Server<ati_force_torque::PublishConfigurationConfig> reconfigPublishSrv_; // Dynamic reconfiguration service

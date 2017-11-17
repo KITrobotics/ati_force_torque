@@ -21,6 +21,7 @@ find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
   realtime_tools
   iirob_led
+  filters
 )
 
 find_package(Eigen3)
@@ -67,7 +68,7 @@ generate_messages(
 ###################################
 catkin_package(
  INCLUDE_DIRS common/include ros/include
- CATKIN_DEPENDS cob_generic_can geometry_msgs iirob_filters message_runtime roscpp std_msgs std_srvs rospy tf2 tf2_ros tf2_geometry_msgs trajectory_msgs realtime_tools iirob_led
+ CATKIN_DEPENDS cob_generic_can geometry_msgs iirob_filters message_runtime roscpp std_msgs std_srvs rospy tf2 tf2_ros tf2_geometry_msgs trajectory_msgs realtime_tools iirob_led filters
  DEPENDS Eigen
  LIBRARIES ${PROJECT_NAME}
 )
