@@ -63,7 +63,7 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration
     pub_params_.fromParamServer();
     node_params_.fromParamServer();
     gravity_params_.fromParamServer();
-    
+
     int calibNMeas;
     calibNMeas=calibration_params_.n_measurements;
  
@@ -99,9 +99,10 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration
     srvServer_DetermineCoordianteSystem_ = nh_.advertiseService("DetermineCoordinateSystem", &ForceTorqueSensor::srvCallback_DetermineCoordinateSystem, this);
     srvServer_Temp_ = nh_.advertiseService("GetTemperature", &ForceTorqueSensor::srvReadDiagnosticVoltages, this);
     srvServer_ReCalibrate = nh_.advertiseService("Recalibrate", &ForceTorqueSensor::srvCallback_recalibrate, this);
-    //reconfigCalibrationSrv_.setCallback(boost::bind(&ForceTorqueSensor::reconfigureCalibrationRequest, this, _1, _2));
-    //reconfigPublishSrv_.setCallback(boost::bind(&ForceTorqueSensor::reconfigurePublishRequest, this, _1, _2));
     
+    reconfigCalibrationSrv_.setCallback(boost::bind(&ForceTorqueSensor::reconfigureCalibrationRequest, this, _1, _2));
+    reconfigPublishSrv_.setCallback(boost::bind(&ForceTorqueSensor::reconfigurePublishRequest, this, _1, _2));
+
     // Read data from parameter server
     canType = can_params_.type;
     canPath = can_params_.path;
@@ -143,10 +144,6 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration
     is_pub_transformed_data_  = pub_params_.transformed_data;
     if(is_pub_transformed_data_){
         transformed_data_pub_ = new realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped>(nh_, "transformed_data", 1);        
-    }
-    is_pub_iirob_led_ = pub_params_.iirob_led;
-     if(is_pub_iirob_led_){
-        iirob_led_pub = new realtime_tools::RealtimePublisher<iirob_led::DirectionWithForce>(nh_, "/fts/force_values_transformed", 1);
     }
 
     ftUpdateTimer_ = nh.createTimer(ros::Rate(nodePubFreq), &ForceTorqueSensor::updateFTData, this, false, false);
@@ -472,6 +469,7 @@ void ForceTorqueSensor::pullFTData(const ros::TimerEvent &event)
             sensor_data.wrench.torque.y -= offset_.torque.y;
             sensor_data.wrench.torque.z -= offset_.torque.z;
         }
+
     //lowpass
     low_pass_filtered_data.header = sensor_data.header;
 	if(useLowPassFilter){
@@ -524,7 +522,6 @@ void ForceTorqueSensor::pullFTData(const ros::TimerEvent &event)
 }
 
 void ForceTorqueSensor::filterFTData(){
-  
   
     transformed_data.header.stamp = moving_mean_filtered_wrench.header.stamp;
     transformed_data.header.frame_id = transform_frame_;
@@ -579,23 +576,6 @@ void ForceTorqueSensor::filterFTData(){
              threshold_filtered_pub_->msg_ = threshold_filtered_force;
              threshold_filtered_pub_->unlockAndPublish();
         }
-        else threshold_filtered_force = moving_mean_filtered_wrench;
-    }
-    
-    if(is_pub_iirob_led_)
-    {
-        iirob_led::DirectionWithForce LEDForceMsg;
-        LEDForceMsg.force.wrench = threshold_filtered_force.wrench;
-        std_msgs::ColorRGBA LEDColorMsg;
-        LEDColorMsg.r = 255;
-        LEDColorMsg.g = 0;
-        LEDColorMsg.b = 0;
-        LEDColorMsg.a = 1;
-        LEDForceMsg.color = LEDColorMsg;
-        if(iirob_led_pub->trylock()){
-          iirob_led_pub->msg_=  LEDForceMsg; 
-          iirob_led_pub->unlockAndPublish();
-        }
     }
 }
 
@@ -628,11 +608,11 @@ bool ForceTorqueSensor::transform_wrench(std::string goal_frame, std::string sou
     
     return true;  
 }
-/*void ForceTorqueSensor::reconfigureCalibrationRequest(ati_force_torque::CalibrationConfig& config, uint32_t level){
 
+void ForceTorqueSensor::reconfigureCalibrationRequest(ati_force_torque::CalibrationConfig& config, uint32_t level){
     calibration_params_.fromConfig(config); 
 }
-void ForceTorqueSensor::reconfigurePublishRequest(ati_force_torque::PublishConfigurationConfig& config, uint32_t level){
 
+void ForceTorqueSensor::reconfigurePublishRequest(ati_force_torque::PublishConfigurationConfig& config, uint32_t level){
     pub_params_.fromConfig(config);
-}*/
+}

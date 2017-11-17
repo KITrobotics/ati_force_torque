@@ -94,7 +94,6 @@ typedef unsigned char uint8_t;
 
 #include <filters/filter_chain.h>
 #include <realtime_tools/realtime_publisher.h>
-#include <iirob_led/DirectionWithForce.h>
 
 #define PI 3.14159265
 
@@ -150,16 +149,13 @@ private:
   geometry_msgs::TransformStamped transform_ee_base_stamped;
   tf2_ros::Buffer *p_tfBuffer;
   realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped>  *gravity_compensated_pub_, *threshold_filtered_pub_, *transformed_data_pub_, *sensor_data_pub_, *low_pass_pub_, *moving_mean_pub_;
-  realtime_tools::RealtimePublisher<iirob_led::DirectionWithForce> *iirob_led_pub;
-  ros::Subscriber led_sub_;
-  
+
   bool is_pub_gravity_compensated_ = false;
   bool is_pub_threshold_filtered_ = false;
   bool is_pub_transformed_data_ = false;
   bool is_pub_sensor_data_ = false;
   bool is_pub_low_pass_ = false;
   bool is_pub_moving_mean_ = false;
-  bool is_pub_iirob_led_ = false;
   
   uint _num_transform_errors;
 
@@ -203,8 +199,10 @@ private:
   
   bool useGravityCompensator=false;
   bool useThresholdFilter=false;
+
   bool useMovingMean = false;
   bool useLowPassFilter = false;
+
   
   dynamic_reconfigure::Server<ati_force_torque::CalibrationConfig> reconfigCalibrationSrv_; // Dynamic reconfiguration service
   dynamic_reconfigure::Server<ati_force_torque::PublishConfigurationConfig> reconfigPublishSrv_; // Dynamic reconfiguration service

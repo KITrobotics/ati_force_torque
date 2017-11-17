@@ -5,6 +5,7 @@ find_package(catkin REQUIRED COMPONENTS
   cmake_modules
   cob_generic_can
   dynamic_reconfigure 
+  gazebo_ros
   geometry_msgs
   iirob_filters
   message_generation
@@ -14,13 +15,13 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   std_srvs
+  teleop_twist_joy
   tf2
   tf2_geometry_msgs
   tf2_ros
   trajectory_msgs
   visualization_msgs
   realtime_tools
-  iirob_led
   filters
 )
 
@@ -39,7 +40,6 @@ CHECK_CXX_COMPILER_FLAG("-std=c++11" Cpp11CompilerFlag)
 if (Cpp11CompilerFlag)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
-
 
 generate_ros_parameter_files(
     cfg/CoordinateSystemCalibration.params
@@ -68,7 +68,7 @@ generate_messages(
 ###################################
 catkin_package(
  INCLUDE_DIRS common/include ros/include
- CATKIN_DEPENDS cob_generic_can geometry_msgs iirob_filters message_runtime roscpp std_msgs std_srvs rospy tf2 tf2_ros tf2_geometry_msgs trajectory_msgs realtime_tools iirob_led filters
+ CATKIN_DEPENDS cob_generic_can geometry_msgs iirob_filters message_runtime roscpp std_msgs std_srvs rospy tf2 tf2_ros tf2_geometry_msgs trajectory_msgs realtime_tools filters
  DEPENDS Eigen
  LIBRARIES ${PROJECT_NAME}
 )
@@ -119,8 +119,6 @@ install(DIRECTORY ros/launch config description
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
-
-  
 #############
 ## Tests ##
 #############
