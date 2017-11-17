@@ -12,138 +12,24 @@ Calibration:
         isStatic: false # true= use static offset Calibration, false=use calibrate Sensor to 0 in current State
 
 ThresholdFilter:
-  - 
-    name: ThresholdFilter
-    type: iirob_filters/MultiChannelThresholdFilter
-    params: {linear_threshold: 2.5,  angular_threshold: 0.3}
+  name: ThresholdFilter
+  type: iirob_filters/ThresholdFilterWrench
+  params: {linear_threshold: 2.5,  angular_threshold: 0.3}
 
 LowPassFilter:
-  filter_chain: 
-    -
-      name: Force_x
-      type: iirob_filters/MultiChannelLowPassFilter
-      params: {SamplingFrequency: 200.0, DampingFrequency: 15.0, DampingIntensity: -6.0}
-    -
-      name: Force_y
-      type: iirob_filters/MultiChannelLowPassFilter
-      params: {SamplingFrequency: 200.0, DampingFrequency: 15.0, DampingIntensity: -6.0}
-    -
-      name: Force_z
-      type: iirob_filters/MultiChannelLowPassFilter
-      params: {SamplingFrequency: 200.0, DampingFrequency: 15.0, DampingIntensity: -6.0}
-    -
-      name: Torque_x
-      type: iirob_filters/MultiChannelLowPassFilter
-      params: {SamplingFrequency: 200.0, DampingFrequency: 15.0, DampingIntensity: -6.0}
-    -
-      name: Torque_y
-      type: iirob_filters/MultiChannelLowPassFilter
-      params: {SamplingFrequency: 200.0, DampingFrequency: 15.0, DampingIntensity: -6.0}
-    -
-      name: Torque_z
-      type: iirob_filters/MultiChannelLowPassFilter
-      params: {SamplingFrequency: 200.0, DampingFrequency: 15.0, DampingIntensity: -6.0}
-
-    #Force_y:
-      #  SamplingFrequency: 200.0
-       # DampingFrequency: 15.0
-        #DampingIntensity: -6.0
-    #Force_z:
-      #  SamplingFrequency: 200.0
-       # DampingFrequency: 15.0
-        #DampingIntensity: -6.0
-    #Torque_x:
-      #  SamplingFrequency: 200.0
-       # DampingFrequency: 15.0
-        #DampingIntensity: -6.0
-    #Torque_y:
-      #  SamplingFrequency: 200.0
-       # DampingFrequency: 15.0
-        #DampingIntensity: -6.0
-    #Torque_z:
-      #  SamplingFrequency: 200.0
-       # DampingFrequency: 15.0
-        #DampingIntensity: -6.0
-
+  name: LowPassFilter
+  type: iirob_filters/LowPassFilterWrench
+  params: {SamplingFrequency: 200.0, DampingFrequency: 15.0, DampingIntensity: -6.0}
         
 MovingMeanFilter:
-    filter_chain:
-      -
-        name: Force_x
-        type: filters/MultiChannelMeanFilterDouble
-        params: {number_of_observations: 4}
-      - 
-        name: Force_y
-        type: filters/MultiChannelMeanFilterDouble
-        params: {number_of_observations: 4}
-      - 
-        name: Force_z
-        type: filters/MultiChannelMeanFilterDouble
-        params: {number_of_observations: 4}
-      - 
-        name: Torque_x
-        type: filters/MultiChannelMeanFilterDouble
-        params: {number_of_observations: 4}
-      - 
-        name: Torque_y
-        type: filters/MultiChannelMeanFilterDouble
-        params: {number_of_observations: 4}
-      - 
-        name: Torque_z
-        type: filters/MultiChannelMeanFilterDouble
-        params: {number_of_observations: 4}
+  name: MovingMeanFilter
+  type: filters/MultiChannelMeanFilterDouble
+  params: {number_of_observations: 4}
 
-#    name: Force_x
-#    type: MultiChannelMeanFilterDouble
-#    params:
-#        number_of_observations: 4
-#    name: Force_y
-#    type: MultiChannelMeanFilterDouble
-#    params:
-#        number_of_observations: 4    
-#    name: Force_z
-#    type: MultiChannelMeanFilterDouble
-#    params:
-#        number_of_observations: 4
-#    name: Toque_x
-#    type: MultiChannelMeanFilterDouble
-#    params:
-#        number_of_observations: 4    
-#    name: Toque_y
-#    type: MultiChannelMeanFilterDouble
-#    params:
-#        number_of_observations: 4
-#    name: Toque_z
-#    type: MultiChannelMeanFilterDouble
-#    params:
-#        number_of_observations: 4        
-    
-    #Force_x:
-    #    divider: 4
-    #Force_y:
-    #    divider: 4
-    #Force_z:
-    #    divider: 4
-    #Torque_x:
-    #    divider: 4
-    #Torque_y:
-    #    divider: 4
-    #Torque_z:
-    #    divider: 4
-    
 GravityCompensation:
-  -
-    name: GravityCompensation
-    type: iirob_filters/MultiChannelGravityCompensator
-    params: {world_frame: "base_link"}
-  
-#GravityCompensation:  
-    #CoG:
-     #x: 0
-     #y: 0
-     #z: 0.027346102 # m
-    #force: 7.9459955 # f_G
- #   world_frame: "base_link"
+  name: GravityCompensationWrench
+  type: iirob_filters/GravityCompensator
+  params: {world_frame: "base_link"}
 
 Publish:
     sensor_data: true

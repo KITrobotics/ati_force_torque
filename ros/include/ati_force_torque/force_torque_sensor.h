@@ -76,7 +76,6 @@ typedef unsigned char uint8_t;
 #include <iirob_filters/gravity_compensation.h>
 #include <iirob_filters/GravityCompensationParameters.h>
 #include <iirob_filters/low_pass_filter.h>
-//#include <iirob_filters/moving_mean_filter.h>
 #include <iirob_filters/threshold_filter.h>
 
 #include <math.h>
@@ -93,6 +92,8 @@ typedef unsigned char uint8_t;
 #include <ati_force_torque/CalibrationConfig.h>
 
 #include <filters/filter_chain.h>
+#include <filters/filter_base.h>
+#include <filters/mean.h>
 #include <realtime_tools/realtime_publisher.h>
 
 #define PI 3.14159265
@@ -192,10 +193,10 @@ private:
   bool m_staticCalibration;
   geometry_msgs::Wrench m_calibOffset;
   
-  filters::MultiChannelFilterChain<double> chain_moving_mean_ ; 
-  filters::MultiChannelFilterChain<double> chain_low_pass_; 
-  filters::MultiChannelFilterChain<double> threshold_filters_;
-  filters::MultiChannelFilterChain<double> gravity_compensator_;
+  filters::MultiChannelFilterBase<double> *chain_moving_mean_ = new filters::MultiChannelMeanFilter<double>();
+  filters::FilterBase<geometry_msgs::WrenchStamped> *chain_low_pass_ = new iirob_filters::LowPassFilter<geometry_msgs::WrenchStamped>();
+  filters::FilterBase<geometry_msgs::WrenchStamped> *threshold_filters_ = new iirob_filters::ThresholdFilter<geometry_msgs::WrenchStamped>();
+  filters::FilterBase<geometry_msgs::WrenchStamped> *gravity_compensator_ = new iirob_filters::GravityCompensator<geometry_msgs::WrenchStamped>();
   
   bool useGravityCompensator=false;
   bool useThresholdFilter=false;
