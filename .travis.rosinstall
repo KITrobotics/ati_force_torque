@@ -1,7 +1,7 @@
 - git:
     uri: 'https://github.com/iirob/iirob_filters.git'
     local-name: iirob_filters
-    version: kinetic-devel
+    version: raw_with_fts
 - git:
     uri: 'https://github.com/ipa320/cob_driver.git'
     local-name: cob_driver
