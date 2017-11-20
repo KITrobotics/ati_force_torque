@@ -23,8 +23,8 @@ LowPassFilter:
         
 MovingMeanFilter:
   name: MovingMeanFilter
-  type: filters/MultiChannelMeanFilterDouble
-  params: {number_of_observations: 4}
+  type: filters/MovingMeanFilterWrench
+  params: {divider: 4}
 
 GravityCompensation:
   name: GravityCompensationWrench

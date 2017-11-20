@@ -149,10 +149,10 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration
     ftUpdateTimer_ = nh.createTimer(ros::Rate(nodePubFreq), &ForceTorqueSensor::updateFTData, this, false, false);
     ftPullTimer_ = nh.createTimer(ros::Rate(nodePullFreq), &ForceTorqueSensor::pullFTData, this, false, false);
      
-    chain_moving_mean_->configure(6,"MovingMeanFilter");
-    chain_low_pass_->configure("LowPassFilter");
+    moving_mean_filter_->configure("MovingMeanFilter");
+    low_pass_filter_->configure("LowPassFilter");
     gravity_compensator_->configure("GravityCompensation");
-    threshold_filters_->configure("ThresholdFilter");
+    threshold_filter_->configure("ThresholdFilter");
    
     //Median Filter
     if(nh_.hasParam("MovingMeanFilter")) {
@@ -476,7 +476,7 @@ void ForceTorqueSensor::pullFTData(const ros::TimerEvent &event)
         std::vector<double> in_data= {(double)sensor_data.wrench.force.x, double(sensor_data.wrench.force.y), (double)sensor_data.wrench.force.z,(double)sensor_data.wrench.torque.x,(double)sensor_data.wrench.torque.y,(double)sensor_data.wrench.torque.z};
         std::vector<double> out_data= {(double)low_pass_filtered_data.wrench.force.x, double(low_pass_filtered_data.wrench.force.y), (double)low_pass_filtered_data.wrench.force.z,(double)low_pass_filtered_data.wrench.torque.x,(double)low_pass_filtered_data.wrench.torque.y,(double)low_pass_filtered_data.wrench.torque.z};  
         
-        chain_low_pass_->update(sensor_data,low_pass_filtered_data);
+        low_pass_filter_->update(sensor_data,low_pass_filtered_data);
     }
     else low_pass_filtered_data = sensor_data;
     //moving_mean
@@ -485,13 +485,7 @@ void ForceTorqueSensor::pullFTData(const ros::TimerEvent &event)
         std::vector<double> in_data= {(double)low_pass_filtered_data.wrench.force.x, double(low_pass_filtered_data.wrench.force.y), (double)low_pass_filtered_data.wrench.force.z,(double)low_pass_filtered_data.wrench.torque.x,(double)low_pass_filtered_data.wrench.torque.y,(double)low_pass_filtered_data.wrench.torque.z};
         std::vector<double> out_data = {(double)moving_mean_filtered_wrench.wrench.force.x, double(moving_mean_filtered_wrench.wrench.force.y), (double)moving_mean_filtered_wrench.wrench.force.z,(double)moving_mean_filtered_wrench.wrench.torque.x,(double)moving_mean_filtered_wrench.wrench.torque.y,(double)moving_mean_filtered_wrench.wrench.torque.z};
     
-        chain_moving_mean_->update(in_data,out_data);
-        moving_mean_filtered_wrench.wrench.force.x = out_data.at(0);
-        moving_mean_filtered_wrench.wrench.force.y = out_data.at(1);
-        moving_mean_filtered_wrench.wrench.force.z = out_data.at(2);
-        moving_mean_filtered_wrench.wrench.torque.x = out_data.at(3);
-        moving_mean_filtered_wrench.wrench.torque.y = out_data.at(4);
-        moving_mean_filtered_wrench.wrench.torque.z = out_data.at(5);
+        moving_mean_filter_->update(low_pass_filtered_data, moving_mean_filtered_wrench);
     }
     else moving_mean_filtered_wrench = low_pass_filtered_data;
     
@@ -535,7 +529,7 @@ void ForceTorqueSensor::filterFTData(){
       {
           std::vector<double> in_data= {(double)gravity_compensated_force.wrench.force.x, double(gravity_compensated_force.wrench.force.y), (double)gravity_compensated_force.wrench.force.z,(double)gravity_compensated_force.wrench.torque.x,(double)gravity_compensated_force.wrench.torque.y,(double)gravity_compensated_force.wrench.torque.z};
           std::vector<double> out_data = {(double)threshold_filtered_force.wrench.force.x, double(threshold_filtered_force.wrench.force.y), (double)threshold_filtered_force.wrench.force.z,(double)threshold_filtered_force.wrench.torque.x,(double)threshold_filtered_force.wrench.torque.y,(double)threshold_filtered_force.wrench.torque.z};
-          threshold_filters_->update(gravity_compensated_force, threshold_filtered_force);
+          threshold_filter_->update(gravity_compensated_force, threshold_filtered_force);
       }
       else threshold_filtered_force = gravity_compensated_force;
 
