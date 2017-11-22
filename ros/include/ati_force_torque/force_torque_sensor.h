@@ -87,7 +87,6 @@ typedef unsigned char uint8_t;
 #include <ati_force_torque/CanConfigurationParameters.h>
 #include <ati_force_torque/FTSConfigurationParameters.h>
 #include <ati_force_torque/PublishConfigurationParameters.h>
-#include <ati_force_torque/PublishConfigurationConfig.h>
 #include <ati_force_torque/NodeConfigurationParameters.h>
 #include <ati_force_torque/CalibrationParameters.h>
 #include <ati_force_torque/CalibrationConfig.h>
@@ -166,7 +165,7 @@ private:
   std::string canPath;
   int canBaudrate;
   int ftsBaseID;
-  double nodePubFreq;
+  double nodePubFreq, nodePullFreq;
   uint calibrationNMeasurements;
   double calibrationTBetween;
   int coordinateSystemNMeasurements;
@@ -193,11 +192,11 @@ private:
   // Variables for Static offset
   bool m_staticCalibration;
   geometry_msgs::Wrench m_calibOffset;
+
   
-  //filters::MultiChannelFilterBase<double> *chain_moving_mean_ = new filters::MultiChannelMeanFilter<double>();
   filters::FilterBase<geometry_msgs::WrenchStamped> *moving_mean_filter_ = new iirob_filters::MovingMeanFilter<geometry_msgs::WrenchStamped>();
   filters::FilterBase<geometry_msgs::WrenchStamped> *low_pass_filter_ = new iirob_filters::LowPassFilter<geometry_msgs::WrenchStamped>();
-  filters::FilterBase<geometry_msgs::WrenchStamped> *threshold_filter_ = new iirob_filters::ThresholdFilter<geometry_msgs::WrenchStamped>();
+  filters::FilterBase<geometry_msgs::WrenchStamped> *threshold_filter_ = new iirob_filters::ThresholdFilter<geometry_msgs::WrenchStamped>();  
   filters::FilterBase<geometry_msgs::WrenchStamped> *gravity_compensator_ = new iirob_filters::GravityCompensator<geometry_msgs::WrenchStamped>();
   
   bool useGravityCompensator=false;
@@ -207,10 +206,8 @@ private:
   bool useLowPassFilter = false;
 
   
-  dynamic_reconfigure::Server<ati_force_torque::CalibrationConfig> reconfigCalibrationSrv_; // Dynamic reconfiguration service
-  dynamic_reconfigure::Server<ati_force_torque::PublishConfigurationConfig> reconfigPublishSrv_; // Dynamic reconfiguration service
+  dynamic_reconfigure::Server<ati_force_torque::CalibrationConfig> reconfigCalibrationSrv_; // Dynamic reconfiguration service  
 
-  void reconfigureCalibrationRequest(ati_force_torque::CalibrationConfig& config, uint32_t level);
-  void reconfigurePublishRequest(ati_force_torque::PublishConfigurationConfig& config, uint32_t level);
+  void reconfigureCalibrationRequest(ati_force_torque::CalibrationConfig& config, uint32_t level);  
 };
 

@@ -75,12 +75,12 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration
     else {
         calibrationNMeasurements = (uint)calibNMeas;
     }
-    calibrationTBetween=calibration_params_.T_between_meas;
-    m_staticCalibration=calibration_params_.isStatic;
+    calibrationTBetween = calibration_params_.T_between_meas;
+    m_staticCalibration = calibration_params_.isStatic;
 
     std::map<std::string,double> forceVal,torqueVal;
-    forceVal= calibration_params_.force;
-    torqueVal= calibration_params_.torque;
+    forceVal = calibration_params_.force;
+    torqueVal = calibration_params_.torque;
 
     m_calibOffset.force.x = forceVal["x"];
     m_calibOffset.force.y = forceVal["y"];
@@ -90,7 +90,6 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration
     m_calibOffset.torque.x = torqueVal["z"];
 
     bool isAutoInit = false;
-    double nodePullFreq = 0;
     m_isInitialized = false;
     m_isCalibrated = false;
     srvServer_Init_ = nh_.advertiseService("Init", &ForceTorqueSensor::srvCallback_Init, this);
@@ -100,18 +99,17 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration
     srvServer_Temp_ = nh_.advertiseService("GetTemperature", &ForceTorqueSensor::srvReadDiagnosticVoltages, this);
     srvServer_ReCalibrate = nh_.advertiseService("Recalibrate", &ForceTorqueSensor::srvCallback_recalibrate, this);
     
-    reconfigCalibrationSrv_.setCallback(boost::bind(&ForceTorqueSensor::reconfigureCalibrationRequest, this, _1, _2));
-    reconfigPublishSrv_.setCallback(boost::bind(&ForceTorqueSensor::reconfigurePublishRequest, this, _1, _2));
+    reconfigCalibrationSrv_.setCallback(boost::bind(&ForceTorqueSensor::reconfigureCalibrationRequest, this, _1, _2));    
 
     // Read data from parameter server
     canType = can_params_.type;
     canPath = can_params_.path;
     canBaudrate = can_params_.baudrate;
-    ftsBaseID=FTS_params_.base_identifier;
-    isAutoInit=FTS_params_.auto_init;
-    nodePubFreq=node_params_.ft_pub_freq;
-    nodePullFreq=node_params_.ft_pull_freq;
-    sensor_frame_=node_params_.sensor_frame;
+    ftsBaseID = FTS_params_.base_identifier;
+    isAutoInit = FTS_params_.auto_init;
+    nodePubFreq = node_params_.ft_pub_freq;
+    nodePullFreq = node_params_.ft_pull_freq;
+    sensor_frame_ = node_params_.sensor_frame;
 
     coordinateSystemNMeasurements = CS_params_.n_measurements;
     coordinateSystemTBetween = CS_params_.T_between_meas;
@@ -148,9 +146,9 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration
 
     ftUpdateTimer_ = nh.createTimer(ros::Rate(nodePubFreq), &ForceTorqueSensor::updateFTData, this, false, false);
     ftPullTimer_ = nh.createTimer(ros::Rate(nodePullFreq), &ForceTorqueSensor::pullFTData, this, false, false);
-     
+    
     moving_mean_filter_->configure("MovingMeanFilter");
-    low_pass_filter_->configure("LowPassFilter");
+    low_pass_filter_->configure("LowPassFilter");    
     gravity_compensator_->configure("GravityCompensation");
     threshold_filter_->configure("ThresholdFilter");
    
@@ -476,7 +474,7 @@ void ForceTorqueSensor::pullFTData(const ros::TimerEvent &event)
         std::vector<double> in_data= {(double)sensor_data.wrench.force.x, double(sensor_data.wrench.force.y), (double)sensor_data.wrench.force.z,(double)sensor_data.wrench.torque.x,(double)sensor_data.wrench.torque.y,(double)sensor_data.wrench.torque.z};
         std::vector<double> out_data= {(double)low_pass_filtered_data.wrench.force.x, double(low_pass_filtered_data.wrench.force.y), (double)low_pass_filtered_data.wrench.force.z,(double)low_pass_filtered_data.wrench.torque.x,(double)low_pass_filtered_data.wrench.torque.y,(double)low_pass_filtered_data.wrench.torque.z};  
         
-        low_pass_filter_->update(sensor_data,low_pass_filtered_data);
+        low_pass_filter_->update(sensor_data,low_pass_filtered_data);                  
     }
     else low_pass_filtered_data = sensor_data;
     //moving_mean
@@ -584,8 +582,20 @@ bool ForceTorqueSensor::transform_wrench(std::string goal_frame, std::string sou
 
 void ForceTorqueSensor::reconfigureCalibrationRequest(ati_force_torque::CalibrationConfig& config, uint32_t level){
     calibration_params_.fromConfig(config); 
+    
+    calibrationTBetween = calibration_params_.T_between_meas;
+    m_staticCalibration = calibration_params_.isStatic;
+
+    std::map<std::string,double> forceVal,torqueVal;
+    forceVal = calibration_params_.force;
+    torqueVal = calibration_params_.torque;
+    
+    m_calibOffset.force.x = forceVal["x"];
+    m_calibOffset.force.y = forceVal["y"];
+    m_calibOffset.force.z = forceVal["z"];
+    m_calibOffset.torque.x = torqueVal["x"];
+    m_calibOffset.torque.x = torqueVal["y"];
+    m_calibOffset.torque.x = torqueVal["z"];
+    
 }
 
-void ForceTorqueSensor::reconfigurePublishRequest(ati_force_torque::PublishConfigurationConfig& config, uint32_t level){
-    pub_params_.fromConfig(config);
-}
