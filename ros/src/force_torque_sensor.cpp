@@ -55,8 +55,7 @@
 #include <ati_force_torque/force_torque_sensor.h>
 
 ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration_params_{nh.getNamespace()+"/Calibration/Offset"}, CS_params_{nh.getNamespace()}, can_params_{nh.getNamespace()+"/CAN"}, FTS_params_{nh.getNamespace()+"/FTS"}, pub_params_{nh.getNamespace()+"/Publish"}, node_params_{nh.getNamespace()+"/Node"}, gravity_params_{nh.getNamespace()+"/GravityCompensation/params"}
-{
-    calibration_params_.fromParamServer();
+{    
     CS_params_.fromParamServer();
     can_params_.fromParamServer();
     FTS_params_.fromParamServer();
@@ -64,19 +63,6 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration
     node_params_.fromParamServer();
     gravity_params_.fromParamServer();
 
-    int calibNMeas;
-    calibNMeas=calibration_params_.n_measurements;
- 
-    if (calibNMeas <= 0)
-    {
-        ROS_WARN("Parameter 'Calibration/n_measurements' is %d (<=0) using default: 20", calibNMeas);
-        calibrationNMeasurements = 20;
-    }
-    else {
-        calibrationNMeasurements = (uint)calibNMeas;
-    }
-    calibrationTBetween = calibration_params_.T_between_meas;
-    m_staticCalibration = calibration_params_.isStatic;
 
     std::map<std::string,double> forceVal,torqueVal;
     forceVal = calibration_params_.force;
@@ -101,6 +87,21 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration
     
     reconfigCalibrationSrv_.setCallback(boost::bind(&ForceTorqueSensor::reconfigureCalibrationRequest, this, _1, _2));    
 
+    calibration_params_.fromParamServer(); 
+    int calibNMeas;
+   
+    calibNMeas=calibration_params_.n_measurements;
+    calibrationTBetween = calibration_params_.T_between_meas;
+    m_staticCalibration = calibration_params_.isStatic;
+    if (calibNMeas <= 0)
+    {
+        ROS_WARN("Parameter 'Calibration/n_measurements' is %d (<=0) using default: 20", calibNMeas);
+        calibrationNMeasurements = 20;
+    }
+    else {
+        calibrationNMeasurements = (uint)calibNMeas;
+    }
+    
     // Read data from parameter server
     canType = can_params_.type;
     canPath = can_params_.path;
@@ -147,10 +148,10 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration
     ftUpdateTimer_ = nh.createTimer(ros::Rate(nodePubFreq), &ForceTorqueSensor::updateFTData, this, false, false);
     ftPullTimer_ = nh.createTimer(ros::Rate(nodePullFreq), &ForceTorqueSensor::pullFTData, this, false, false);
     
-    moving_mean_filter_->configure("MovingMeanFilter");
-    low_pass_filter_->configure("LowPassFilter");    
-    gravity_compensator_->configure("GravityCompensation");
-    threshold_filter_->configure("ThresholdFilter");
+    moving_mean_filter_->configure("MovingMeanFilter", nh_);    
+    low_pass_filter_->configure("LowPassFilter", nh_);    
+    gravity_compensator_->configure("GravityCompensation", nh_);
+    threshold_filter_->configure("ThresholdFilter", nh_);
    
     //Median Filter
     if(nh_.hasParam("MovingMeanFilter")) {
@@ -364,7 +365,6 @@ geometry_msgs::Wrench ForceTorqueSensor::makeAverageMeasurement(uint number_of_m
     for (int i = 0; i < number_of_measurements; i++)
     {
       geometry_msgs::Wrench output;
-      //std::cout<<"frame id"<< frame_id<<std::endl;
       if (frame_id.compare("") != 0) {  
       if (not transform_wrench(frame_id, sensor_frame_, moving_mean_filtered_wrench.wrench, &output))
       {
@@ -582,7 +582,6 @@ bool ForceTorqueSensor::transform_wrench(std::string goal_frame, std::string sou
 
 void ForceTorqueSensor::reconfigureCalibrationRequest(ati_force_torque::CalibrationConfig& config, uint32_t level){
     calibration_params_.fromConfig(config); 
-    
     calibrationTBetween = calibration_params_.T_between_meas;
     m_staticCalibration = calibration_params_.isStatic;
 

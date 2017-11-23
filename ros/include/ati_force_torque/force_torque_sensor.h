@@ -78,6 +78,7 @@ typedef unsigned char uint8_t;
 #include <iirob_filters/low_pass_filter.h>
 #include <iirob_filters/threshold_filter.h>
 #include <iirob_filters/moving_mean_filter.h>
+#include <iirob_filters/iirob_filter_base.h>
 
 #include <math.h>
 #include <iostream>
@@ -194,10 +195,10 @@ private:
   geometry_msgs::Wrench m_calibOffset;
 
   
-  filters::FilterBase<geometry_msgs::WrenchStamped> *moving_mean_filter_ = new iirob_filters::MovingMeanFilter<geometry_msgs::WrenchStamped>();
-  filters::FilterBase<geometry_msgs::WrenchStamped> *low_pass_filter_ = new iirob_filters::LowPassFilter<geometry_msgs::WrenchStamped>();
-  filters::FilterBase<geometry_msgs::WrenchStamped> *threshold_filter_ = new iirob_filters::ThresholdFilter<geometry_msgs::WrenchStamped>();  
-  filters::FilterBase<geometry_msgs::WrenchStamped> *gravity_compensator_ = new iirob_filters::GravityCompensator<geometry_msgs::WrenchStamped>();
+  iirob_filters::iirobFilterBase<geometry_msgs::WrenchStamped> *moving_mean_filter_ = new iirob_filters::MovingMeanFilter<geometry_msgs::WrenchStamped>();
+  iirob_filters::iirobFilterBase<geometry_msgs::WrenchStamped> *low_pass_filter_ = new iirob_filters::LowPassFilter<geometry_msgs::WrenchStamped>();
+  iirob_filters::iirobFilterBase<geometry_msgs::WrenchStamped> *threshold_filter_ = new iirob_filters::ThresholdFilter<geometry_msgs::WrenchStamped>();  
+  iirob_filters::iirobFilterBase<geometry_msgs::WrenchStamped> *gravity_compensator_ = new iirob_filters::GravityCompensator<geometry_msgs::WrenchStamped>();
   
   bool useGravityCompensator=false;
   bool useThresholdFilter=false;
