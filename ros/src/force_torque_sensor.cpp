@@ -148,10 +148,10 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration
     ftUpdateTimer_ = nh.createTimer(ros::Rate(nodePubFreq), &ForceTorqueSensor::updateFTData, this, false, false);
     ftPullTimer_ = nh.createTimer(ros::Rate(nodePullFreq), &ForceTorqueSensor::pullFTData, this, false, false);
     
-    moving_mean_filter_->configure("MovingMeanFilter", nh_);    
-    low_pass_filter_->configure("LowPassFilter", nh_);    
-    gravity_compensator_->configure("GravityCompensation", nh_);
-    threshold_filter_->configure("ThresholdFilter", nh_);
+    moving_mean_filter_.configure("MovingMeanFilter", nh_);    
+    low_pass_filter_.configure("LowPassFilter", nh_);    
+    gravity_compensator_.configure("GravityCompensation", nh_);
+    threshold_filter_.configure("ThresholdFilter", nh_);
    
     //Median Filter
     if(nh_.hasParam("MovingMeanFilter")) {
@@ -474,7 +474,7 @@ void ForceTorqueSensor::pullFTData(const ros::TimerEvent &event)
         std::vector<double> in_data= {(double)sensor_data.wrench.force.x, double(sensor_data.wrench.force.y), (double)sensor_data.wrench.force.z,(double)sensor_data.wrench.torque.x,(double)sensor_data.wrench.torque.y,(double)sensor_data.wrench.torque.z};
         std::vector<double> out_data= {(double)low_pass_filtered_data.wrench.force.x, double(low_pass_filtered_data.wrench.force.y), (double)low_pass_filtered_data.wrench.force.z,(double)low_pass_filtered_data.wrench.torque.x,(double)low_pass_filtered_data.wrench.torque.y,(double)low_pass_filtered_data.wrench.torque.z};  
         
-        low_pass_filter_->update(sensor_data,low_pass_filtered_data);                  
+        low_pass_filter_.update(sensor_data,low_pass_filtered_data);                  
     }
     else low_pass_filtered_data = sensor_data;
     //moving_mean
@@ -483,7 +483,7 @@ void ForceTorqueSensor::pullFTData(const ros::TimerEvent &event)
         std::vector<double> in_data= {(double)low_pass_filtered_data.wrench.force.x, double(low_pass_filtered_data.wrench.force.y), (double)low_pass_filtered_data.wrench.force.z,(double)low_pass_filtered_data.wrench.torque.x,(double)low_pass_filtered_data.wrench.torque.y,(double)low_pass_filtered_data.wrench.torque.z};
         std::vector<double> out_data = {(double)moving_mean_filtered_wrench.wrench.force.x, double(moving_mean_filtered_wrench.wrench.force.y), (double)moving_mean_filtered_wrench.wrench.force.z,(double)moving_mean_filtered_wrench.wrench.torque.x,(double)moving_mean_filtered_wrench.wrench.torque.y,(double)moving_mean_filtered_wrench.wrench.torque.z};
     
-        moving_mean_filter_->update(low_pass_filtered_data, moving_mean_filtered_wrench);
+        moving_mean_filter_.update(low_pass_filtered_data, moving_mean_filtered_wrench);
     }
     else moving_mean_filtered_wrench = low_pass_filtered_data;
     
@@ -518,7 +518,7 @@ void ForceTorqueSensor::filterFTData(){
       {
           std::vector<double> in_data= {(double)transformed_data.wrench.force.x, double(transformed_data.wrench.force.y), (double)transformed_data.wrench.force.z,(double)transformed_data.wrench.torque.x,(double)transformed_data.wrench.torque.y,(double)transformed_data.wrench.torque.z};
           std::vector<double> out_data = {(double)gravity_compensated_force.wrench.force.x, double(gravity_compensated_force.wrench.force.y), (double)gravity_compensated_force.wrench.force.z,(double)gravity_compensated_force.wrench.torque.x,(double)gravity_compensated_force.wrench.torque.y,(double)gravity_compensated_force.wrench.torque.z};
-          gravity_compensator_->update(transformed_data, gravity_compensated_force);
+          gravity_compensator_.update(transformed_data, gravity_compensated_force);
       }
       else gravity_compensated_force = transformed_data;
 
@@ -527,7 +527,7 @@ void ForceTorqueSensor::filterFTData(){
       {
           std::vector<double> in_data= {(double)gravity_compensated_force.wrench.force.x, double(gravity_compensated_force.wrench.force.y), (double)gravity_compensated_force.wrench.force.z,(double)gravity_compensated_force.wrench.torque.x,(double)gravity_compensated_force.wrench.torque.y,(double)gravity_compensated_force.wrench.torque.z};
           std::vector<double> out_data = {(double)threshold_filtered_force.wrench.force.x, double(threshold_filtered_force.wrench.force.y), (double)threshold_filtered_force.wrench.force.z,(double)threshold_filtered_force.wrench.torque.x,(double)threshold_filtered_force.wrench.torque.y,(double)threshold_filtered_force.wrench.torque.z};
-          threshold_filter_->update(gravity_compensated_force, threshold_filtered_force);
+          threshold_filter_.update(gravity_compensated_force, threshold_filtered_force);
       }
       else threshold_filtered_force = gravity_compensated_force;
 
