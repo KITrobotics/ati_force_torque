@@ -54,7 +54,7 @@
  ****************************************************************/
 #include <ati_force_torque/force_torque_sensor.h>
 
-ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration_params_{nh.getNamespace()+"/Calibration/Offset"}, CS_params_{nh.getNamespace()}, can_params_{nh.getNamespace()+"/CAN"}, FTS_params_{nh.getNamespace()+"/FTS"}, pub_params_{nh.getNamespace()+"/Publish"}, node_params_{nh.getNamespace()+"/Node"}, gravity_params_{nh.getNamespace()+"/GravityCompensation/params"}
+ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration_params_{nh.getNamespace()+"/Calibration/Offset"}, CS_params_{nh.getNamespace()}, can_params_{nh.getNamespace()+"/CAN"}, FTS_params_{nh.getNamespace()+"/FTS"}, pub_params_{nh.getNamespace()+"/Publish"}, node_params_{nh.getNamespace()+"/Node"}, gravity_params_{nh.getNamespace()+"/GravityCompensation/params"}//,low_pass_filter_("geometry_msgs::WrenchStamped"),threshold_filter_("geometry_msgs::WrenchStamped"),moving_mean_filter_("geometry_msgs::WrenchStamped"),gravity_compensator_("geometry_msgs::WrenchStamped")
 {    
     CS_params_.fromParamServer();
     can_params_.fromParamServer();
@@ -152,7 +152,7 @@ ForceTorqueSensor::ForceTorqueSensor(ros::NodeHandle& nh) : nh_(nh), calibration
     low_pass_filter_.configure("LowPassFilter", nh_);    
     gravity_compensator_.configure("GravityCompensation", nh_);
     threshold_filter_.configure("ThresholdFilter", nh_);
-   
+    
     //Median Filter
     if(nh_.hasParam("MovingMeanFilter")) {
     useMovingMean = true;

@@ -79,6 +79,7 @@ typedef unsigned char uint8_t;
 #include <iirob_filters/threshold_filter.h>
 #include <iirob_filters/moving_mean_filter.h>
 #include <iirob_filters/iirob_filter_base.h>
+#include <iirob_filters/iirob_filter_chain.h>
 
 #include <math.h>
 #include <iostream>
@@ -195,10 +196,10 @@ private:
   geometry_msgs::Wrench m_calibOffset;
 
   
-  iirob_filters::IIrobFilterBase<geometry_msgs::WrenchStamped> low_pass_filter_;
-  iirob_filters::IIrobFilterBase<geometry_msgs::WrenchStamped> moving_mean_filter_;
-  iirob_filters::IIrobFilterBase<geometry_msgs::WrenchStamped> threshold_filter_;
-  iirob_filters::IIrobFilterBase<geometry_msgs::WrenchStamped> gravity_compensator_;
+  iirob_filters::IIrobFilterChain<geometry_msgs::WrenchStamped> low_pass_filter_;
+  iirob_filters::IIrobFilterChain<geometry_msgs::WrenchStamped> moving_mean_filter_;
+  iirob_filters::IIrobFilterChain<geometry_msgs::WrenchStamped> threshold_filter_;
+  iirob_filters::IIrobFilterChain<geometry_msgs::WrenchStamped> gravity_compensator_;
   
   bool useGravityCompensator=false;
   bool useThresholdFilter=false;
