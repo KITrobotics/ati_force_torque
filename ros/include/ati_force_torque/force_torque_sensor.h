@@ -196,10 +196,10 @@ private:
   geometry_msgs::Wrench m_calibOffset;
 
   
-  iirob_filters::IIrobFilterChain<geometry_msgs::WrenchStamped> low_pass_filter_;
-  iirob_filters::IIrobFilterChain<geometry_msgs::WrenchStamped> moving_mean_filter_;
-  iirob_filters::IIrobFilterChain<geometry_msgs::WrenchStamped> threshold_filter_;
-  iirob_filters::IIrobFilterChain<geometry_msgs::WrenchStamped> gravity_compensator_;
+  iirob_filters::IIrobFilterChain<geometry_msgs::WrenchStamped, iirob_filters::IIrobFilterBase<geometry_msgs::WrenchStamped>> low_pass_filter_;
+  iirob_filters::IIrobFilterChain<geometry_msgs::WrenchStamped, iirob_filters::IIrobFilterBase<geometry_msgs::WrenchStamped>> moving_mean_filter_;
+  iirob_filters::IIrobFilterChain<geometry_msgs::WrenchStamped, iirob_filters::IIrobFilterBase<geometry_msgs::WrenchStamped>> threshold_filter_;
+  iirob_filters::IIrobFilterChain<geometry_msgs::WrenchStamped, iirob_filters::IIrobFilterBase<geometry_msgs::WrenchStamped>> gravity_compensator_;  
   
   bool useGravityCompensator=false;
   bool useThresholdFilter=false;

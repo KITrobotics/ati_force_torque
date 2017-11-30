@@ -10,11 +10,6 @@ Calibration:
         n_measurements: 500
         T_between_meas: 0.01
         isStatic: false # true= use static offset Calibration, false=use calibrate Sensor to 0 in current State
-
-#Filters:
-#    name: ThresholdFilter
-#    type: iirob_filters/ThresholdFilterWrench
-#    params: {linear_threshold: 2.5,  angular_threshold: 0.3}
         
 ThresholdFilter:
   name: ThresholdFilter
@@ -35,7 +30,7 @@ GravityCompensation:
   name: GravityCompensation
   type: iirob_filters/GravityCompensatorWrench
   params: {world_frame: "base_link"}
-
+  
 Publish:
     sensor_data: true
     low_pass: true
@@ -43,3 +38,4 @@ Publish:
     transformed_data: true
     gravity_compensated: true
     threshold_filtered: true
+    
