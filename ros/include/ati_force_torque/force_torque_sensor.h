@@ -76,8 +76,8 @@ typedef unsigned char uint8_t;
 #include <iirob_filters/gravity_compensation.h>
 #include <iirob_filters/GravityCompensationParameters.h>
 #include <iirob_filters/low_pass_filter.h>
-#include <iirob_filters/moving_mean_filter.h>
 #include <iirob_filters/threshold_filter.h>
+#include <iirob_filters/moving_mean_filter.h>
 
 #include <math.h>
 #include <iostream>
@@ -87,10 +87,14 @@ typedef unsigned char uint8_t;
 #include <ati_force_torque/CanConfigurationParameters.h>
 #include <ati_force_torque/FTSConfigurationParameters.h>
 #include <ati_force_torque/PublishConfigurationParameters.h>
-#include <ati_force_torque/PublishConfigurationConfig.h>
 #include <ati_force_torque/NodeConfigurationParameters.h>
 #include <ati_force_torque/CalibrationParameters.h>
 #include <ati_force_torque/CalibrationConfig.h>
+
+#include <filters/filter_chain.h>
+#include <filters/filter_base.h>
+#include <filters/mean.h>
+#include <realtime_tools/realtime_publisher.h>
 
 #define PI 3.14159265
 
@@ -145,7 +149,8 @@ private:
   geometry_msgs::Wrench offset_;
   geometry_msgs::TransformStamped transform_ee_base_stamped;
   tf2_ros::Buffer *p_tfBuffer;
-  ros::Publisher gravity_compensated_pub_, threshold_filtered_pub_, transformed_data_pub_, sensor_data_pub_, low_pass_pub_, moving_mean_pub_;
+  realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped>  *gravity_compensated_pub_, *threshold_filtered_pub_, *transformed_data_pub_, *sensor_data_pub_, *low_pass_pub_, *moving_mean_pub_;
+
   bool is_pub_gravity_compensated_ = false;
   bool is_pub_threshold_filtered_ = false;
   bool is_pub_transformed_data_ = false;
@@ -160,7 +165,7 @@ private:
   std::string canPath;
   int canBaudrate;
   int ftsBaseID;
-  double nodePubFreq;
+  double nodePubFreq, nodePullFreq;
   uint calibrationNMeasurements;
   double calibrationTBetween;
   int coordinateSystemNMeasurements;
@@ -188,42 +193,21 @@ private:
   bool m_staticCalibration;
   geometry_msgs::Wrench m_calibOffset;
 
-  ThresholdFilter threshold_filter_;
-
-  LowPassFilter lp_filter_force_x_;
-  LowPassFilter lp_filter_force_y_;
-  LowPassFilter lp_filter_force_z_;
-  LowPassFilter lp_filter_torque_x_;
-  LowPassFilter lp_filter_torque_y_;
-  LowPassFilter lp_filter_torque_z_;
-  MovingMeanFilter moving_mean_filter_force_x_;
-  MovingMeanFilter moving_mean_filter_force_y_;
-  MovingMeanFilter moving_mean_filter_force_z_;
-  MovingMeanFilter moving_mean_filter_torque_x_;
-  MovingMeanFilter moving_mean_filter_torque_y_;
-  MovingMeanFilter moving_mean_filter_torque_z_;
-
-  GravityCompensator gravity_compensator_; 
-
-  bool useLowPassFilterForceX=false;  
-  bool useLowPassFilterForceY=false;
-  bool useLowPassFilterForceZ=false;
-  bool useLowPassFilterTorqueX=false;
-  bool useLowPassFilterTorqueY=false;
-  bool useLowPassFilterTorqueZ=false;
-  bool useMovinvingMeanForceX= false;
-  bool useMovinvingMeanForceY= false;
-  bool useMovinvingMeanForceZ= false;
-  bool useMovinvingMeanTorqueX= false;
-  bool useMovinvingMeanTorqueY= false;
-  bool useMovinvingMeanTorqueZ= false;
+  
+  filters::FilterBase<geometry_msgs::WrenchStamped> *moving_mean_filter_ = new iirob_filters::MovingMeanFilter<geometry_msgs::WrenchStamped>();
+  filters::FilterBase<geometry_msgs::WrenchStamped> *low_pass_filter_ = new iirob_filters::LowPassFilter<geometry_msgs::WrenchStamped>();
+  filters::FilterBase<geometry_msgs::WrenchStamped> *threshold_filter_ = new iirob_filters::ThresholdFilter<geometry_msgs::WrenchStamped>();  
+  filters::FilterBase<geometry_msgs::WrenchStamped> *gravity_compensator_ = new iirob_filters::GravityCompensator<geometry_msgs::WrenchStamped>();
+  
   bool useGravityCompensator=false;
   bool useThresholdFilter=false;
-  
-  dynamic_reconfigure::Server<ati_force_torque::CalibrationConfig> reconfigCalibrationSrv_; // Dynamic reconfiguration service
-  dynamic_reconfigure::Server<ati_force_torque::PublishConfigurationConfig> reconfigPublishSrv_; // Dynamic reconfiguration service
 
-  void reconfigureCalibrationRequest(ati_force_torque::CalibrationConfig& config, uint32_t level);
-  void reconfigurePublishRequest(ati_force_torque::PublishConfigurationConfig& config, uint32_t level);
+  bool useMovingMean = false;
+  bool useLowPassFilter = false;
+
+  
+  dynamic_reconfigure::Server<ati_force_torque::CalibrationConfig> reconfigCalibrationSrv_; // Dynamic reconfiguration service  
+
+  void reconfigureCalibrationRequest(ati_force_torque::CalibrationConfig& config, uint32_t level);  
 };
 
