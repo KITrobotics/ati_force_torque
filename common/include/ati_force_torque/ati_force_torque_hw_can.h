@@ -81,7 +81,7 @@
 #define ATI_CAN_BAUD_500K 3
 #define ATI_CAN_BAUD_250K 7
 
-class ATIForceTorqueSensorHWCan : public ForceTorqueSensorHW
+class ATIForceTorqueSensorHWCan : public hardware_interface::ForceTorqueSensorHW
 {
 public:
   ATIForceTorqueSensorHWCan();

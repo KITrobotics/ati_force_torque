@@ -1,0 +1,7 @@
+<library path="lib/libati_force_torque_sensor_hw">
+  <class name="ati_force_torque/ATIForceTorqueSensorHWCan" type="ATIForceTorqueSensorHWCan" base_class_type="hardware_interface::ForceTorqueSensorHW">
+  <description>
+    Powercube
+  </description>
+  </class>
+</library>

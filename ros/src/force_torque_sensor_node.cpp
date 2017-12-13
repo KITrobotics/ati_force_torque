@@ -65,14 +65,14 @@ public:
 {
     node_params_.fromParamServer();
     bool sim = node_params_.sim;
-    ForceTorqueSensorHW *sensor;
+    hardware_interface::ForceTorqueSensorHW *sensor;
     if(sim) {
-      sensor = new ForceTorqueSensorSim();
+      sensor = new force_torque_sensor::ForceTorqueSensorSim();
     }
     else{
         sensor = new ATIForceTorqueSensorHWCan();
     }
-    new ForceTorqueSensorHandle(nh, sensor, node_params_.sensor_frame,node_params_.transform_frame);
+    new force_torque_sensor::ForceTorqueSensorHandle(nh, sensor, node_params_.sensor_frame,node_params_.transform_frame);
 }
 private:
     force_torque_sensor::NodeConfigurationParameters node_params_;

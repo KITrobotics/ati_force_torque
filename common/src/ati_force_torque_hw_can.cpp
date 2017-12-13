@@ -49,9 +49,9 @@
  ****************************************************************/
 
 // general includes
-#include <unistd.h>
-
 #include <ati_force_torque/ati_force_torque_hw_can.h>
+
+#include <pluginlib/class_list_macros.h>
 
 // Headrs provided by cob-packages
 //#include <cob_generic_can/CanESD.h>
@@ -1076,3 +1076,5 @@ void ATIForceTorqueSensorHWCan::SetCalibMatrix()
 
   m_mXCalibMatrix = tmp.transpose();
 }
+
+PLUGINLIB_EXPORT_CLASS(ATIForceTorqueSensorHWCan, hardware_interface::ForceTorqueSensorHW)
