@@ -1,5 +1,6 @@
 Node:
     sim: false
+    sensor_hw: "ati_force_torque/ATIForceTorqueSensorHWCan"
     ft_pub_freq: 200
     ft_pull_freq: 800
     sensor_frame: "fts_reference_link"

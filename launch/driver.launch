@@ -14,7 +14,7 @@
         <remap from="robot_description" to="sensor_description" />
     </node>
     
-    <include ns="fts" file="$(find ati_force_torque)/ros/launch/sensor_parameters.launch">
+    <include ns="fts" file="$(find ati_force_torque)/launch/sensor_parameters.launch">
       <arg name="is_socket" value="$(arg is_socket)"/>
       <arg name="sim" value="$(arg sim)"/>
     </include>
