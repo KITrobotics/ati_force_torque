@@ -444,7 +444,7 @@ bool ForceTorqueSensor::srvCallback_DetermineCoordinateSystem(std_srvs::Trigger:
 bool ForceTorqueSensor::srvReadDiagnosticVoltages(ati_force_torque::DiagnosticVoltages::Request& req,
                                                   ati_force_torque::DiagnosticVoltages::Response& res)
 {
-    p_Ftc->ReadDiagnosticADCVoltages(req.index, res.adc_value);
+    p_Ftc->readDiagnosticADCVoltages(req.index, res.adc_value);
 
     return true;
 }

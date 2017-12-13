@@ -23,6 +23,7 @@ find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
   realtime_tools
   filters
+  force_torque_sensor
 )
 
 find_package(Eigen3)
@@ -68,9 +69,9 @@ generate_messages(
 ###################################
 catkin_package(
  INCLUDE_DIRS common/include ros/include
- CATKIN_DEPENDS cob_generic_can geometry_msgs iirob_filters message_runtime roscpp std_msgs std_srvs rospy tf2 tf2_ros tf2_geometry_msgs trajectory_msgs realtime_tools filters
+ CATKIN_DEPENDS cob_generic_can geometry_msgs iirob_filters message_runtime roscpp std_msgs std_srvs rospy tf2 tf2_ros tf2_geometry_msgs trajectory_msgs realtime_tools filters force_torque_sensor
  DEPENDS Eigen
- LIBRARIES ${PROJECT_NAME}
+ LIBRARIES ${PROJECT_NAME} ${PROJECT_NAME}_sensor_hw
 )
 
 ###########
@@ -92,9 +93,12 @@ add_dependencies(${PROJECT_NAME}
   )
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
 
+add_library(${PROJECT_NAME}_sensor_hw common/src/ati_force_torque_hw_can.cpp)
+target_link_libraries(${PROJECT_NAME}_sensor_hw ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
+
 add_executable(${PROJECT_NAME}_node ros/src/force_torque_sensor_node.cpp)
 add_dependencies(${PROJECT_NAME}_node ${PROJECT_NAME}_generate_messages_cpp)
-target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES} ${PROJECT_NAME}_sensor_hw )
 
 add_executable(${PROJECT_NAME}_config ros/src/force_torque_sensor_config.cpp)
 target_link_libraries(${PROJECT_NAME}_config ${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
