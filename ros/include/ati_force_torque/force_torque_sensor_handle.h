@@ -48,10 +48,11 @@ class ForceTorqueSensorHandle : public ForceTorqueSensor, public hardware_interf
 public:
 
   ForceTorqueSensorHandle(ros::NodeHandle &nh, std::string sensor_name, std::string output_frame);
+  double* getForce() {return interface_force_;}
+  double* getTorque() {return interface_torque_;}
 
 private:
   void updateFTData(const ros::TimerEvent &event);
-
   // Arrays for hardware_interface
   double interface_force_[3];
   double interface_torque_[3];

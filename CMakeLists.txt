@@ -23,6 +23,8 @@ find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
   realtime_tools
   filters
+  pluginlib
+  hardware_interface
 )
 
 find_package(Eigen3)
@@ -68,7 +70,7 @@ generate_messages(
 ###################################
 catkin_package(
  INCLUDE_DIRS common/include ros/include
- CATKIN_DEPENDS cob_generic_can geometry_msgs iirob_filters message_runtime roscpp std_msgs std_srvs rospy tf2 tf2_ros tf2_geometry_msgs trajectory_msgs realtime_tools filters
+ CATKIN_DEPENDS cob_generic_can geometry_msgs iirob_filters message_runtime roscpp std_msgs std_srvs rospy tf2 tf2_ros tf2_geometry_msgs trajectory_msgs realtime_tools filters pluginlib hardware_interface
  DEPENDS Eigen
  LIBRARIES ${PROJECT_NAME}
 )
@@ -84,7 +86,7 @@ include_directories(
   ${Eigen_INCLUDE_DIRS}
 )
 
-add_library(${PROJECT_NAME} common/src/ForceTorqueCtrl.cpp ros/src/force_torque_sensor.cpp ros/src/force_torque_sensor_sim.cpp ros/src/force_torque_sensor_handle.cpp ros/src/force_torque_sensor_handle_sim.cpp)
+add_library(${PROJECT_NAME} common/src/ForceTorqueCtrl.cpp ros/src/force_torque_sensor.cpp ros/src/force_torque_sensor_sim.cpp ros/src/force_torque_sensor_handle.cpp ros/src/force_torque_sensor_handle_sim.cpp ros/src/force_torque_sensor_hw.cpp)
 add_dependencies(${PROJECT_NAME}
   ${PROJECT_NAME}_gencfg  # For dynamic_reconfigure
   ${PROJECT_NAME}_generate_messages_cpp
@@ -116,6 +118,10 @@ install(DIRECTORY common/include ros/include
 )
 
 install(DIRECTORY ros/launch config description
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+install(FILES ft_interface_plugin.xml
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 

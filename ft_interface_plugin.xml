@@ -1,0 +1,7 @@
+<library path="lib/libati_force_torque">
+  <class name="ati_force_torque/ForceTorqueSensorHW" type="ati_force_torque::ForceTorqueSensorHW" base_class_type="hardware_interface::SensorHW">
+  <description>
+    FTS interface
+  </description>
+  </class>
+</library>
