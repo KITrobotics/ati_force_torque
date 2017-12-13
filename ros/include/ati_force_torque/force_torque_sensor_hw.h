@@ -27,8 +27,6 @@ ForceTorqueSensorHW::ForceTorqueSensorHW()
 
 bool ForceTorqueSensorHW::init(ros::NodeHandle& root_nh, ros::NodeHandle &robot_hw_nh)
 {
-  ROS_INFO("in init ati_ft");
-  
   // Populate hardware interfaces
   robot_hw_nh.param<std::string>("FTS/fts_name", fts_name, "ATI_45_Mini");
   robot_hw_nh.param<std::string>("Node/transform_frame", fts_transform_frame, "fts_transform_frame");
