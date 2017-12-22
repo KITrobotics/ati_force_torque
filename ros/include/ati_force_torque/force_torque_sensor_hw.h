@@ -84,6 +84,7 @@ bool ForceTorqueSensorHW::init(ros::NodeHandle& root_nh, ros::NodeHandle &robot_
   robot_hw_nh.param<std::string>("FTS/fts_name", fts_name, "ATI_45_Mini");
   robot_hw_nh.param<std::string>("Node/transform_frame", fts_transform_frame, "fts_transform_frame");
   
+  //if not using handle instatiate directly ForceTorqueSensor
   ftsh_ = new ForceTorqueSensorHandle(robot_hw_nh, fts_name, fts_transform_frame);
   fts_interface_.registerHandle(*ftsh_);
   
@@ -95,6 +96,7 @@ bool ForceTorqueSensorHW::init(ros::NodeHandle& root_nh, ros::NodeHandle &robot_
 
 void ForceTorqueSensorHW::read(const ros::Time& time, const ros::Duration& period)
 {
+  //example for reading
   double* force; 
   force = ftsh_->getForce();  
   double* torque;
