@@ -120,7 +120,7 @@ install(DIRECTORY common/include ros/include
   PATTERN ".svn" EXCLUDE
 )
 
-install(DIRECTORY ros/launch config description
+install(DIRECTORY launch config description
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
