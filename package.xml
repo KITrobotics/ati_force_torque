@@ -39,11 +39,18 @@
   <depend>visualization_msgs</depend>
   <depend>realtime_tools</depend>
   <depend>filters</depend>
+  <depend>force_torque_sensor</depend>
+  <depend>pluginlib</depend>
 
   <exec_depend>message_runtime</exec_depend>
   <exec_depend>robot_state_publisher</exec_depend>
   <exec_depend>xacro</exec_depend>
 
   <test_depend>roslaunch</test_depend>
+
+  <export>
+    <force_torque_sensor plugin="${prefix}/ati_fts_plugin.xml"/>
+  </export>
+
 
 </package>

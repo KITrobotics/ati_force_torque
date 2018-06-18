@@ -3,6 +3,14 @@
     local-name: iirob_filters
     version: kinetic-devel
 - git:
+    uri: 'https://github.com/iirob/rosparam_handler.git'
+    local-name: rosparam_handler
+    version: master
+- git:
+    uri: 'https://github.com/KITrobotics/force_torque_sensor.git'
+    local-name: force_torque_sensor
+    version: kinetic-devel
+- git:
     uri: 'https://github.com/ipa320/cob_driver.git'
     local-name: cob_driver
     version: indigo_dev

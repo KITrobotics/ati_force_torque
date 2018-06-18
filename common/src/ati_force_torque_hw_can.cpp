@@ -49,9 +49,9 @@
  ****************************************************************/
 
 // general includes
-#include <unistd.h>
+#include <ati_force_torque/ati_force_torque_hw_can.h>
 
-#include <cob_forcetorque/ForceTorqueCtrl.h>
+#include <pluginlib/class_list_macros.h>
 
 // Headrs provided by cob-packages
 //#include <cob_generic_can/CanESD.h>
@@ -59,7 +59,7 @@
 #include <cob_generic_can/CanPeakSysUSB.h>
 #include <cob_generic_can/SocketCan.h>
 
-ForceTorqueCtrl::ForceTorqueCtrl()
+ATIForceTorqueSensorHWCan::ATIForceTorqueSensorHWCan()
 {
   m_pCanCtrl = NULL;
 
@@ -71,7 +71,7 @@ ForceTorqueCtrl::ForceTorqueCtrl()
   m_CanBaseIdentifier = 0x20 << 4;
 }
 
-ForceTorqueCtrl::ForceTorqueCtrl(int can_type, std::string can_path, int can_baudrate, int base_identifier)
+ATIForceTorqueSensorHWCan::ATIForceTorqueSensorHWCan(int can_type, std::string can_path, int can_baudrate, int base_identifier)
 {
   m_pCanCtrl = NULL;
 
@@ -83,7 +83,7 @@ ForceTorqueCtrl::ForceTorqueCtrl(int can_type, std::string can_path, int can_bau
   m_CanBaseIdentifier = base_identifier << 4;
 }
 
-ForceTorqueCtrl::~ForceTorqueCtrl()
+ATIForceTorqueSensorHWCan::~ATIForceTorqueSensorHWCan()
 {
   if (m_pCanCtrl != NULL)
   {
@@ -91,7 +91,19 @@ ForceTorqueCtrl::~ForceTorqueCtrl()
   }
 }
 
-bool ForceTorqueCtrl::Init()
+bool ATIForceTorqueSensorHWCan::initCommunication(int can_type, std::string can_path, int can_baudrate, int base_identifier)
+{
+  m_pCanCtrl = NULL;
+
+  // for types and baudrates see:
+  // https://github.com/ipa320/cob_robots/blob/hydro_dev/cob_hardware_config/raw3-5/config/base/CanCtrl.ini
+  m_CanType = can_type;
+  m_CanDevice = can_path;
+  m_CanBaudrate = can_baudrate;
+  m_CanBaseIdentifier = base_identifier << 4;
+}
+
+bool ATIForceTorqueSensorHWCan::init()
 {
   bool ret = true;
 
@@ -131,7 +143,7 @@ bool ForceTorqueCtrl::Init()
   return ret;
 }
 
-bool ForceTorqueCtrl::initCan()
+bool ATIForceTorqueSensorHWCan::initCan()
 {
   bool ret = true;
 
@@ -151,7 +163,7 @@ bool ForceTorqueCtrl::initCan()
   return ret;
 }
 
-bool ForceTorqueCtrl::ReadFTSerialNumber()
+bool ATIForceTorqueSensorHWCan::ReadFTSerialNumber()
 {
 #if DEBUG
   std::cout << "\n\n*********FTSerialNumber**********" << std::endl;
@@ -194,21 +206,21 @@ bool ForceTorqueCtrl::ReadFTSerialNumber()
     else
     {
 #if DEBUG
-      std::cout << "ForceTorqueCtrl::ReadFTSerialNumber(): Can not read message!" << std::endl;
+      std::cout << "ATIForceTorqueSensorHWCan::ReadFTSerialNumber(): Can not read message!" << std::endl;
 #endif
     }
   }
   else
   {
 #if DEBUG
-    std::cout << "ForceTorqueCtrl::ReadFTSerialNumber(): Can not transmit message!" << std::endl;
+    std::cout << "ATIForceTorqueSensorHWCan::ReadFTSerialNumber(): Can not transmit message!" << std::endl;
 #endif
   }
 
   return ret;
 }
 
-bool ForceTorqueCtrl::ReadCountsPerUnit()
+bool ATIForceTorqueSensorHWCan::ReadCountsPerUnit()
 {
 #if DEBUG
   std::cout << "\n\n*********Read Counts Per Unit**********" << std::endl;
@@ -264,12 +276,12 @@ bool ForceTorqueCtrl::ReadCountsPerUnit()
     }
     else
     {
-      std::cout << "ForceTorqueCtrl::ReadCountsPerUnit(): Can not read message!" << std::endl;
+      std::cout << "ATIForceTorqueSensorHWCan::ReadCountsPerUnit(): Can not read message!" << std::endl;
     }
   }
   else
   {
-    std::cout << "ForceTorqueCtrl::ReadCountsPerUnit(): Can not transmit message!" << std::endl;
+    std::cout << "ATIForceTorqueSensorHWCan::ReadCountsPerUnit(): Can not transmit message!" << std::endl;
   }
 #if DEBUG
   std::cout << "CountsPerforce: " << countsPerForce << "  CountsPerTorque: " << countsPerTorque << std::endl;
@@ -277,7 +289,7 @@ bool ForceTorqueCtrl::ReadCountsPerUnit()
   return ret;
 }
 
-bool ForceTorqueCtrl::ReadUnitCodes()
+bool ATIForceTorqueSensorHWCan::ReadUnitCodes()
 {
 #if DEBUG
   std::cout << "\n\n*********Read Unit Codes**********" << std::endl;
@@ -310,18 +322,18 @@ bool ForceTorqueCtrl::ReadUnitCodes()
     }
     else
     {
-      std::cout << "ForceTorqueCtrl::ReadUnitCodes(): Can not read message!" << std::endl;
+      std::cout << "ATIForceTorqueSensorHWCan::ReadUnitCodes(): Can not read message!" << std::endl;
     }
   }
   else
   {
-    std::cout << "ForceTorqueCtrl::ReadUnitCodes(): Can not transmit message!" << std::endl;
+    std::cout << "ATIForceTorqueSensorHWCan::ReadUnitCodes(): Can not transmit message!" << std::endl;
   }
 
   return ret;
 }
 
-bool ForceTorqueCtrl::readDiagnosticADCVoltages(int index, short int &value)
+bool ATIForceTorqueSensorHWCan::readDiagnosticADCVoltages(int index, short int &value)
 {
   // TODO: Check for Init
 #if DEBUG
@@ -366,13 +378,13 @@ bool ForceTorqueCtrl::readDiagnosticADCVoltages(int index, short int &value)
   }
   else
   {
-    std::cout << "ForceTorqueCtrl::readDiagnosticADCVoltages(byte index): Can not transmit message!" << std::endl;
+    std::cout << "ATIForceTorqueSensorHWCan::readDiagnosticADCVoltages(byte index): Can not transmit message!" << std::endl;
   }
 
   return ret;
 }
 
-bool ForceTorqueCtrl::SetActiveCalibrationMatrix(int num)
+bool ATIForceTorqueSensorHWCan::SetActiveCalibrationMatrix(int num)
 {
 #if DEBUG
   std::cout << "\n\n*******Setting Active Calibration Matrix Num to: " << num << "********" << std::endl;
@@ -418,14 +430,14 @@ bool ForceTorqueCtrl::SetActiveCalibrationMatrix(int num)
   }
   else
   {
-    std::cout << "ForceTorqueCtrl::SetActiveCalibrationMatrix(int num): Can not transmit message!" << std::endl;
+    std::cout << "ATIForceTorqueSensorHWCan::SetActiveCalibrationMatrix(int num): Can not transmit message!" << std::endl;
     ret = false;
   }
 
   return ret;
 }
 
-bool ForceTorqueCtrl::SetBaudRate(int value)
+bool ATIForceTorqueSensorHWCan::SetBaudRate(int value)
 {
 #if DEBUG
   std::cout << "\n\n*******Setting Baud Rate value to: " << value << "********" << std::endl;
@@ -469,14 +481,14 @@ bool ForceTorqueCtrl::SetBaudRate(int value)
   }
   else
   {
-    std::cout << "ForceTorqueCtrl::SetBaudRate(int value): Can not transmit message!" << std::endl;
+    std::cout << "ATIForceTorqueSensorHWCan::SetBaudRate(int value): Can not transmit message!" << std::endl;
     ret = false;
   }
 
   return ret;
 }
 
-bool ForceTorqueCtrl::Reset()
+bool ATIForceTorqueSensorHWCan::Reset()
 {
   std::cout << "\n\n******* Reseting the NETCANOEM ********" << std::endl;
   bool ret = true;
@@ -488,7 +500,7 @@ bool ForceTorqueCtrl::Reset()
 
   if (!ret)
   {
-    std::cout << "ForceTorqueCtrl::Reset(): Can not transmit message!" << std::endl;
+    std::cout << "ATIForceTorqueSensorHWCan::Reset(): Can not transmit message!" << std::endl;
     ret = false;
   }
 
@@ -497,7 +509,7 @@ bool ForceTorqueCtrl::Reset()
   return ret;
 }
 
-bool ForceTorqueCtrl::SetBaseIdentifier(int identifier)
+bool ATIForceTorqueSensorHWCan::SetBaseIdentifier(int identifier)
 {
 #if DEBUG
   std::cout << "\n\n*******Setting Base Identifier value to HEX : " << std::hex << identifier << " ********"
@@ -543,14 +555,14 @@ bool ForceTorqueCtrl::SetBaseIdentifier(int identifier)
   }
   else
   {
-    std::cout << "ForceTorqueCtrl::SetBaseIdentifier(int identifier): Can not transmit message!" << std::endl;
+    std::cout << "ATIForceTorqueSensorHWCan::SetBaseIdentifier(int identifier): Can not transmit message!" << std::endl;
     ret = false;
   }
 
   return ret;
 }
 
-void ForceTorqueCtrl::ReadCalibrationMatrix()
+void ATIForceTorqueSensorHWCan::ReadCalibrationMatrix()
 {
   Eigen::VectorXf vCoef(6);
 
@@ -580,7 +592,7 @@ void ForceTorqueCtrl::ReadCalibrationMatrix()
   SetCalibMatrix();
 }
 
-void ForceTorqueCtrl::ReadMatrix(int axis, Eigen::VectorXf &vec)
+void ATIForceTorqueSensorHWCan::ReadMatrix(int axis, Eigen::VectorXf &vec)
 {
 #if DEBUG
   std::cout << "\n\n*******Read Matrix**********" << std::endl;
@@ -701,7 +713,7 @@ void ForceTorqueCtrl::ReadMatrix(int axis, Eigen::VectorXf &vec)
 #endif
 }
 
-bool ForceTorqueCtrl::ReadFirmwareVersion()
+bool ATIForceTorqueSensorHWCan::ReadFirmwareVersion()
 {
 #if DEBUG
   std::cout << "\n\n*******Reading Firmware Version*******" << std::endl;
@@ -752,7 +764,7 @@ bool ForceTorqueCtrl::ReadFirmwareVersion()
   return ret;
 }
 
-bool ForceTorqueCtrl::ReadSGData(int statusCode, double &Fx, double &Fy, double &Fz, double &Tx, double &Ty, double &Tz)
+bool ATIForceTorqueSensorHWCan::readFTData(int statusCode, double &Fx, double &Fy, double &Fz, double &Tx, double &Ty, double &Tz)
 {
   int sg0 = 0, sg1 = 0, sg2 = 0, sg3 = 0, sg4 = 0, sg5 = 0;
 
@@ -763,7 +775,7 @@ bool ForceTorqueCtrl::ReadSGData(int statusCode, double &Fx, double &Fy, double 
 
   if (!ret)
   {
-    std::cout << "ForceTorqueCtrl::ReadSGData: Error: Transmiting message failed!" << std::endl;
+    std::cout << "ATIForceTorqueSensorHWCan::ReadSGData: Error: Transmiting message failed!" << std::endl;
     return false;
   }
 
@@ -774,7 +786,7 @@ bool ForceTorqueCtrl::ReadSGData(int statusCode, double &Fx, double &Fy, double 
   {
     if (replyMsg.getID() != (m_CanBaseIdentifier | 0x0))
     {
-      std::cout << "ForceTorqueCtrl::ReadSGData: Error: Received wrong opcode (Should be 0x200)!" << std::endl;
+      std::cout << "ATIForceTorqueSensorHWCan::ReadSGData: Error: Received wrong opcode (Should be 0x200)!" << std::endl;
       std::cout << "reply ID: \t" << std::hex << replyMsg.getID() << std::endl;
       std::cout << "reply Length: \t" << replyMsg.getLength() << std::endl;
       std::cout << "reply Data: \t" << replyMsg.getAt(0) << " " << replyMsg.getAt(1) << " " << replyMsg.getAt(2) << " "
@@ -791,13 +803,13 @@ bool ForceTorqueCtrl::ReadSGData(int statusCode, double &Fx, double &Fy, double 
     {
       if (statusCode & 0x4000)
       {
-        std::cout << "ForceTorqueCtrl::ReadSGData: CAN bus error detected!" << std::endl;
+        std::cout << "ATIForceTorqueSensorHWCan::ReadSGData: CAN bus error detected!" << std::endl;
         Reset();
-        std::cout << "ForceTorqueCtrl::ReadSGData: FTS reseted!" << std::endl;
+        std::cout << "ATIForceTorqueSensorHWCan::ReadSGData: FTS reseted!" << std::endl;
       }
       else
       {
-        std::cout << "ForceTorqueCtrl::ReadSGData: Error: Something is wrong with sensor!" << std::endl;
+        std::cout << "ATIForceTorqueSensorHWCan::ReadSGData: Error: Something is wrong with sensor!" << std::endl;
         std::cout << std::hex << statusCode << std::endl;
       }
     }
@@ -822,7 +834,7 @@ bool ForceTorqueCtrl::ReadSGData(int statusCode, double &Fx, double &Fy, double 
   {
     if (replyMsg.getID() != (m_CanBaseIdentifier | 0x1))
     {
-      std::cout << "ForceTorqueCtrl::ReadSGData: Error: Received wrong opcode (Should be 0x201)!" << std::endl;
+      std::cout << "ATIForceTorqueSensorHWCan::ReadSGData: Error: Received wrong opcode (Should be 0x201)!" << std::endl;
       std::cout << "reply ID: \t" << std::hex << replyMsg.getID() << std::endl;
       std::cout << "reply Length: \t" << replyMsg.getLength() << std::endl;
       std::cout << "reply Data: \t" << replyMsg.getAt(0) << " " << replyMsg.getAt(1) << " " << replyMsg.getAt(2) << " "
@@ -856,7 +868,7 @@ bool ForceTorqueCtrl::ReadSGData(int statusCode, double &Fx, double &Fy, double 
   return true;
 }
 
-void ForceTorqueCtrl::StrainGaugeToForce(int &sg0, int &sg1, int &sg2, int &sg3, int &sg4, int &sg5)
+void ATIForceTorqueSensorHWCan::StrainGaugeToForce(int &sg0, int &sg1, int &sg2, int &sg3, int &sg4, int &sg5)
 {
   Eigen::VectorXf v6SG(6);
   Eigen::VectorXf v6tmp(6);
@@ -872,7 +884,7 @@ void ForceTorqueCtrl::StrainGaugeToForce(int &sg0, int &sg1, int &sg2, int &sg3,
   m_vForceData = test * 0.000001;
 }
 
-void ForceTorqueCtrl::SetGaugeOffset(float sg0Off, float sg1Off, float sg2Off, float sg3Off, float sg4Off, float sg5Off)
+void ATIForceTorqueSensorHWCan::SetGaugeOffset(float sg0Off, float sg1Off, float sg2Off, float sg3Off, float sg4Off, float sg5Off)
 {
   Eigen::VectorXf tmp(6);
   tmp[0] = sg0Off;
@@ -883,7 +895,7 @@ void ForceTorqueCtrl::SetGaugeOffset(float sg0Off, float sg1Off, float sg2Off, f
   tmp[5] = sg5Off;
   m_v3StrainGaigeOffset = tmp;
 }
-void ForceTorqueCtrl::SetGaugeGain(float gg0, float gg1, float gg2, float gg3, float gg4, float gg5)
+void ATIForceTorqueSensorHWCan::SetGaugeGain(float gg0, float gg1, float gg2, float gg3, float gg4, float gg5)
 {
   Eigen::VectorXf tmp(6);
   tmp[0] = gg0;
@@ -896,7 +908,7 @@ void ForceTorqueCtrl::SetGaugeGain(float gg0, float gg1, float gg2, float gg3, f
   // std::cout<<"GaugeGain: \n"<<m_v3GaugeGain<<"\n\n";
 }
 
-void ForceTorqueCtrl::SetFXGain(float fxg0, float fxg1, float fxg2, float fxg3, float fxg4, float fxg5)
+void ATIForceTorqueSensorHWCan::SetFXGain(float fxg0, float fxg1, float fxg2, float fxg3, float fxg4, float fxg5)
 {
   Eigen::VectorXf tmp(6);
   tmp[0] = fxg0;
@@ -908,7 +920,7 @@ void ForceTorqueCtrl::SetFXGain(float fxg0, float fxg1, float fxg2, float fxg3, 
   m_v3FXGain = tmp;
   // std::cout<<"FXGain: \n"<<m_v3FXGain<<"\n\n";
 }
-void ForceTorqueCtrl::SetFYGain(float fyg0, float fyg1, float fyg2, float fyg3, float fyg4, float fyg5)
+void ATIForceTorqueSensorHWCan::SetFYGain(float fyg0, float fyg1, float fyg2, float fyg3, float fyg4, float fyg5)
 {
   Eigen::VectorXf tmp(6);
   tmp[0] = fyg0;
@@ -920,7 +932,7 @@ void ForceTorqueCtrl::SetFYGain(float fyg0, float fyg1, float fyg2, float fyg3, 
   m_v3FYGain = tmp;
   // std::cout<<"FYGain: \n"<<m_v3FYGain<<"\n\n";
 }
-void ForceTorqueCtrl::SetFZGain(float fzg0, float fzg1, float fzg2, float fzg3, float fzg4, float fzg5)
+void ATIForceTorqueSensorHWCan::SetFZGain(float fzg0, float fzg1, float fzg2, float fzg3, float fzg4, float fzg5)
 {
   Eigen::VectorXf tmp(6);
   tmp[0] = fzg0;
@@ -932,7 +944,7 @@ void ForceTorqueCtrl::SetFZGain(float fzg0, float fzg1, float fzg2, float fzg3, 
   m_v3FZGain = tmp;
   // std::cout<<"FZGain: \n"<<m_v3FZGain<<"\n\n";
 }
-void ForceTorqueCtrl::SetTXGain(float txg0, float txg1, float txg2, float txg3, float txg4, float txg5)
+void ATIForceTorqueSensorHWCan::SetTXGain(float txg0, float txg1, float txg2, float txg3, float txg4, float txg5)
 {
   Eigen::VectorXf tmp(6);
   tmp[0] = txg0;
@@ -944,7 +956,7 @@ void ForceTorqueCtrl::SetTXGain(float txg0, float txg1, float txg2, float txg3, 
   m_v3TXGain = tmp;
   // std::cout<<"TXGain: \n"<<m_v3TXGain<<"\n\n";
 }
-void ForceTorqueCtrl::SetTYGain(float tyg0, float tyg1, float tyg2, float tyg3, float tyg4, float tyg5)
+void ATIForceTorqueSensorHWCan::SetTYGain(float tyg0, float tyg1, float tyg2, float tyg3, float tyg4, float tyg5)
 {
   Eigen::VectorXf tmp(6);
   tmp[0] = tyg0;
@@ -956,7 +968,7 @@ void ForceTorqueCtrl::SetTYGain(float tyg0, float tyg1, float tyg2, float tyg3, 
   m_v3TYGain = tmp;
   // std::cout<<"TYGain: \n"<<m_v3TYGain<<"\n\n";
 }
-void ForceTorqueCtrl::SetTZGain(float tzg0, float tzg1, float tzg2, float tzg3, float tzg4, float tzg5)
+void ATIForceTorqueSensorHWCan::SetTZGain(float tzg0, float tzg1, float tzg2, float tzg3, float tzg4, float tzg5)
 {
   Eigen::VectorXf tmp(6);
   tmp[0] = tzg0;
@@ -969,7 +981,7 @@ void ForceTorqueCtrl::SetTZGain(float tzg0, float tzg1, float tzg2, float tzg3, 
   // std::cout<<"TZGain: \n"<<m_v3TZGain<<"\n\n";
 }
 
-void ForceTorqueCtrl::CalcCalibMatrix()
+void ATIForceTorqueSensorHWCan::CalcCalibMatrix()
 {
   Eigen::MatrixXf tmp(6, 6);
   tmp(0) = m_v3FXGain[0] / m_v3GaugeGain[0];
@@ -1017,7 +1029,7 @@ void ForceTorqueCtrl::CalcCalibMatrix()
   m_mXCalibMatrix = tmp;
 }
 
-void ForceTorqueCtrl::SetCalibMatrix()
+void ATIForceTorqueSensorHWCan::SetCalibMatrix()
 {
   Eigen::MatrixXf tmp(6, 6);
   tmp(0) = m_v3FXGain[0];
@@ -1064,3 +1076,5 @@ void ForceTorqueCtrl::SetCalibMatrix()
 
   m_mXCalibMatrix = tmp.transpose();
 }
+
+PLUGINLIB_EXPORT_CLASS(ATIForceTorqueSensorHWCan, hardware_interface::ForceTorqueSensorHW)

@@ -48,12 +48,14 @@
  *
  ****************************************************************/
 
-#ifndef FORCETORQUECTRL_INCLUDEDEF_H
-#define FORCETORQUECTRL_INCLUDEDEF_H
+#ifndef ATIFORCETORQUESENSORHWCAN_INCLUDEDEF_H
+#define ATIFORCETORQUESENSORHWCAN_INCLUDEDEF_H
 
 #include <iostream>
 #include <fstream>
 #include <Eigen/Core>
+
+#include <force_torque_sensor/force_torque_sensor_hw.h>
 
 // Headers provided by other cob-packages
 #include <cob_generic_can/CanItf.h>
@@ -79,14 +81,15 @@
 #define ATI_CAN_BAUD_500K 3
 #define ATI_CAN_BAUD_250K 7
 
-class ForceTorqueCtrl
+class ATIForceTorqueSensorHWCan : public hardware_interface::ForceTorqueSensorHW
 {
 public:
-  ForceTorqueCtrl();
-  ForceTorqueCtrl(int can_type, std::string can_path, int can_baudrate, int base_identifier);
-  ~ForceTorqueCtrl();
+  ATIForceTorqueSensorHWCan();
+  ATIForceTorqueSensorHWCan(int can_type, std::string can_path, int can_baudrate, int base_identifier);
+  ~ATIForceTorqueSensorHWCan();
 
-  bool Init();
+  bool init();
+  bool initCommunication(int can_type, std::string can_path, int can_baudrate, int base_identifier);
   bool ReadFTSerialNumber();
   bool ReadCountsPerUnit();
   bool ReadUnitCodes();
@@ -95,7 +98,7 @@ public:
   bool SetBaudRate(int value);
   bool SetBaseIdentifier(int identifier);
   bool Reset();
-  bool ReadSGData(int statusCode, double& Fx, double& Fy, double& Fz, double& Tx, double& Ty, double& Tz);
+  bool readFTData(int statusCode, double& Fx, double& Fy, double& Fz, double& Tx, double& Ty, double& Tz);
   bool ReadFirmwareVersion();
   void ReadCalibrationMatrix();
 
