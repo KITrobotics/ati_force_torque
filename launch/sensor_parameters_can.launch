@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+    <rosparam command="load" file="$(find ati_force_torque)/config/can_ati.yaml"/>
+    <rosparam command="load" file="$(find ati_force_torque)/config/sensor_configuration_can.yaml"/>
+    <rosparam command="load" ns="Calibration/Offset" file="$(find ati_force_torque)/config/sensor_offset.yaml" />
+</launch>

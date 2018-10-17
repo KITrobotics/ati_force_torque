@@ -1,8 +1,7 @@
 <?xml version="1.0"?>
 <launch>
-
     <include file="$(find ati_force_torque)/launch/driver.launch">
-        <arg name="is_socket" value="true" />
+        <arg name="sim" value="false"/>
     </include>
-
+    <include ns="fts" file="$(find ati_force_torque)/launch/sensor_parameters_can_socket.launch"/>
 </launch>

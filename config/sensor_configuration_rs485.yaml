@@ -1,0 +1,41 @@
+Node:
+    sim: false
+    sensor_hw: "ati_force_torque/ATIForceTorqueSensorHWRS485"
+    ft_pub_freq: 200
+    ft_pull_freq: 800
+    sensor_frame: "fts_reference_link"
+    transform_frame: "fts_base_link"
+
+Calibration:
+    Offset:
+        n_measurements: 500
+        T_between_meas: 0.01
+        isStatic: false # true= use static offset Calibration, false=use calibrate Sensor to 0 in current State
+
+ThresholdFilter:
+  name: ThresholdFilter
+  type: iirob_filters/ThresholdFilterWrench
+  params: {linear_threshold: 2.5,  angular_threshold: 0.3}
+
+LowPassFilter:
+  name: LowPassFilter
+  type: iirob_filters/LowPassFilterWrench
+  params: {SamplingFrequency: 200.0, DampingFrequency: 15.0, DampingIntensity: -6.0}
+        
+MovingMeanFilter:
+  name: MovingMeanFilter
+  type: filters/MovingMeanFilterWrench
+  params: {divider: 4}
+
+GravityCompensation:
+  name: GravityCompensationWrench
+  type: iirob_filters/GravityCompensator
+  params: {world_frame: "base_link"}
+
+Publish:
+    sensor_data: true
+    low_pass: true
+    moving_mean: true
+    transformed_data: true
+    gravity_compensated: true
+    threshold_filtered: true

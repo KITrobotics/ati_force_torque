@@ -4,4 +4,9 @@
     Powercube
   </description>
   </class>
+  <class name="ati_force_torque/ATIForceTorqueSensorHWRS485" type="ATIForceTorqueSensorHWRS485" base_class_type="hardware_interface::ForceTorqueSensorHW">
+  <description>
+    Powercube
+  </description>
+  </class>
 </library>

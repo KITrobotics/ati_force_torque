@@ -1,10 +1,9 @@
 <?xml version="1.0"?>
 <launch>
-    <arg name="is_socket" default="true"/>
     <arg name="sim" default="false"/>
+    <arg name="scenario_parameters" value="sim:=$(arg sim)"/> 
     
     <!-- send urdf to param server -->
-    <arg name="scenario_parameters" value="sim:=$(arg sim)"/> 
     <param name="sensor_description" command="$(find xacro)/xacro --inorder '$(find ati_force_torque)/description/urdf/sensor_mini58.urdf.xacro' $(arg scenario_parameters)"/>  
     
     <!-- sensor state publisher -->
@@ -14,11 +13,6 @@
         <remap from="robot_description" to="sensor_description" />
     </node>
     
-    <include ns="fts" file="$(find ati_force_torque)/launch/sensor_parameters.launch">
-      <arg name="is_socket" value="$(arg is_socket)"/>
-      <arg name="sim" value="$(arg sim)"/>
-    </include>
-
     <!-- start FTS Driver Node -->
     <node pkg="ati_force_torque" type="ati_force_torque_node" name="fts_node" ns="fts" cwd="node" respawn="false" output="screen">
     </node>
