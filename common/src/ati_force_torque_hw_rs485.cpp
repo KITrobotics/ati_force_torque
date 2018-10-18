@@ -5,7 +5,7 @@
  * Intelligent Process Control and Robotics (IPR),
  * Karlsruhe Institute of Technology
  *
- * Maintainer: Denis ������togl, email: denis.stogl@kit.edu
+ * Maintainer: Denis ������������������togl, email: denis.stogl@kit.edu
  *
  * Date of update: 2014-2016
  *
@@ -369,7 +369,7 @@ bool ATIForceTorqueSensorHWRS485::ReadFTCalibrationData(const unsigned int calib
       temp = (((int32_t)tab_reg[index]) << 16) | tab_reg[index+1];
       memcpy(&m_calibrationData.maxRating[i], &temp, sizeof(float));
   }
-  m_calibrationData.countsPerForce =  MODBUS_GET_INT32_FROM_INT16(tab_reg, 117); //((tab_reg[118] << 16) + tab_reg[117]);
+  m_calibrationData.countsPerForce =  MODBUS_GET_INT32_FROM_INT16(tab_reg, 117);
 #if DEBUG
   std::cout << "Counts per force are " << m_calibrationData.countsPerForce << std::endl;
 #endif
@@ -432,7 +432,7 @@ bool ATIForceTorqueSensorHWRS485::SetActiveGain(const uint16_t ag0, const uint16
 {
 	std::cout << "Setting active gain to " << ag0 << ", " <<  ag1 << ", " << ag2 << ", " << ag3 << ", " << ag4 << ", " << ag5 << std::endl;
 	uint16_t activeGain[6] = {ag0, ag1, ag2, ag3, ag4, ag5};
-;	int rc = modbus_write_registers(m_modbusCtrl, 0x0000, 6, activeGain);
+	int rc = modbus_write_registers(m_modbusCtrl, 0x0000, 6, activeGain);
 	if (rc == -1)
 	{
 		std::cout << "Setting active gain failed with status " << rc << std::endl;
@@ -661,12 +661,14 @@ bool ATIForceTorqueSensorHWRS485::readFTData(int statusCode, double& Fx, double&
 		}
 	}
 
-	if ((ros::Time::now()-m_buffer.timestamp).toNSec() > m_bufferTimeout)
+	m_buffer_mutex.lock();
+	long unsigned int timeSinceLastInput = (ros::Time::now()-m_buffer.timestamp).toNSec();
+	if (timeSinceLastInput > m_bufferTimeout)
 	{
-		std::cout << "Buffer timestamp is too far in the past! Data might be deprecated and will be ignored. (" << (ros::Time::now()-m_buffer.timestamp).toNSec() << ")" << std::endl;
+		std::cout << "Buffer timestamp is too far in the past! Data might be deprecated and will be ignored. (" << timeSinceLastInput << ")" << std::endl;
+		m_buffer_mutex.unlock();
 		return false;
 	}
-	m_buffer_mutex.lock();
 	sg0 = m_buffer.gageData[0];
 	sg1 = m_buffer.gageData[1];
 	sg2 = m_buffer.gageData[2];
