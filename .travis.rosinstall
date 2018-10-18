@@ -11,6 +11,10 @@
     local-name: force_torque_sensor
     version: kinetic-devel
 - git:
+    uri: 'https://github.com/KITrobotics/ipr_extern.git'
+    local-name: ipr_extern
+    version: kinetic-devel
+- git:
     uri: 'https://github.com/ipa320/cob_driver.git'
     local-name: cob_driver
     version: indigo_dev
