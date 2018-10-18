@@ -66,8 +66,6 @@
 
 #include <force_torque_sensor/force_torque_sensor_hw.h>
 
-#define DEBUG 1
-
 //Available Modbus Baudrates (As specified in 8.1):
 #define MODBUSBAUD_1250K		1250000
 #define MODBUSBAUD_115200	115200

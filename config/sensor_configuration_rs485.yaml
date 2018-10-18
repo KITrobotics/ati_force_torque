@@ -2,7 +2,7 @@ Node:
     sim: false
     sensor_hw: "ati_force_torque/ATIForceTorqueSensorHWRS485"
     ft_pub_freq: 200
-    ft_pull_freq: 800
+    ft_pull_freq: 7000
     sensor_frame: "fts_reference_link"
     transform_frame: "fts_base_link"
 

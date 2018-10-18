@@ -1,8 +1,0 @@
-#!/usr/bin/env python
-from rosparam_handler.parameter_generator_catkin import *
-gen = ParameterGenerator()
-
-gen.add("path", paramtype="std::string", description="socket_rs485", default=" ", configurable=False)
-gen.add("baudrate", paramtype="int", description="baudrate", default=-1, configurable=False)
-
-exit(gen.generate("ati_force_torque", "ForceTorqueSensor", "RS485Configuration"))

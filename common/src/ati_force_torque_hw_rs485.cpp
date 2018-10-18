@@ -48,6 +48,8 @@
  *
  ****************************************************************/
 
+#define DEBUG 1
+
 // general includes
 #include <ati_force_torque/ati_force_torque_hw_rs485.h>
 
@@ -775,7 +777,6 @@ bool ATIForceTorqueSensorHWRS485::StartStreaming()
 
 void ATIForceTorqueSensorHWRS485::ReadDataLoop()
 {
-	std::chrono::microseconds sleepTime = std::chrono::microseconds(100);
 	while (m_isStreaming)
 	{
 		if (ReadData())

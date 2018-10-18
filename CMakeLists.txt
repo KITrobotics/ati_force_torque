@@ -4,7 +4,6 @@ project(ati_force_torque)
 find_package(catkin REQUIRED COMPONENTS
   cmake_modules
   cob_generic_can
-  dynamic_reconfigure 
   gazebo_ros
   geometry_msgs
   iirob_filters
@@ -45,16 +44,6 @@ if (Cpp11CompilerFlag)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
 
-generate_ros_parameter_files(
-    cfg/CoordinateSystemCalibration.params
-    cfg/CanConfiguration.params
-    cfg/RS485Configuration.params
-    cfg/FTSConfiguration.params
-    cfg/NodeConfiguration.params
-    cfg/PublishConfiguration.params
-    cfg/Calibration.params
-)
-
 add_service_files(
   FILES
   CalculateAverageMasurement.srv
@@ -89,7 +78,7 @@ include_directories(
   ${Eigen_INCLUDE_DIRS}
 )
 
-add_library(${PROJECT_NAME} common/src/ForceTorqueCtrl.cpp src/force_torque_sensor.cpp)
+add_library(${PROJECT_NAME} common/src/ForceTorqueCtrl.cpp)
 add_dependencies(${PROJECT_NAME}
   ${PROJECT_NAME}_gencfg  # For dynamic_reconfigure
   ${PROJECT_NAME}_generate_messages_cpp

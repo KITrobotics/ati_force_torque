@@ -1,4 +1,4 @@
-CAN:
+HWComm:
     path: /dev/ttyUSB0
     baudrate: 1250000
 

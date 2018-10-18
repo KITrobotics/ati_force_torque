@@ -60,8 +60,6 @@
 // Headers provided by other cob-packages
 #include <cob_generic_can/CanItf.h>
 
-#define DEBUG 0
-
 // opCodes for the ForceTorque Can Interface
 // set as Can Message ID
 #define READ_SG 0x0
