@@ -57,7 +57,7 @@
 #include <fstream>
 #include <Eigen/Core>
 
-#include <modbus/modbus-rtu.h>
+#include <libmodbus/modbus-rtu.h>
 #include <ros/time.h>
 #include <ros/ros.h>
 #include <mutex>

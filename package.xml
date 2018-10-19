@@ -25,6 +25,7 @@
   <depend>geometry_msgs</depend>
   <depend>hardware_interface</depend>
   <depend>iirob_filters</depend>
+  <depend>libmodbus</depend>
   <depend>rosparam_handler</depend>
   <depend>roslaunch</depend>
   <depend>rostopic</depend>
@@ -40,7 +41,6 @@
   <depend>filters</depend>
   <depend>force_torque_sensor</depend>
   <depend>pluginlib</depend>
-  <depend>libmodbus</depend>
 
   <exec_depend>message_runtime</exec_depend>
   <exec_depend>robot_state_publisher</exec_depend>
