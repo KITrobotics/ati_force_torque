@@ -5,7 +5,7 @@
  * Intelligent Process Control and Robotics (IPR),
  * Karlsruhe Institute of Technology
  *
- * Maintainer: Denis ������togl, email: denis.stogl@kit.edu
+ * Maintainer: Denis ������������������togl, email: denis.stogl@kit.edu
  *
  * Date of update: 2014-2016
  *
@@ -122,7 +122,9 @@ bool ATIForceTorqueSensorHWRS485::initCommunication(int type, std::string path, 
 
 bool ATIForceTorqueSensorHWRS485::init()
 {
+#if DEBUG
   std::cout << "ATIForceTorqueSensorHWRS485::init" << std::endl;
+#endif
   m_isStreaming = false;
   if (initRS485())
   {
@@ -171,12 +173,16 @@ bool ATIForceTorqueSensorHWRS485::init()
 
 bool ATIForceTorqueSensorHWRS485::initRS485()
 {
+#if DEBUG
   std::cout << "ATIForceTorqueSensorHWRS485::initRS485" << std::endl;
+#endif
   if (m_modbusCtrl)
   {
 	  Close();	//Close existing modbus connection before opening a new one
   }
+#if DEBUG
   std::cout << "Opening new modbus connection to " << m_RS485Device.c_str() << " with baudrate " << m_ModbusBaudrate << std::endl;
+#endif
   m_ModbusBaseIdentifier = 0x0A;
   //m_ModbusBaudrate = MODBUSBAUD_19200;
   m_modbusCtrl = modbus_new_rtu(m_RS485Device.c_str(), m_ModbusBaudrate, 'E', 8, 1); //As specified in 8.1., the sensor uses 8 data bits and one bit for 'Even' parity
@@ -188,7 +194,9 @@ bool ATIForceTorqueSensorHWRS485::initRS485()
 //#if DEBUG
 //  modbus_set_debug(m_modbusCtrl, true);
 //#endif
+#if DEBUG
   std::cout << "Setting slave to " << m_ModbusBaseIdentifier << std::endl;
+#endif
   int rc = modbus_set_slave(m_modbusCtrl, m_ModbusBaseIdentifier);
   if (rc == -1)
   {
@@ -369,7 +377,7 @@ bool ATIForceTorqueSensorHWRS485::ReadFTCalibrationData(const unsigned int calib
       temp = (((int32_t)tab_reg[index]) << 16) | tab_reg[index+1];
       memcpy(&m_calibrationData.maxRating[i], &temp, sizeof(float));
   }
-  m_calibrationData.countsPerForce =  MODBUS_GET_INT32_FROM_INT16(tab_reg, 117); //((tab_reg[118] << 16) + tab_reg[117]);
+  m_calibrationData.countsPerForce =  MODBUS_GET_INT32_FROM_INT16(tab_reg, 117);
 #if DEBUG
   std::cout << "Counts per force are " << m_calibrationData.countsPerForce << std::endl;
 #endif
@@ -422,7 +430,9 @@ bool ATIForceTorqueSensorHWRS485::SetStorageLock(const bool lock) const
     std::cout << "Could not set storage lock. Invalid answer." << std::endl;
     return false;
   }
+#if DEBUG
   std::cout << "Setting storage lock was successful" << std::endl;
+#endif
 
   return true;
 }
@@ -430,9 +440,11 @@ bool ATIForceTorqueSensorHWRS485::SetStorageLock(const bool lock) const
 
 bool ATIForceTorqueSensorHWRS485::SetActiveGain(const uint16_t ag0, const uint16_t ag1, const uint16_t ag2, const uint16_t ag3, const uint16_t ag4, const uint16_t ag5) const
 {
+#if DEBUG
 	std::cout << "Setting active gain to " << ag0 << ", " <<  ag1 << ", " << ag2 << ", " << ag3 << ", " << ag4 << ", " << ag5 << std::endl;
+#endif
 	uint16_t activeGain[6] = {ag0, ag1, ag2, ag3, ag4, ag5};
-;	int rc = modbus_write_registers(m_modbusCtrl, 0x0000, 6, activeGain);
+	int rc = modbus_write_registers(m_modbusCtrl, 0x0000, 6, activeGain);
 	if (rc == -1)
 	{
 		std::cout << "Setting active gain failed with status " << rc << std::endl;
@@ -445,7 +457,9 @@ bool ATIForceTorqueSensorHWRS485::SetActiveGain(const uint16_t ag0, const uint16
 
 bool ATIForceTorqueSensorHWRS485::SetActiveOffset(const uint16_t ao0, const uint16_t ao1, const uint16_t ao2, const uint16_t ao3, const uint16_t ao4, const uint16_t ao5) const
 {
+#if DEBUG
 	std::cout << "Setting active offset to " << ao0 << ", " <<  ao1 << ", " << ao2 << ", " << ao3 << ", " << ao4 << ", " << ao5 << std::endl;
+#endif
 	uint16_t activeOffset[6] = {ao0, ao1, ao2, ao3, ao4, ao5};
 	int rc = modbus_write_registers(m_modbusCtrl, 0x0006, 6, activeOffset);
 	if (rc == -1)
@@ -474,7 +488,9 @@ bool ATIForceTorqueSensorHWRS485::ReadStatusWord() const
   bool statusGood = true;
   if (tab_reg[0] == 0)
   {
+#if DEBUG
 	  std::cout << "Status is good." << std::endl;
+#endif
       return true;
   }
   
@@ -589,7 +605,9 @@ bool ATIForceTorqueSensorHWRS485::SetBaudRate(const int value, const bool setVol
 
 bool ATIForceTorqueSensorHWRS485::Reset()
 {
+#if DEBUG
   std::cout << "\n\n******* Reseting the RS485 Interface ********" << std::endl;
+#endif
   if (!Close())
   {
 	  return false;
@@ -661,12 +679,14 @@ bool ATIForceTorqueSensorHWRS485::readFTData(int statusCode, double& Fx, double&
 		}
 	}
 
-	if ((ros::Time::now()-m_buffer.timestamp).toNSec() > m_bufferTimeout)
+	m_buffer_mutex.lock();
+	long unsigned int timeSinceLastInput = (ros::Time::now()-m_buffer.timestamp).toNSec();
+	if (timeSinceLastInput > m_bufferTimeout)
 	{
-		std::cout << "Buffer timestamp is too far in the past! Data might be deprecated and will be ignored. (" << (ros::Time::now()-m_buffer.timestamp).toNSec() << ")" << std::endl;
+		std::cout << "Buffer timestamp is too far in the past! Data might be deprecated and will be ignored. (" << timeSinceLastInput << ")" << std::endl;
+		m_buffer_mutex.unlock();
 		return false;
 	}
-	m_buffer_mutex.lock();
 	sg0 = m_buffer.gageData[0];
 	sg1 = m_buffer.gageData[1];
 	sg2 = m_buffer.gageData[2];
@@ -691,7 +711,9 @@ bool ATIForceTorqueSensorHWRS485::readFTData(int statusCode, double& Fx, double&
 
 bool ATIForceTorqueSensorHWRS485::StartStreaming()
 {
+#if DEBUG
 	std::cout << "Trying to start stream" << std::endl;
+#endif
 	if (!m_isStreaming)
 	{
 		uint8_t raw_req[] = { m_ModbusBaseIdentifier, 0x46, 0x55 };		//OpCode is 0x46 = 70, Data is 0x55 as specified in 8.3.1.
@@ -799,6 +821,9 @@ bool ATIForceTorqueSensorHWRS485::ReadData()
 {
 	if (m_isStreaming)
 	{
+#if DEBUG
+		readStart = ros::Time::now();
+#endif
 		/* *** READ *** */
 		int n = read( m_rs485, &streamBuf + bufferSize , sizeof(streamBuf) - bufferSize );
 		/* Error Handling */
@@ -823,8 +848,6 @@ bool ATIForceTorqueSensorHWRS485::ReadData()
 		}
 		bytesRead += sizeof(streamBuf);
 		bufferSize = 0;
-//		std::cout << "Got data: " << n  << "/" << bufferSize << " - "<< (unsigned int)streamBuf[0] << " " << (unsigned int)streamBuf[1] << " " << (unsigned int)streamBuf[2] << " " << (unsigned int)streamBuf[3] << " " << (unsigned int)streamBuf[4] << " " << (unsigned int)streamBuf[5] << " " << (unsigned int)streamBuf[6] << " " << (unsigned int)streamBuf[7]  <<
-//				" " << (unsigned int)streamBuf[8]  << " " << (unsigned int)streamBuf[9]  << " " << (unsigned int)streamBuf[10]  << " " << (unsigned int)streamBuf[11]  << " " << (unsigned int)streamBuf[12]  << std::endl;
 		//Validate the read data (if invalid, exit)
 		if (!ValidateFTData(streamBuf))
 		{
@@ -845,6 +868,10 @@ bool ATIForceTorqueSensorHWRS485::ReadData()
 			m_buffer = tmp;
 			m_buffer_mutex.unlock();
 		}
+#if DEBUG
+		std::cout << "Read took " << (ros::Time::now()-readStart).toNSec() << " nanoseconds" << std::endl;
+#endif
+
 	}
 	return true;
 }

@@ -5,7 +5,7 @@
  * Intelligent Process Control and Robotics (IPR),
  * Karlsruhe Institute of Technology
  *
- * Maintainer: Denis ������togl, email: denis.stogl@kit.edu
+ * Maintainer: Denis ������������������togl, email: denis.stogl@kit.edu
  *
  *
  * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -329,6 +329,7 @@ private:
 	CalibrationData m_calibrationData;				//Calibration data object from the sensor. Can be set using ReadFTCalibrationData
 	ros::Time lastValidTimeStamp;					//The timestamp of the last valid data package
 	uint8_t streamBuf [26];							//Stream buffer. Contains the latest streaming data from the sensor
+	ros::Time readStart;
 	unsigned int bufferSize = 0;					//Contains the size of the current buffer
 
 	GageVector m_buffer;				//Contains the latest reading from the sensor
