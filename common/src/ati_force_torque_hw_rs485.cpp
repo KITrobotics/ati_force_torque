@@ -180,47 +180,64 @@ bool ATIForceTorqueSensorHWRS485::initRS485()
   {
 	  Close();	//Close existing modbus connection before opening a new one
   }
+
+
 #if DEBUG
   std::cout << "Opening new modbus connection to " << m_RS485Device.c_str() << " with baudrate " << m_ModbusBaudrate << std::endl;
 #endif
   m_ModbusBaseIdentifier = 0x0A;
-  //m_ModbusBaudrate = MODBUSBAUD_19200;
-  m_modbusCtrl = modbus_new_rtu(m_RS485Device.c_str(), m_ModbusBaudrate, 'E', 8, 1); //As specified in 8.1., the sensor uses 8 data bits and one bit for 'Even' parity
-  if (!m_modbusCtrl)
-  {
-	  std::cout << "Could not initialize modbus connection" << std::endl;
-	  return false;
-  }
-//#if DEBUG
-//  modbus_set_debug(m_modbusCtrl, true);
-//#endif
-#if DEBUG
-  std::cout << "Setting slave to " << m_ModbusBaseIdentifier << std::endl;
-#endif
-  int rc = modbus_set_slave(m_modbusCtrl, m_ModbusBaseIdentifier);
-  if (rc == -1)
-  {
-	  std::cout << "Could not set slave ID" << std::endl;
-	  Close();
-	  return false;
-  }
-
-  rc = modbus_connect(m_modbusCtrl);
-  if (rc == -1)
-  {
-	  std::cout << "Could not connect" << std::endl;
-	  Close();
-	  return false;
-  }
 
   int tries = 0;
-  while (!ReadStatusWord() && tries < 5) {
+  bool gotStatusWord = false;
+  while (!gotStatusWord && tries < 10) {
+	m_modbusCtrl = modbus_new_rtu(m_RS485Device.c_str(), m_ModbusBaudrate, 'E', 8, 1); //As specified in 8.1., the sensor uses 8 data bits and one bit for 'Even' parity
+	if (!m_modbusCtrl)
+	{
+	  std::cout << "Could not initialize modbus connection" << std::endl;
+	  tries++;
+	  continue;
+	}
+	//#if DEBUG
+	//  modbus_set_debug(m_modbusCtrl, true);
+	//#endif
+	#if DEBUG
+	  std::cout << "Setting slave to " << m_ModbusBaseIdentifier << std::endl;
+	#endif
+	int rc = modbus_set_slave(m_modbusCtrl, m_ModbusBaseIdentifier);
+	if (rc == -1)
+	{
+	  std::cout << "Could not set slave ID" << std::endl;
+	  Close();
+	  tries++;
+	  continue;
+	}
+
+	rc = modbus_connect(m_modbusCtrl);
+	if (rc == -1)
+	{
+	  std::cout << "Could not connect" << std::endl;
+	  Close();
+	  tries++;
+	  continue;
+	}
+	// This is a way of testing if communication is successful
+	gotStatusWord = ReadStatusWord();
+	if(!gotStatusWord)
+	{
+      Close();
+	  //Send stop sequence when starting a new connection, to make sure the sensor is not in streaming mode
+	  if (!OpenRawConnection())
+	  {
+		  tries++;
+		  continue;
+	  }
+	  SendStopSequence();
+	  usleep(500000);
+	}
     tries++;
-    usleep(1000000);
   }
 
-  // This is a way of testing if communication is successful
-  if (tries >= 5)
+  if (!gotStatusWord)
   {
     std::cout << "Could not read status word!" << std::endl;
     return false;
@@ -728,58 +745,10 @@ bool ATIForceTorqueSensorHWRS485::StartStreaming()
 		}
 		else if (rsp[2] == 1)
 		{
-			//Confirmed
-			/* Open File Descriptor: The connection have read/write access and it should be blocking */
-			m_rs485 = open( m_RS485Device.c_str(),   O_RDWR | O_NOCTTY |  O_EXCL );
-
-			/* Error Handling */
-			if ( m_rs485 == 0 )
+			if (!OpenRawConnection())
 			{
-				std::cout << "Error " << errno << " opening " << m_RS485Device << ": " << strerror (errno) << std::endl;
+				return false;
 			}
-			struct serial_struct ss;
-	        ioctl(m_rs485, TIOCGSERIAL, &ss);
-	        ss.flags = (ss.flags & ~ASYNC_SPD_MASK) | ASYNC_SPD_CUST;
-	        ss.custom_divisor = (ss.baud_base + (m_ModbusBaudrate/ 2)) / m_ModbusBaudrate;
-	        int closestSpeed = ss.baud_base / ss.custom_divisor;
-
-	        if (closestSpeed < m_ModbusBaudrate * 98 / 100 || closestSpeed > m_ModbusBaudrate * 102 / 100) {
-	            fprintf(stderr, "Cannot set serial port speed to. Closest possible is %i\n", closestSpeed);
-	        }
-	        ioctl(m_rs485, TIOCSSERIAL, &ss);
-	        struct termios tios;
-	        memset(&tios, 0, sizeof(struct termios));
-	        speed_t speed;
-	        speed = B38400;
-	        cfsetispeed(&tios, B38400);
-	        cfsetospeed(&tios, B38400);
-	        /* Set the baud rate */
-	        if ((cfsetispeed(&tios, speed) < 0) ||
-	            (cfsetospeed(&tios, speed) < 0)) {
-	            close(m_rs485);
-	            m_rs485 = 0;
-	            std::cout << "Could not set speed" << std::endl;
-	            return false;
-
-	        }
-	        ioctl(m_rs485, TIOCSSERIAL, &ss);
-	        /* Software flow control is disabled */
-	        tios.c_iflag &= ~(IXON | IXOFF | IXANY);
-	        /* Raw ouput */
-	        tios.c_oflag &=~ OPOST;
-	        tios.c_cflag &= ~CSIZE;
-	        tios.c_cflag |= CS8;
-	        tios.c_cflag &=~ CSTOPB;
-	        tios.c_cflag |= PARENB;
-	        tios.c_cflag &=~ PARODD;
-	        tios.c_iflag |= INPCK;
-	        tios.c_cflag |= (CREAD | CLOCAL);	//enable receiver
-	        tios.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
-	        tios.c_cc[VMIN] = 39;		/* Read 10 characters */
-	        tios.c_cc[VTIME] = 0;		/* Wait indefinitely   */
-	        if (tcsetattr(m_rs485, TCSANOW, &tios) < 0) {
-	            return false;
-	        }
 			m_isStreaming = true;
 		}
 		else
@@ -795,6 +764,69 @@ bool ATIForceTorqueSensorHWRS485::StartStreaming()
 		m_readThread.detach();
 	}
 	return true;
+}
+
+bool ATIForceTorqueSensorHWRS485::OpenRawConnection()
+{
+	//Confirmed
+	/* Open File Descriptor: The connection have read/write access and it should be blocking */
+	m_rs485 = open( m_RS485Device.c_str(),   O_RDWR | O_NOCTTY |  O_EXCL );
+
+	/* Error Handling */
+	if ( m_rs485 == 0 )
+	{
+		std::cout << "Error " << errno << " opening " << m_RS485Device << ": " << strerror (errno) << std::endl;
+		return false;
+	}
+	//Flush serial buffer
+	tcflush(m_rs485,TCIOFLUSH);
+
+	struct serial_struct ss;
+    ioctl(m_rs485, TIOCGSERIAL, &ss);
+    ss.flags = (ss.flags & ~ASYNC_SPD_MASK) | ASYNC_SPD_CUST;
+    ss.custom_divisor = (ss.baud_base + (m_ModbusBaudrate/ 2)) / m_ModbusBaudrate;
+    int closestSpeed = ss.baud_base / ss.custom_divisor;
+
+    if (closestSpeed < m_ModbusBaudrate * 98 / 100 || closestSpeed > m_ModbusBaudrate * 102 / 100) {
+        fprintf(stderr, "Cannot set serial port speed to. Closest possible is %i\n", closestSpeed);
+        return false;
+    }
+    ioctl(m_rs485, TIOCSSERIAL, &ss);
+    struct termios tios;
+    memset(&tios, 0, sizeof(struct termios));
+    speed_t speed;
+    speed = B38400;
+    cfsetispeed(&tios, B38400);
+    cfsetospeed(&tios, B38400);
+    /* Set the baud rate */
+    if ((cfsetispeed(&tios, speed) < 0) ||
+        (cfsetospeed(&tios, speed) < 0)) {
+        close(m_rs485);
+        m_rs485 = 0;
+        std::cout << "Could not set speed" << std::endl;
+        return false;
+
+    }
+    ioctl(m_rs485, TIOCSSERIAL, &ss);
+    /* Software flow control is disabled */
+    tios.c_iflag &= ~(IXON | IXOFF | IXANY);
+    /* Raw ouput */
+    tios.c_oflag &=~ OPOST;
+    tios.c_cflag &= ~CSIZE;
+    tios.c_cflag |= CS8;
+    tios.c_cflag &=~ CSTOPB;
+    tios.c_cflag |= PARENB;
+    tios.c_cflag &=~ PARODD;
+    tios.c_iflag |= INPCK;
+    tios.c_cflag |= (CREAD | CLOCAL);	//enable receiver
+    tios.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
+    tios.c_cc[VMIN] = 39;		/* Read 10 characters */
+    tios.c_cc[VTIME] = 0;		/* Wait indefinitely   */
+    if (tcsetattr(m_rs485, TCSANOW, &tios) < 0)
+    {
+        return false;
+    }
+    return true;
 }
 
 void ATIForceTorqueSensorHWRS485::ReadDataLoop()
@@ -921,6 +953,12 @@ bool ATIForceTorqueSensorHWRS485::SendStopSequence()
 	if (m_isStreaming)
 	{
 		unsigned char stopCmd[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,	//Send jamming sequence of 14 bytes to stop streaming
+								0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+								0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+								0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+								0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+								0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+								0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 								0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 		int n_written = write( m_rs485, stopCmd, sizeof(stopCmd));
 		return true;

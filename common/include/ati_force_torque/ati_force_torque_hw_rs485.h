@@ -306,6 +306,8 @@ protected:
 	bool ReadData();
 	void ReadDataLoop();
 
+	bool OpenRawConnection();
+
 	bool ValidateFTData(const uint8_t (&buf)[26]) const;
 
 	bool SendStopSequence();
