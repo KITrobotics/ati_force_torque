@@ -2,8 +2,8 @@
 Changelog for package ati_force_torque
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.1 (2018-12-11)
+------------------
 * Merge pull request #1 from KITrobotics/destogl-patch-1-1
   Update README.md
 * Update README.md
