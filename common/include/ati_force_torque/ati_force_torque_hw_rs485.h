@@ -5,17 +5,10 @@
  * Intelligent Process Control and Robotics (IPR),
  * Karlsruhe Institute of Technology
  *
- * Maintainer: Denis ������������������togl, email: denis.stogl@kit.edu
+ * Author: Florian Aumann
+ * Maintainer: Denis Štogl, email: denis.stogl@kit.edu
  *
- *
- * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- *
- * Copyright (c) 2010
- *
- * Fraunhofer Institute for Manufacturing Engineering
- * and Automation (IPA)
- *
- * Date of creation: May 2018
+ * Date of creation: October 2018
  *
  * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  *

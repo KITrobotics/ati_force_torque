@@ -5,9 +5,10 @@
  * Intelligent Process Control and Robotics (IPR),
  * Karlsruhe Institute of Technology
  *
- * Maintainer: Denis ������������������togl, email: denis.stogl@kit.edu
+ * Author: Florian Aumann
+ * Maintainer: Denis Štogl, email: denis.stogl@kit.edu
  *
- * Date of update: 2014-2016
+ * Date of update: 2014-2018
  *
  * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  *
@@ -48,7 +49,7 @@
  *
  ****************************************************************/
 
-#define DEBUG 1
+#define DEBUG 0
 
 // general includes
 #include <ati_force_torque/ati_force_torque_hw_rs485.h>
