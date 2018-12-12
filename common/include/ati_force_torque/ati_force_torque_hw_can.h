@@ -5,9 +5,10 @@
  * Intelligent Process Control and Robotics (IPR),
  * Karlsruhe Institute of Technology
  *
+ * Author: Florian Aumann
  * Maintainer: Denis Štogl, email: denis.stogl@kit.edu
  *
- * Date of update: 2014-2016
+ * Date of update: 2014-2018
  *
  * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  *
@@ -59,8 +60,6 @@
 
 // Headers provided by other cob-packages
 #include <cob_generic_can/CanItf.h>
-
-#define DEBUG 0
 
 // opCodes for the ForceTorque Can Interface
 // set as Can Message ID

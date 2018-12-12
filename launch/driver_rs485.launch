@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+  
+  <include ns="fts" file="$(find ati_force_torque)/launch/sensor_parameters_rs485.launch"/>
+  
+  <include file="$(find ati_force_torque)/launch/driver.launch">
+    <arg name="sim" value="false"/>
+  </include>
+  
+</launch>

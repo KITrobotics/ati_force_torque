@@ -1,7 +1,12 @@
 <library path="lib/libati_force_torque_sensor_hw">
   <class name="ati_force_torque/ATIForceTorqueSensorHWCan" type="ATIForceTorqueSensorHWCan" base_class_type="hardware_interface::ForceTorqueSensorHW">
   <description>
-    Powercube
+    ATI FTS CAN hardware interface.
+  </description>
+  </class>
+  <class name="ati_force_torque/ATIForceTorqueSensorHWRS485" type="ATIForceTorqueSensorHWRS485" base_class_type="hardware_interface::ForceTorqueSensorHW">
+  <description>
+    ATI FTS RS485 (Modbus) interface.
   </description>
   </class>
 </library>

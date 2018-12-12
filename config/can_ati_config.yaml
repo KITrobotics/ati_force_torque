@@ -1,4 +1,4 @@
-CAN:
+COMM:
     type: 1                 # CAN_PEAK_USB
     path: /dev/pcan32
     baudrate: 0x0           # CANITFBAUD_250K

@@ -4,7 +4,6 @@ project(ati_force_torque)
 find_package(catkin REQUIRED COMPONENTS
   cmake_modules
   cob_generic_can
-  dynamic_reconfigure 
   gazebo_ros
   geometry_msgs
   iirob_filters
@@ -25,9 +24,11 @@ find_package(catkin REQUIRED COMPONENTS
   filters
   force_torque_sensor
   pluginlib
+  libmodbus
 )
 
 find_package(Eigen3)
+
 if(NOT EIGEN3_FOUND)
   # Fallback to cmake_modules
   find_package(cmake_modules REQUIRED)
@@ -42,15 +43,6 @@ CHECK_CXX_COMPILER_FLAG("-std=c++11" Cpp11CompilerFlag)
 if (Cpp11CompilerFlag)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
-
-generate_ros_parameter_files(
-    cfg/CoordinateSystemCalibration.params
-    cfg/CanConfiguration.params
-    cfg/FTSConfiguration.params
-    cfg/NodeConfiguration.params
-    cfg/PublishConfiguration.params
-    cfg/Calibration.params
-)
 
 add_service_files(
   FILES
@@ -70,7 +62,7 @@ generate_messages(
 ###################################
 catkin_package(
  INCLUDE_DIRS common/include include
- CATKIN_DEPENDS cob_generic_can geometry_msgs iirob_filters message_runtime roscpp std_msgs std_srvs rospy tf2 tf2_ros tf2_geometry_msgs trajectory_msgs realtime_tools filters force_torque_sensor pluginlib
+ CATKIN_DEPENDS cob_generic_can geometry_msgs iirob_filters message_runtime roscpp std_msgs std_srvs rospy tf2 tf2_ros tf2_geometry_msgs trajectory_msgs realtime_tools filters force_torque_sensor pluginlib libmodbus
  DEPENDS Eigen
  LIBRARIES ${PROJECT_NAME} ${PROJECT_NAME}_sensor_hw
 )
@@ -86,7 +78,7 @@ include_directories(
   ${Eigen_INCLUDE_DIRS}
 )
 
-add_library(${PROJECT_NAME} common/src/ForceTorqueCtrl.cpp src/force_torque_sensor.cpp)
+add_library(${PROJECT_NAME} common/src/ForceTorqueCtrl.cpp)
 add_dependencies(${PROJECT_NAME}
   ${PROJECT_NAME}_gencfg  # For dynamic_reconfigure
   ${PROJECT_NAME}_generate_messages_cpp
@@ -94,8 +86,8 @@ add_dependencies(${PROJECT_NAME}
   )
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
 
-add_library(${PROJECT_NAME}_sensor_hw common/src/ati_force_torque_hw_can.cpp)
-target_link_libraries(${PROJECT_NAME}_sensor_hw ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
+add_library(${PROJECT_NAME}_sensor_hw common/src/ati_force_torque_hw_rs485.cpp common/src/ati_force_torque_hw_can.cpp)
+target_link_libraries(${PROJECT_NAME}_sensor_hw ${catkin_LIBRARIES} ${Eigen_LIBRARIES} ${Libmodbus_LIBRARIES})
 
 add_executable(${PROJECT_NAME}_node src/force_torque_sensor_node.cpp)
 add_dependencies(${PROJECT_NAME}_node ${PROJECT_NAME}_generate_messages_cpp)

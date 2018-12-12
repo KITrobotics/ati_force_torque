@@ -47,6 +47,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  ****************************************************************/
+#define DEBUG 0
 
 // general includes
 #include <ati_force_torque/ati_force_torque_hw_can.h>

@@ -1,0 +1,8 @@
+HWComm:
+    path: /dev/ttyUSB0
+    baudrate: 1250000
+
+FTS:
+    base_identifier: 0xA
+    auto_init: true
+    name: "ATI_45_Mini"

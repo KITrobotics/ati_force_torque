@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-<launch>
-    
-    <include file="$(find ati_force_torque)/launch/driver.launch">
-        <arg name="is_socket" value="false" />
-    </include>
-    
-</launch>
