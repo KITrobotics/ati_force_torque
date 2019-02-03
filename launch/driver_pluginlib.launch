@@ -11,7 +11,7 @@
         <remap from="robot_description" to="sensor_description" />
     </node>
     
-    <include ns="fts" file="$(find ati_force_torque)/launch/sensor_parameters_rs485.launch"/>
+    <include ns="fts" file="$(find ati_force_torque)/launch/sensor_parameters_can_socket.launch"/>
 
     <!-- start FTS Driver Node -->
     <node pkg="force_torque_sensor" type="force_torque_sensor_node" name="fts" ns="fts" cwd="node" respawn="false" output="screen">
