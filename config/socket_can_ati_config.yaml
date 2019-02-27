@@ -5,5 +5,5 @@ HWComm:
 
 FTS:
     base_identifier: 0x20
-    auto_init: true
-    fts_name: "ATI_45_Mini"
+    future_baudrate: 1      # ATI_CAN_BAUD_1M
+    future_base_id: 0x20

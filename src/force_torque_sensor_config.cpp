@@ -91,9 +91,9 @@ ForceTorqueConfig::ForceTorqueConfig()
   srvSever_Reset_ = nh_.advertiseService("Reset", &ForceTorqueConfig::srvCallback_Reset, this);
 
   // Read data from parameter server
-  nh_.param<int>("CAN/type", canType, -1);
-  nh_.param<std::string>("CAN/path", canPath, "");
-  nh_.param<int>("CAN/baudrate", canBaudrate, -1);
+  nh_.param<int>("HWComm/type", canType, -1);
+  nh_.param<std::string>("HWComm/path", canPath, "");
+  nh_.param<int>("HWComm/baudrate", canBaudrate, -1);
   nh_.param<int>("FTS/base_identifier", ftsBaseID, -1);
   nh_.param<int>("FTS/future_baudrate", ftsFutureBaudrate, 7);
   nh_.param<int>("FTS/future_base_id", ftsFutureBaseID, 0x20);
