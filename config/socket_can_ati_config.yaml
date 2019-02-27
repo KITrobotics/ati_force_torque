@@ -1,0 +1,9 @@
+HWComm:
+    type: 5           # CANITFTYPE_SOCKET_CAN
+    path: can0
+    #baudrate: 0x04     # CANITFBAUD_250K - for socket not needed
+
+FTS:
+    base_identifier: 0x20
+    future_baudrate: 1      # ATI_CAN_BAUD_1M
+    future_base_id: 0x20
