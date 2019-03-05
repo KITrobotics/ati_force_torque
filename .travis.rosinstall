@@ -9,7 +9,7 @@
 - git:
     uri: 'https://github.com/KITrobotics/force_torque_sensor.git'
     local-name: force_torque_sensor
-    version: kinetic-devel
+    version: force-torque-sensor-hw-handler
 - git:
     uri: 'https://github.com/KITrobotics/ipr_extern.git'
     local-name: ipr_extern
