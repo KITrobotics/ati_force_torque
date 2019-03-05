@@ -52,7 +52,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  ****************************************************************/
-#include <force_torque_sensor/force_torque_sensor_handle.h>
+#include <force_torque_sensor/force_torque_sensor_hw_handler.h>
 #include <force_torque_sensor/force_torque_sensor_sim.h>
 #include <force_torque_sensor/NodeConfigurationParameters.h>
 
@@ -80,7 +80,7 @@ public:
         ROS_ERROR("Unknown sensor hardware plugin!");
         return;
     }
-    new force_torque_sensor::ForceTorqueSensorHandle(nh, sensor, node_params_.sensor_frame,node_params_.transform_frame);
+    new force_torque_sensor::ForceTorqueSensorHWHandler(nh, sensor, node_params_.sensor_frame,node_params_.transform_frame);
 }
 private:
     force_torque_sensor::NodeConfigurationParameters node_params_;

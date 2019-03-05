@@ -858,7 +858,7 @@ bool ATIForceTorqueSensorHWRS485::ReadData()
 		readStart = ros::Time::now();
 #endif
 		/* *** READ *** */
-		int n = read( m_rs485, &streamBuf + bufferSize , sizeof(streamBuf) - bufferSize );
+		int n = ::read( m_rs485, &streamBuf + bufferSize , sizeof(streamBuf) - bufferSize );
 		/* Error Handling */
 		if (n < 0)
 		{
