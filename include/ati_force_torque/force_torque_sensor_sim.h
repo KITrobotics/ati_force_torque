@@ -54,8 +54,8 @@ typedef unsigned char uint8_t;
 #include <tf2_ros/transform_listener.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
-#include <ati_force_torque/PublishConfigurationParameters.h>
-#include <ati_force_torque/NodeConfigurationParameters.h>
+#include <force_torque_sensor/PublishConfigurationParameters.h>
+#include <force_torque_sensor/NodeConfigurationParameters.h>
 
 #include <math.h>
 #include <iostream>
@@ -72,8 +72,8 @@ protected:
 
   std::string transform_frame_;
   std::string sensor_frame_;
-  ati_force_torque::NodeConfigurationParameters node_params_;
-  ati_force_torque::PublishConfigurationParameters pub_params_;
+  force_torque_sensor::NodeConfigurationParameters node_params_;
+  force_torque_sensor::PublishConfigurationParameters pub_params_;
   void pullFTData(const ros::TimerEvent &event);
   void filterFTData();
   void subscribeData(const geometry_msgs::Twist::ConstPtr& msg);
