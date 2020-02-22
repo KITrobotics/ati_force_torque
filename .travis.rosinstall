@@ -9,7 +9,7 @@
 - git:
     uri: 'https://github.com/KITrobotics/force_torque_sensor.git'
     local-name: force_torque_sensor
-    version: kinetic-devel
+    version: force-torque-sensor-hw-handler
 - git:
     uri: 'https://github.com/KITrobotics/ipr_extern.git'
     local-name: ipr_extern
@@ -30,3 +30,7 @@
     uri: 'https://github.com/ipa320/cob_perception_common.git'
     local-name: cob_perception_common
     version: indigo_dev
+- git:
+    uri: 'https://github.com/KITrobotics/ros_control.git'
+    local-name: ros_control
+    version: combined_robot_sensor_hw
