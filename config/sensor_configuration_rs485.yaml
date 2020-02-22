@@ -28,8 +28,8 @@ MovingMeanFilter:
   params: {divider: 4}
 
 GravityCompensation:
-  name: GravityCompensationWrench
-  type: iirob_filters/GravityCompensator
+  name: GravityCompensator
+  type: iirob_filters/GravityCompensatorWrench
   params: {world_frame: "base_link"}
 
 Publish:
@@ -39,3 +39,4 @@ Publish:
     transformed_data: true
     gravity_compensated: true
     threshold_filtered: true
+    output_data: true

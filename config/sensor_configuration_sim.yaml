@@ -16,3 +16,4 @@ Publish:
     transformed_data: true
     gravity_compensated: true
     threshold_filtered: true
+    output_data: true

@@ -62,7 +62,7 @@
 class ATIForceTorqueSensorNode
 {
 public:
-    ATIForceTorqueSensorNode(ros::NodeHandle &nh):node_params_{nh.getNamespace()+"/Node"}
+    ATIForceTorqueSensorNode(ros::NodeHandle &nh):node_params_{ros::NodeHandle("~/Node").getNamespace()}
 {
     node_params_.fromParamServer();
     bool sim = node_params_.sim;
@@ -88,12 +88,12 @@ private:
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "forcetorque_node");
+    ros::init(argc, argv, "force_torque_node");
 
     ros::AsyncSpinner spinner(4); // Use 4 threads
     spinner.start();
 
-    ros::NodeHandle nh("/fts");
+    ros::NodeHandle nh("~");
 
     ATIForceTorqueSensorNode ftn(nh);
 

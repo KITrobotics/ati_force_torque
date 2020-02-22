@@ -14,7 +14,7 @@
     </node>
     
     <!-- start FTS Driver Node -->
-    <node pkg="ati_force_torque" type="ati_force_torque_node" name="fts_node" ns="fts" cwd="node" respawn="false" output="screen">
+    <node pkg="ati_force_torque" type="ati_force_torque_node" name="fts" cwd="node" respawn="false" output="screen">
     </node>
 
 </launch>
