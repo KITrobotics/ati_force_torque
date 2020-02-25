@@ -2,8 +2,8 @@
 Changelog for package ati_force_torque
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.1.1 (2020-02-25)
+------------------
 * Updated README with melodic description
 * Added static_application parameter to example configs.
 * Adapted namespace for sensor parameters
