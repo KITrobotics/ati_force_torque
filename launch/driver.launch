@@ -7,7 +7,7 @@
     <param name="sensor_description" command="$(find xacro)/xacro --inorder '$(find ati_force_torque)/description/urdf/sensor_mini58.urdf.xacro' $(arg scenario_parameters)"/>  
     
     <!-- sensor state publisher -->
-    <node ns="fts" pkg="robot_state_publisher" type="robot_state_publisher" name="sensor_state_publisher">
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="sensor_state_publisher">
         <param name="publish_frequency" type="double" value="200.0" />
         <param name="tf_prefix" type="string" value="" />
         <remap from="robot_description" to="sensor_description" />
