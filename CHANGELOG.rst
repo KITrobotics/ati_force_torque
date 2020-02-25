@@ -4,6 +4,19 @@ Changelog for package ati_force_torque
 
 Forthcoming
 -----------
+* Updated README with melodic description
+* Added static_application parameter to example configs.
+* Adapted namespace for sensor parameters
+* Contributors: Denis Stogl
+
+1.1.0 (2020-02-22)
+------------------
+* Addapted to changes in iirob_filters
+* Merge pull request `#9 <https://github.com/KITrobotics/ati_force_torque/issues/9>`_ from KITrobotics/updated_params
+  Updated param names for can yaml and config node
+* Added config files for config node
+* Updated param names for can yaml and config node
+* Contributors: Denis Štogl
 
 1.0.1 (2018-12-11)
 ------------------
