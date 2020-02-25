@@ -5,6 +5,7 @@ Node:
     ft_pull_freq: 800
     sensor_frame: "fts_reference_link"
     transform_frame: "fts_base_link"
+    static_application: false
 
 Calibration:
     Offset:

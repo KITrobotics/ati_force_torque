@@ -4,6 +4,7 @@ Node:
     ft_pull_freq: 800
     sensor_frame: ""
     transform_frame: ""
+    static_application: false
     sim_forceX_param: 40
     sim_forceY_param: 55
     sim_torqueZ_param: 10
